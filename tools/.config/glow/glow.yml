@@ -1,10 +1,14 @@
 # style name or JSON path (default "auto")
-style: "auto"
+style: "/home/seth/.config/glow/tokyo-night.json"
 # mouse support (TUI-mode only)
 mouse: false
 # use pager to display markdown
-pager: false
+pager: true
 # word-wrap at width
-width: 80
+width: 100
 # show all files, including hidden and ignored.
 all: false
+# show line numbers (TUI-mode only)
+showLineNumbers: false
+# preserve newlines in the output
+preserveNewLines: false

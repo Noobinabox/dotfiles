@@ -147,31 +147,25 @@ alias count='wc -l'
 vf() {
   local file
 
-  if command -v gum >/dev/null 2>&1 && [ -t 0 ]; then
-    file="$(gum file .)" || return
-  elif command -v fzf >/dev/null 2>&1; then
-    file="$(find . -type f 2>/dev/null | fzf --prompt='file> ')" || return
-  else
-    echo "vf: gum or fzf is required" >&2
+  if ! command -v fzf >/dev/null 2>&1; then
+    echo "vf: fzf is required" >&2
     return 1
   fi
 
+  file="$(find . -type f 2>/dev/null | fzf --prompt='file> ')" || return
   [ -n "$file" ] && "${EDITOR:-nvim}" "$file"
 }
 
 cdf() {
   local dir
 
-  if command -v gum >/dev/null 2>&1 && [ -t 0 ]; then
-    dir="$(find . -type d 2>/dev/null | gum filter --placeholder 'cd to directory')" || return
-  elif command -v fzf >/dev/null 2>&1; then
-    dir="$(find . -type d 2>/dev/null | fzf --prompt='cd> ')" || return
-  else
-    echo "cdf: gum or fzf is required" >&2
+  if ! command -v fzf >/dev/null 2>&1; then
+    echo "cdf: fzf is required" >&2
     return 1
   fi
 
-  [ -n "$dir" ] && cd "$dir"
+  dir="$(find . -type d 2>/dev/null | fzf --prompt='cd> ')" || return
+  [ -n "$dir" ] && cd "$dir" || return
 }
 
 cat() {

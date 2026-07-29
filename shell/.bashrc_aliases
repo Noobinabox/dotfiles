@@ -1,9 +1,91 @@
-# apt
-alias update='sudo apt update'
-alias upgrade='sudo apt upgrade'
-alias search='apt search'
-alias install='sudo apt install'
-alias remove='sudo apt remove'
+# shellcheck shell=bash
+
+# Distro package helpers
+dotfiles_pkg_manager() {
+  if command -v apt >/dev/null 2>&1; then
+    printf 'apt\n'
+  elif command -v dnf >/dev/null 2>&1; then
+    printf 'dnf\n'
+  elif command -v pacman >/dev/null 2>&1; then
+    printf 'pacman\n'
+  elif command -v zypper >/dev/null 2>&1; then
+    printf 'zypper\n'
+  elif command -v apk >/dev/null 2>&1; then
+    printf 'apk\n'
+  else
+    printf 'unsupported\n'
+    return 1
+  fi
+}
+
+dotfiles_sudo() {
+  if [ "$(id -u)" -eq 0 ]; then
+    "$@"
+  else
+    sudo "$@"
+  fi
+}
+
+dotfiles_pkg_update() {
+  case "$(dotfiles_pkg_manager)" in
+    apt) dotfiles_sudo apt update ;;
+    dnf) dotfiles_sudo dnf check-update || [ "$?" -eq 100 ] ;;
+    pacman) dotfiles_sudo pacman -Sy ;;
+    zypper) dotfiles_sudo zypper refresh ;;
+    apk) dotfiles_sudo apk update ;;
+    *) return 1 ;;
+  esac
+}
+
+dotfiles_pkg_upgrade() {
+  case "$(dotfiles_pkg_manager)" in
+    apt) dotfiles_sudo apt upgrade "$@" ;;
+    dnf) dotfiles_sudo dnf upgrade "$@" ;;
+    pacman) dotfiles_sudo pacman -Syu "$@" ;;
+    zypper) dotfiles_sudo zypper update "$@" ;;
+    apk) dotfiles_sudo apk upgrade "$@" ;;
+    *) return 1 ;;
+  esac
+}
+
+dotfiles_pkg_search() {
+  case "$(dotfiles_pkg_manager)" in
+    apt) apt search "$@" ;;
+    dnf) dnf search "$@" ;;
+    pacman) pacman -Ss "$@" ;;
+    zypper) zypper search "$@" ;;
+    apk) apk search "$@" ;;
+    *) return 1 ;;
+  esac
+}
+
+dotfiles_pkg_install() {
+  case "$(dotfiles_pkg_manager)" in
+    apt) dotfiles_sudo apt install ${DOTFILES_ASSUME_YES:+-y} "$@" ;;
+    dnf) dotfiles_sudo dnf install ${DOTFILES_ASSUME_YES:+-y} "$@" ;;
+    pacman) dotfiles_sudo pacman -S ${DOTFILES_ASSUME_YES:+--noconfirm} "$@" ;;
+    zypper) dotfiles_sudo zypper install ${DOTFILES_ASSUME_YES:+-y} "$@" ;;
+    apk) dotfiles_sudo apk add "$@" ;;
+    *) return 1 ;;
+  esac
+}
+
+dotfiles_pkg_remove() {
+  case "$(dotfiles_pkg_manager)" in
+    apt) dotfiles_sudo apt remove "$@" ;;
+    dnf) dotfiles_sudo dnf remove "$@" ;;
+    pacman) dotfiles_sudo pacman -R "$@" ;;
+    zypper) dotfiles_sudo zypper remove "$@" ;;
+    apk) dotfiles_sudo apk del "$@" ;;
+    *) return 1 ;;
+  esac
+}
+
+update() { dotfiles_pkg_update "$@"; }
+upgrade() { dotfiles_pkg_upgrade "$@"; }
+search() { dotfiles_pkg_search "$@"; }
+install() { dotfiles_pkg_install "$@"; }
+remove() { dotfiles_pkg_remove "$@"; }
 
 # git
 alias gl='git log --graph --all --decorate --oneline'
@@ -27,8 +109,15 @@ alias ta='tmux attach'
 alias vim='nvim'
 alias v='vim'
 alias view='v -R'
-alias fd='fdfind'
 alias python='python.exe'
+
+fd() {
+  if command -v fdfind >/dev/null 2>&1; then
+    fdfind "$@"
+  else
+    command fd "$@"
+  fi
+}
 
 # navigations
 alias ..='cd ..'
@@ -54,4 +143,13 @@ dtn() {
 }
 
 alias count='wc -l'
-alias cat='batcat'
+
+cat() {
+  if command -v batcat >/dev/null 2>&1; then
+    batcat "$@"
+  elif command -v bat >/dev/null 2>&1; then
+    bat "$@"
+  else
+    command cat "$@"
+  fi
+}

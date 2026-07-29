@@ -61,7 +61,7 @@ tool config           npm.env.gpg            histories
 
 ## First-Time Setup
 
-Install required tools:
+Install the baseline tools needed to run the dotfiles installer:
 
 ```sh
 sudo apt install stow gpg
@@ -90,6 +90,19 @@ scripts/install.sh
 `scripts/install.sh` backs up existing non-symlink files to
 `~/.dotfiles-backup/<timestamp>/` before running stow.
 
+Bootstrap applications used by the managed configs:
+
+```sh
+./setup.sh --check
+./setup.sh
+```
+
+To bootstrap dependencies and stow configs in one run:
+
+```sh
+./setup.sh --stow
+```
+
 ## Daily Use
 
 After changing config in this repo, run:
@@ -116,6 +129,28 @@ Inspect managed links:
 ```sh
 find ~ -maxdepth 3 -type l -lname '*dot-files*' -print
 ```
+
+## Package Commands
+
+Shell package helpers are distro-aware. On this machine they resolve to `apt`,
+but the same commands also support `dnf`, `pacman`, `zypper`, and `apk`:
+
+```sh
+update
+upgrade
+search ripgrep
+install ripgrep
+remove ripgrep
+```
+
+`setup.sh` sources the same helpers and installs system packages through the
+shared `install` implementation. Tool-specific ecosystems still use their own
+installers: NVM for Node, npm for global JavaScript CLIs, rustup for Rust,
+Mason for Neovim LSP/formatter tools, Doom for Emacs packages, and TPM for tmux
+plugins.
+
+The `install` shell function intentionally shadows the coreutils file-copy
+utility. Use `command install ...` when you need the coreutils command.
 
 ## Auto-Sync
 

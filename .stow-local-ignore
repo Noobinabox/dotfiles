@@ -1,0 +1,22 @@
+\.git
+\.gitignore
+\.stow-local-ignore
+AGENTS\.md
+README\.md
+scripts
+secrets
+\.local
+.*\.log
+.*\.tmp
+.*\.bak
+.*\.swp
+.*\.swo
+Cache
+Code Cache
+GPUCache
+Crashpad
+Session Storage
+Local Storage
+IndexedDB
+eln-cache
+node_modules

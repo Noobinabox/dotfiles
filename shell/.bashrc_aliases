@@ -1,0 +1,57 @@
+# apt
+alias update='sudo apt update'
+alias upgrade='sudo apt upgrade'
+alias search='apt search'
+alias install='sudo apt install'
+alias remove='sudo apt remove'
+
+# git
+alias gl='git log --graph --all --decorate --oneline'
+alias gs='git status -sb'
+alias ga='git add -A'
+
+# general
+alias cls='clear'
+alias ls='ls -h --color=auto'
+alias ll='ls -l'
+alias la='ls -al'
+alias rm='rm -vi'
+alias cp='cp -vi'
+alias mv='mv -vi'
+
+# tmux
+alias tm='tmux new -s Obsidian -c ~/'
+alias ta='tmux attach'
+
+# vim aliases
+alias vim='nvim'
+alias v='vim'
+alias view='v -R'
+alias fd='fdfind'
+alias python='python.exe'
+
+# navigations
+alias ..='cd ..'
+alias oo='cd ~/vault/'
+
+# wsl mapping
+alias poweroff='shutdown.exe /s /t 0'
+alias reboot='shutdown.exe /r /t 0'
+
+# remote
+alias sshr='ssh -p 1024 slyon@rotsmud.org'
+
+# gdb
+alias debug='gdb --args ./bin/ageland 3791'
+
+# dotnet
+dtn() {
+  if [ -z "$1" ]; then
+    echo "Usage: dtn <Namespace>"
+    return 1
+  fi
+  dotnet test --filter "FullyQualifiedName~$1"
+}
+
+alias count='wc -l'
+alias cat='batcat'

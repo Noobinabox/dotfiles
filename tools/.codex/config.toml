@@ -1,0 +1,65 @@
+model = "gpt-5.5"
+model_reasoning_effort = "medium"
+approvals_reviewer = "user"
+[projects."/home/seth/repos/sg2/fusion/fusion-supervisor-databricks"]
+trust_level = "trusted"
+
+[projects."/home/seth/.config/nvim"]
+trust_level = "trusted"
+
+[projects."/home/seth/vault"]
+trust_level = "trusted"
+
+[projects."/home/seth"]
+trust_level = "trusted"
+
+[projects."/home/seth/repos/personal/RotS_Live"]
+trust_level = "trusted"
+
+[projects."/home/seth/repos/personal/typescript/calc"]
+trust_level = "trusted"
+
+[projects."/home/seth/repos/sg2/fusion/fusion-ai-insight-databricks"]
+trust_level = "trusted"
+
+[projects."/home/seth/repos/sg2/fusion/rag-webcomponent-ui"]
+trust_level = "trusted"
+
+[projects."/home/seth/.config/tmux"]
+trust_level = "trusted"
+
+[projects."/mnt/c/Users/slyon"]
+trust_level = "trusted"
+
+[projects."/home/seth/repos/sg2/odyssey/sg2-nve-strategy"]
+trust_level = "trusted"
+
+[projects."/home/seth/repos/sg2/fusion/sg2-next-gen-portal-sso-bricks-api"]
+trust_level = "trusted"
+
+[projects."/home/seth/repos/sg2/odyssey/sg2-claims-etl"]
+trust_level = "trusted"
+
+[projects."/home/seth/.config/emacs"]
+trust_level = "trusted"
+
+[projects."/home/seth/repos/personal/rots-world"]
+trust_level = "trusted"
+
+[projects."/home/seth/repos/sg2/odyssey/sg2-nve-strategy-pulumi"]
+trust_level = "trusted"
+
+[projects."/home/seth/repos/personal/dot-files"]
+trust_level = "trusted"
+
+[tui]
+theme = "dracula"
+status_line = ["model-with-reasoning", "current-dir", "git-branch", "used-tokens"]
+status_line_use_colors = true
+session_picker_view = "comfortable"
+
+[tui.model_availability_nux]
+"gpt-5.5" = 4
+
+[features]
+memories = true

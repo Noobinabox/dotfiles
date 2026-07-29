@@ -1,0 +1,25 @@
+.local/
+*.log
+*.tmp
+*.bak
+*.swp
+*.swo
+
+# Secret material must be encrypted before it is tracked.
+secrets/*.env
+secrets/*.txt
+secrets/*.json
+!secrets/*.gpg
+!secrets/README.md
+
+# Runtime auth/state that should never be imported directly.
+**/auth.db
+**/auth.db-*
+**/token-cache.json
+**/credentials.json
+**/hosts.yml
+**/known_hosts
+**/id_*
+**/.zsh_history
+**/.bash_history
+

@@ -55,6 +55,9 @@ trust_level = "trusted"
 [projects."/home/seth/vault/ai-development-instructions/codex-sandbox"]
 trust_level = "trusted"
 
+[projects."/home/seth/vault/ai-development-instructions"]
+trust_level = "trusted"
+
 [tui]
 theme = "dracula"
 status_line = ["model-with-reasoning", "current-dir", "git-branch", "used-tokens"]

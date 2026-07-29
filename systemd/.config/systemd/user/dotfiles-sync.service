@@ -1,0 +1,9 @@
+[Unit]
+Description=Auto-sync dotfiles repository
+Documentation=file:/home/seth/repos/personal/dot-files/README.md
+
+[Service]
+Type=oneshot
+WorkingDirectory=/home/seth/repos/personal/dot-files
+ExecStart=/home/seth/repos/personal/dot-files/scripts/auto-sync.sh
+

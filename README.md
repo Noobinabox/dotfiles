@@ -45,6 +45,7 @@ The repo is organized as stow packages:
 - `tmux`: tmux config
 - `tools`: small CLI/tool configs such as `glow`, `htop`, `bpytop`, `harper-ls`,
   GitHub CLI config, Angular config, and Codex config
+- `systemd`: user service and timer for automatic dotfiles sync
 - `secrets`: encrypted secret env files
 
 Generated state, caches, histories, auth databases, plugin installs, and nested
@@ -114,6 +115,56 @@ Inspect managed links:
 
 ```sh
 find ~ -maxdepth 3 -type l -lname '*dot-files*' -print
+```
+
+## Auto-Sync
+
+This repo can sync itself every 10 minutes with a user-level systemd timer.
+The timer runs `scripts/auto-sync.sh`, which:
+
+- refuses to overlap with another run
+- runs `scripts/check.sh` before committing
+- commits all non-ignored changes
+- rebases on the configured upstream
+- pushes without force
+
+Install and enable the timer:
+
+```sh
+scripts/install.sh systemd
+systemctl --user daemon-reload
+systemctl --user enable --now dotfiles-sync.timer
+```
+
+Check timer status:
+
+```sh
+systemctl --user list-timers dotfiles-sync.timer
+systemctl --user status dotfiles-sync.timer
+```
+
+Inspect sync logs:
+
+```sh
+journalctl --user -u dotfiles-sync.service -n 100 --no-pager
+```
+
+Run one sync manually:
+
+```sh
+systemctl --user start dotfiles-sync.service
+```
+
+Disable auto-sync:
+
+```sh
+systemctl --user disable --now dotfiles-sync.timer
+```
+
+If you want the timer to run even when no user session is active:
+
+```sh
+loginctl enable-linger "$USER"
 ```
 
 ## Secrets

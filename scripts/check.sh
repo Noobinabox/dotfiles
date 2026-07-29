@@ -3,7 +3,7 @@ set -euo pipefail
 
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 target="${STOW_TARGET:-$HOME}"
-packages=(shell npm git nvim doom tmux tools)
+packages=(shell npm git nvim doom tmux tools systemd)
 
 cd "$repo_root"
 

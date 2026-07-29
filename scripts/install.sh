@@ -7,7 +7,7 @@ backup_root="${DOTFILES_BACKUP_DIR:-$HOME/.dotfiles-backup/$(date +%Y%m%d-%H%M%S
 if [[ "$#" -gt 0 ]]; then
   packages=("$@")
 else
-  packages=(shell npm git nvim doom tmux tools)
+  packages=(shell npm git nvim doom tmux tools systemd)
 fi
 
 cd "$repo_root"
@@ -42,6 +42,8 @@ backup_path .config/bpytop/bpytop.conf
 backup_path .config/harper-ls/dictionary.txt
 backup_path .config/gh/config.yml
 backup_path .codex/config.toml
+backup_path .config/systemd/user/dotfiles-sync.service
+backup_path .config/systemd/user/dotfiles-sync.timer
 
 for package in "${packages[@]}"; do
   stow --target="$target" "$package"

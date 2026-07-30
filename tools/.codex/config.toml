@@ -1,6 +1,6 @@
 model = "gpt-5.5"
 model_reasoning_effort = "medium"
-approvals_reviewer = "auto_review"
+approvals_reviewer = "user"
 [projects."/home/seth/repos/sg2/fusion/fusion-supervisor-databricks"]
 trust_level = "trusted"
 

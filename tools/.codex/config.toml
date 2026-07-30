@@ -1,6 +1,6 @@
 model = "gpt-5.5"
 model_reasoning_effort = "medium"
-approvals_reviewer = "user"
+approvals_reviewer = "auto_review"
 [projects."/home/seth/repos/sg2/fusion/fusion-supervisor-databricks"]
 trust_level = "trusted"
 
@@ -56,6 +56,9 @@ trust_level = "trusted"
 trust_level = "trusted"
 
 [projects."/home/seth/vault/ai-development-instructions"]
+trust_level = "trusted"
+
+[projects."/home/seth/repos/sg2/fusion/sg2-fusion-agents"]
 trust_level = "trusted"
 
 [tui]

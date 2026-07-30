@@ -165,7 +165,7 @@ vim.api.nvim_create_user_command("Q", "q", {})
 vim.api.nvim_create_user_command("W", "w", {})
 
 local function insert_current_date()
-  local date = os.date("%Y-%m-%d %a")
+  local date = string.format("[[%s]]", os.date("%Y-%m-%d"))
   vim.api.nvim_put({ date }, "c", true, true)
 end
 
@@ -173,7 +173,7 @@ keymap.set(
   "n",
   "<leader>mdt",
   insert_current_date,
-  { noremap = true, silent = true, desc = "Insert current date (YYYY-mm-dd)" }
+  { noremap = true, silent = true, desc = "Insert current date link (YYYY-mm-dd)" }
 )
 
 keymap.set(

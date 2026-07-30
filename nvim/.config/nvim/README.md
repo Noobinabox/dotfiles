@@ -209,7 +209,7 @@ The Codex overlay keeps its panel opaque without blacking out the editor around 
 
 | Key            | Mode   | Action                             |
 | -------------- | ------ | ---------------------------------- |
-| `<leader>mdt`  | normal | Insert current date                |
+| `<leader>mdt`  | normal | Insert current date link           |
 | `<leader>mt`   | visual | Capitalize each word in selection  |
 | `<leader>nn`   | normal | New Obsidian note                  |
 | `<leader>nn`   | visual | Extract selection to Obsidian note |

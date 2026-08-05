@@ -146,14 +146,18 @@ alias count='wc -l'
 
 dotfiles_find_files() {
   if command -v fdfind >/dev/null 2>&1; then
-    fdfind --hidden --no-ignore --type f --strip-cwd-prefix \
+    fdfind --hidden --type f --strip-cwd-prefix \
       --exclude .git --exclude node_modules --exclude .cache --exclude target --exclude dist --exclude build .
-  elif command -v fd >/dev/null 2>&1; then
-    command fd --hidden --no-ignore --type f --strip-cwd-prefix \
+  elif fd --version >/dev/null 2>&1; then
+    fd --hidden --type f --strip-cwd-prefix \
       --exclude .git --exclude node_modules --exclude .cache --exclude target --exclude dist --exclude build .
   else
     find . \
-      \( -name .git -o -name node_modules -o -name .cache -o -name target -o -name dist -o -name build \) -type d -prune \
+      \( -name .git -o -name .local -o -name node_modules -o -name .cache -o -name target -o -name dist -o -name build \) -type d -prune \
+      -o \( -name '*.log' -o -name '*.tmp' -o -name '*.bak' -o -name '*.swp' -o -name '*.swo' \
+        -o -path './secrets/*.env' -o -path './secrets/*.txt' -o -path './secrets/*.json' \
+        -o -name auth.db -o -name 'auth.db-*' -o -name token-cache.json -o -name credentials.json \
+        -o -name hosts.yml -o -name known_hosts -o -name 'id_*' -o -name .zsh_history -o -name .bash_history \) -type f -prune \
       -o -type f -print 2>/dev/null | sed 's#^\./##'
   fi
 }
@@ -192,7 +196,7 @@ Usage:
   vf [--edit|--view|--explore] [query]
   vf --help
 
-Search files recursively, including hidden files, with fzf. Preview the highlighted file, then choose an action.
+Search files recursively, including hidden files, with fzf. Respects ignore rules when fd is available.
 
 Actions:
   edit      Open selected file(s) in nvim.

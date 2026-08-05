@@ -167,8 +167,9 @@ utility. Use `command install ...` when you need the coreutils command.
 ## File Navigation
 
 `vf` is the fast file launcher. It searches files recursively, including hidden
-files, from the current directory with `fzf`, previews the highlighted file,
-then opens the selected file or files with the action you choose.
+files, from the current directory with `fzf`, while still respecting ignore
+rules when `fd` is available. It previews the highlighted file, then opens the
+selected file or files with the action you choose.
 
 ```sh
 vf

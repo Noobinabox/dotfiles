@@ -31,6 +31,7 @@ repo package path              stow link target
 shell/.zshrc                   ~/.zshrc
 nvim/.config/nvim/init.lua     ~/.config/nvim/init.lua
 tmux/.config/tmux/tmux.conf    ~/.config/tmux/tmux.conf
+tools/.config/yazi             ~/.config/yazi
 ```
 
 ## What This Manages
@@ -43,8 +44,8 @@ The repo is organized as stow packages:
 - `nvim`: Neovim config
 - `doom`: personal Doom Emacs config
 - `tmux`: tmux config
-- `tools`: small CLI/tool configs such as `glow`, `htop`, `bpytop`, `harper-ls`,
-  GitHub CLI config, Angular config, and Codex config
+- `tools`: small CLI/tool configs such as `glow`, `yazi`, `htop`, `bpytop`,
+  `harper-ls`, GitHub CLI config, Angular config, and Codex config
 - `systemd`: user service and timer for automatic dotfiles sync
 - `secrets`: encrypted secret env files
 
@@ -97,6 +98,16 @@ Bootstrap applications used by the managed configs:
 ./setup.sh
 ```
 
+On Debian or Ubuntu, Yazi comes from its upstream apt repository on this
+machine. Add that source before running `./setup.sh` if `apt install yazi` is
+not available yet:
+
+```sh
+curl -fsSL https://yazi-rs.github.io/builds/yazi-keyring.gpg | sudo tee /usr/share/keyrings/yazi-keyring.gpg >/dev/null
+echo 'deb [signed-by=/usr/share/keyrings/yazi-keyring.gpg] https://yazi-rs.github.io/builds/ stable main' | sudo tee /etc/apt/sources.list.d/yazi.list >/dev/null
+sudo apt update
+```
+
 To bootstrap dependencies and stow configs in one run:
 
 ```sh
@@ -122,6 +133,7 @@ Apply a specific package only:
 ```sh
 scripts/install.sh shell
 scripts/install.sh nvim
+scripts/install.sh tools
 ```
 
 Inspect managed links:
@@ -151,6 +163,61 @@ plugins.
 
 The `install` shell function intentionally shadows the coreutils file-copy
 utility. Use `command install ...` when you need the coreutils command.
+
+## File Navigation
+
+`vf` is the fast file launcher. It searches files recursively from the current
+directory with `fzf`, previews the highlighted file, then opens the selected
+file or files with the action you choose.
+
+```sh
+vf
+vf README
+vf --edit init.lua
+vf --view notes
+vf --explore package
+vf --help
+```
+
+Preview behavior:
+
+- Markdown files use Glow with the managed Tokyo Night style.
+- Other files use `batcat` or `bat` when available.
+- Plain `sed` output is the fallback.
+
+Selection behavior:
+
+- Press `Enter` to accept the highlighted file.
+- Press `Tab` to toggle multiple file selections.
+- Press `Esc` to cancel without doing anything.
+
+Actions:
+
+- `edit`: opens all selected files in one Neovim process.
+- `view`: opens all selected files read-only with `nvim -R`.
+- `explore`: opens Yazi in the parent directory of the first selected file.
+
+`vf --explore` intentionally opens a directory instead of passing every selected
+file to Yazi. Once Yazi is open, use its own Vim-style selection workflow:
+
+- `h`/`j`/`k`/`l`: parent/down/up/enter
+- `gg`/`G`: top/bottom
+- `/`, `n`, `N`: find and move between matches
+- `v`: visual selection mode
+- `V`: toggle the hovered file
+- `yy`: yank selected files
+- `dd`: cut selected files
+- `p`: paste yanked files
+- `ge`: open the hovered file with the default opener
+- `gv` or `go`: choose an opener for the hovered file, including read-only view
+
+Yazi is the richer file browsing and management layer. Its config is stowed
+from `tools/.config/yazi` to `~/.config/yazi`, uses Vim-style navigation, and
+loads the Tokyo Night flavor. Restore managed Yazi packages and flavors with:
+
+```sh
+ya pkg install
+```
 
 ## Auto-Sync
 
@@ -301,5 +368,6 @@ Some tools are referenced by config but are not vendored here:
 - rustup and `~/.cargo/env`
 - tmux plugins
 - Doom Emacs core
+- Yazi apt source on Debian or Ubuntu, if the distro package is not available
 
 Install or update those tools with their normal package managers.

@@ -1,0 +1,42 @@
+#:schema https://yazi-rs.github.io/schemas/keymap.json
+
+[mgr]
+prepend_keymap = [
+  { on = "h", run = "leave", desc = "Go parent" },
+  { on = "j", run = "arrow next", desc = "Move down" },
+  { on = "k", run = "arrow prev", desc = "Move up" },
+  { on = "l", run = "enter", desc = "Enter directory" },
+
+  { on = [ "g", "g" ], run = "arrow top", desc = "Move top" },
+  { on = "G", run = "arrow bot", desc = "Move bottom" },
+  { on = "<C-u>", run = "arrow -50%", desc = "Move half page up" },
+  { on = "<C-d>", run = "arrow 50%", desc = "Move half page down" },
+  { on = "<C-b>", run = "arrow -100%", desc = "Move page up" },
+  { on = "<C-f>", run = "arrow 100%", desc = "Move page down" },
+
+  { on = "/", run = "find --smart", desc = "Find" },
+  { on = "n", run = "find_arrow", desc = "Next find match" },
+  { on = "N", run = "find_arrow --previous", desc = "Previous find match" },
+
+  { on = "v", run = "visual_mode", desc = "Visual selection mode" },
+  { on = "V", run = "toggle", desc = "Toggle hovered selection" },
+  { on = "<Esc>", run = "escape", desc = "Escape" },
+
+  { on = [ "y", "y" ], run = "yank", desc = "Yank selected files" },
+  { on = [ "d", "d" ], run = "yank --cut", desc = "Cut selected files" },
+  { on = "p", run = "paste", desc = "Paste yanked files" },
+  { on = "r", run = "rename --cursor=before_ext", desc = "Rename selected files" },
+
+  { on = "q", run = "quit", desc = "Quit" },
+  { on = "!", run = "shell \"$SHELL\" --block", for = "unix", desc = "Open shell here" },
+
+  { on = [ "g", "e" ], run = "open --hovered", desc = "Edit hovered with nvim" },
+  { on = [ "g", "v" ], run = "open --interactive --hovered", desc = "Choose read-only view" },
+  { on = [ "g", "o" ], run = "open --interactive --hovered", desc = "Open hovered with" },
+]
+
+[input]
+prepend_keymap = [
+  { on = "<Esc>", run = "escape", desc = "Back to normal mode or cancel input" },
+  { on = "<C-c>", run = "close", desc = "Cancel input" },
+]

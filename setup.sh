@@ -96,7 +96,7 @@ install_system_packages() {
     apt)
       packages=(
         bash zsh git openssh-client curl ca-certificates unzip tar xz-utils
-        build-essential make cmake stow gpg ripgrep fd-find fzf bat tmux
+        build-essential make cmake stow gpg ripgrep fd-find fzf yazi bat tmux
         shellcheck shfmt less bash-completion libnotify-bin direnv gh glow gum htop
         bpytop gdb emacs lua5.4 clang clangd clang-format gcc g++ default-jdk
       )
@@ -104,7 +104,7 @@ install_system_packages() {
     dnf)
       packages=(
         bash zsh git openssh-clients curl ca-certificates unzip tar xz make cmake
-        stow gnupg2 ripgrep fd-find fzf bat tmux ShellCheck shfmt less
+        stow gnupg2 ripgrep fd-find fzf yazi bat tmux ShellCheck shfmt less
         bash-completion libnotify direnv gh glow gum htop bpytop gdb emacs lua
         clang clang-tools-extra gcc gcc-c++ java-latest-openjdk-devel
       )
@@ -112,7 +112,7 @@ install_system_packages() {
     pacman)
       packages=(
         bash zsh git openssh curl ca-certificates unzip tar xz base-devel make
-        cmake stow gnupg ripgrep fd fzf bat tmux shellcheck shfmt less
+        cmake stow gnupg ripgrep fd fzf yazi bat tmux shellcheck shfmt less
         bash-completion libnotify direnv github-cli glow gum htop bpytop gdb emacs
         lua clang gcc jdk-openjdk
       )
@@ -120,7 +120,7 @@ install_system_packages() {
     zypper)
       packages=(
         bash zsh git openssh curl ca-certificates unzip tar xz make cmake stow
-        gpg2 ripgrep fd fzf bat tmux ShellCheck shfmt less bash-completion
+        gpg2 ripgrep fd fzf yazi bat tmux ShellCheck shfmt less bash-completion
         libnotify-tools direnv gh glow gum htop bpytop gdb emacs lua54 clang clang-tools
         gcc gcc-c++ java-devel
       )
@@ -128,7 +128,7 @@ install_system_packages() {
     apk)
       packages=(
         bash zsh git openssh-client curl ca-certificates unzip tar xz build-base
-        make cmake stow gnupg ripgrep fd fzf bat tmux shellcheck shfmt less
+        make cmake stow gnupg ripgrep fd fzf yazi bat tmux shellcheck shfmt less
         bash-completion libnotify direnv github-cli glow gum htop bpytop gdb emacs
         lua5.4 clang clang-extra-tools gcc g++ openjdk21
       )
@@ -140,7 +140,7 @@ install_system_packages() {
   esac
 
   if [[ "$check_only" == true ]]; then
-    for cmd in bash zsh git ssh curl stow gpg rg fzf tmux shellcheck shfmt lesspipe notify-send direnv gh glow gum htop bpytop gdb emacs lua clangd clang-format gcc g++ make cmake java javac; do
+    for cmd in bash zsh git ssh curl stow gpg rg fzf yazi ya tmux shellcheck shfmt lesspipe notify-send direnv gh glow gum htop bpytop gdb emacs lua clangd clang-format gcc g++ make cmake java javac; do
       have "$cmd" || record_missing "$cmd"
     done
     have_any fd fdfind || record_missing "fd/fdfind"

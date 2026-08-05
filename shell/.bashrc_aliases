@@ -144,16 +144,182 @@ dtn() {
 
 alias count='wc -l'
 
+dotfiles_find_files() {
+  if command -v fdfind >/dev/null 2>&1; then
+    fdfind --type f --strip-cwd-prefix .
+  elif command -v fd >/dev/null 2>&1; then
+    command fd --type f --strip-cwd-prefix .
+  else
+    find . \
+      \( -name .git -o -name node_modules -o -name .cache -o -name target -o -name dist -o -name build \) -type d -prune \
+      -o -type f -print 2>/dev/null | sed 's#^\./##'
+  fi
+}
+
+dotfiles_vf_preview_cmd() {
+  command cat <<'EOF'
+file={}
+case "$file" in
+  *.md|*.markdown|*.mdown|*.mkd)
+    if command -v glow >/dev/null 2>&1; then
+      glow --pager=false --style="$HOME/.config/glow/tokyo-night.json" "$file"
+    elif command -v batcat >/dev/null 2>&1; then
+      batcat --style=numbers --color=always "$file"
+    elif command -v bat >/dev/null 2>&1; then
+      bat --style=numbers --color=always "$file"
+    else
+      sed -n "1,200p" "$file"
+    fi
+    ;;
+  *)
+    if command -v batcat >/dev/null 2>&1; then
+      batcat --style=numbers --color=always "$file"
+    elif command -v bat >/dev/null 2>&1; then
+      bat --style=numbers --color=always "$file"
+    else
+      sed -n "1,200p" "$file"
+    fi
+    ;;
+esac
+EOF
+}
+
+dotfiles_vf_help() {
+  command cat <<'EOF'
+Usage:
+  vf [--edit|--view|--explore] [query]
+  vf --help
+
+Search files recursively with fzf, preview the highlighted file, then choose an action.
+
+Actions:
+  edit      Open selected file(s) in nvim.
+  view      Open selected file(s) read-only with nvim -R.
+  explore   Open yazi in the parent directory of the first selected file.
+
+Selection:
+  Enter     Accept the highlighted file.
+  Tab       Toggle multi-select in fzf.
+  Esc       Cancel without doing anything.
+
+Examples:
+  vf
+  vf README
+  vf --edit init.lua
+  vf --view notes
+  vf --explore package
+EOF
+}
+
+dotfiles_vf_action() {
+  local action="$1"
+  local selection="$2"
+  local file first parent
+
+  [ -n "$selection" ] || return 0
+
+  set --
+  while IFS= read -r file; do
+    [ -n "$file" ] || continue
+    [ -n "$first" ] || first="$file"
+    set -- "$@" "$file"
+  done <<EOF
+$selection
+EOF
+
+  [ "$#" -gt 0 ] || return 0
+
+  case "$action" in
+    edit)
+      nvim "$@"
+      ;;
+    view)
+      nvim -R "$@"
+      ;;
+    explore)
+      if ! command -v yazi >/dev/null 2>&1; then
+        echo "vf: yazi is required for --explore" >&2
+        return 1
+      fi
+      parent="$(dirname "$first")"
+      yazi "$parent"
+      ;;
+    *)
+      echo "vf: unknown action: $action" >&2
+      return 2
+      ;;
+  esac
+}
+
 vf() {
-  local file
+  local action=""
+  local query=""
+  local selection
+  local preview_cmd
 
   if ! command -v fzf >/dev/null 2>&1; then
     echo "vf: fzf is required" >&2
     return 1
   fi
 
-  file="$(find . -type f 2>/dev/null | fzf --prompt='file> ')" || return
-  [ -n "$file" ] && "${EDITOR:-nvim}" "$file"
+  while [ "$#" -gt 0 ]; do
+    case "$1" in
+      --edit)
+        if [ -n "$action" ]; then
+          echo "vf: choose only one action" >&2
+          dotfiles_vf_help >&2
+          return 2
+        fi
+        action="edit"
+        ;;
+      --view)
+        if [ -n "$action" ]; then
+          echo "vf: choose only one action" >&2
+          dotfiles_vf_help >&2
+          return 2
+        fi
+        action="view"
+        ;;
+      --explore)
+        if [ -n "$action" ]; then
+          echo "vf: choose only one action" >&2
+          dotfiles_vf_help >&2
+          return 2
+        fi
+        action="explore"
+        ;;
+      --help|-h)
+        dotfiles_vf_help
+        return 0
+        ;;
+      --)
+        shift
+        query="$*"
+        break
+        ;;
+      -*)
+        echo "vf: unknown option: $1" >&2
+        dotfiles_vf_help >&2
+        return 2
+        ;;
+      *)
+        query="${query:+$query }$1"
+        ;;
+    esac
+    shift
+  done
+
+  preview_cmd="$(dotfiles_vf_preview_cmd)"
+
+  selection="$(dotfiles_find_files | fzf --multi --prompt='file> ' --query="$query" --preview="$preview_cmd")" || return 0
+  [ -n "$selection" ] || return 0
+
+  if [ -z "$action" ]; then
+    action="$(printf 'edit\nview\nexplore\n' | fzf --prompt='action> ' --height=~40% --layout=reverse)" || return 0
+    [ -n "$action" ] || return 0
+  fi
+
+  dotfiles_vf_action "$action" "$selection"
 }
 
 cdf() {

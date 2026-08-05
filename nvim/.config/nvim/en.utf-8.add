@@ -58,6 +58,7 @@ Mana
 Mauglir
 Min
 Mirkwood
+Multi-line
 NPC
 NUnit
 NuGet
@@ -68,6 +69,7 @@ Padakandla
 Parital
 PowerPoints
 PowerShell
+Pulumi
 QECP
 RestMethod
 Rhovanion
@@ -94,6 +96,7 @@ Thuy
 Tilak
 Tsarkon
 TypeScript
+Umesh
 Ungambar
 Ungoliant
 Vamsidhar
@@ -112,6 +115,8 @@ dataframes
 dataset
 datasets
 datasources
+figma
+frontend
 iframe
 intelisense
 lakehouse
@@ -138,10 +143,3 @@ ui
 undeath
 webcomponent
 workspace
-Thuy
-frontend
-Pulumi
-Pulumi
-Umesh
-Figma
-figma

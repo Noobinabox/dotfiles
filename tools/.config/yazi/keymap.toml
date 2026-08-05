@@ -31,7 +31,7 @@ prepend_keymap = [
   { on = "!", run = "shell \"$SHELL\" --block", for = "unix", desc = "Open shell here" },
 
   { on = [ "g", "e" ], run = "open --hovered", desc = "Edit hovered with nvim" },
-  { on = [ "g", "v" ], run = "open --interactive --hovered", desc = "Choose read-only view" },
+  { on = [ "g", "v" ], run = "shell 'nvim -R %h' --block", for = "unix", desc = "View hovered read-only" },
   { on = [ "g", "o" ], run = "open --interactive --hovered", desc = "Open hovered with" },
 ]
 

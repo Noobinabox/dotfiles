@@ -166,9 +166,9 @@ utility. Use `command install ...` when you need the coreutils command.
 
 ## File Navigation
 
-`vf` is the fast file launcher. It searches files recursively from the current
-directory with `fzf`, previews the highlighted file, then opens the selected
-file or files with the action you choose.
+`vf` is the fast file launcher. It searches files recursively, including hidden
+files, from the current directory with `fzf`, previews the highlighted file,
+then opens the selected file or files with the action you choose.
 
 ```sh
 vf
@@ -195,10 +195,10 @@ Actions:
 
 - `edit`: opens all selected files in one Neovim process.
 - `view`: opens all selected files read-only with `nvim -R`.
-- `explore`: opens Yazi in the parent directory of the first selected file.
+- `explore`: opens Yazi with the first selected file highlighted.
 
-`vf --explore` intentionally opens a directory instead of passing every selected
-file to Yazi. Once Yazi is open, use its own Vim-style selection workflow:
+`vf --explore` intentionally uses the first selected file as Yazi's starting
+entry. Once Yazi is open, use its own Vim-style selection workflow:
 
 - `h`/`j`/`k`/`l`: parent/down/up/enter
 - `gg`/`G`: top/bottom
@@ -209,14 +209,22 @@ file to Yazi. Once Yazi is open, use its own Vim-style selection workflow:
 - `dd`: cut selected files
 - `p`: paste yanked files
 - `ge`: open the hovered file with the default opener
-- `gv` or `go`: choose an opener for the hovered file, including read-only view
+- `gv`: view the hovered file read-only with `nvim -R`
+- `go`: choose an opener for the hovered file
 
 Yazi is the richer file browsing and management layer. Its config is stowed
 from `tools/.config/yazi` to `~/.config/yazi`, uses Vim-style navigation, and
 loads the Tokyo Night flavor. Restore managed Yazi packages and flavors with:
 
 ```sh
+scripts/install.sh tools
 ya pkg install
+```
+
+To restore the Yazi packages against the repo config without stowing first:
+
+```sh
+YAZI_CONFIG_HOME="$PWD/tools/.config/yazi" ya pkg install
 ```
 
 ## Auto-Sync

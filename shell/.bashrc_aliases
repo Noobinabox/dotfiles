@@ -146,9 +146,11 @@ alias count='wc -l'
 
 dotfiles_find_files() {
   if command -v fdfind >/dev/null 2>&1; then
-    fdfind --type f --strip-cwd-prefix .
+    fdfind --hidden --no-ignore --type f --strip-cwd-prefix \
+      --exclude .git --exclude node_modules --exclude .cache --exclude target --exclude dist --exclude build .
   elif command -v fd >/dev/null 2>&1; then
-    command fd --type f --strip-cwd-prefix .
+    command fd --hidden --no-ignore --type f --strip-cwd-prefix \
+      --exclude .git --exclude node_modules --exclude .cache --exclude target --exclude dist --exclude build .
   else
     find . \
       \( -name .git -o -name node_modules -o -name .cache -o -name target -o -name dist -o -name build \) -type d -prune \
@@ -190,12 +192,12 @@ Usage:
   vf [--edit|--view|--explore] [query]
   vf --help
 
-Search files recursively with fzf, preview the highlighted file, then choose an action.
+Search files recursively, including hidden files, with fzf. Preview the highlighted file, then choose an action.
 
 Actions:
   edit      Open selected file(s) in nvim.
   view      Open selected file(s) read-only with nvim -R.
-  explore   Open yazi in the parent directory of the first selected file.
+  explore   Open yazi with the first selected file highlighted.
 
 Selection:
   Enter     Accept the highlighted file.
@@ -214,7 +216,7 @@ EOF
 dotfiles_vf_action() {
   local action="$1"
   local selection="$2"
-  local file first parent
+  local file first
 
   [ -n "$selection" ] || return 0
 
@@ -241,8 +243,7 @@ EOF
         echo "vf: yazi is required for --explore" >&2
         return 1
       fi
-      parent="$(dirname "$first")"
-      yazi "$parent"
+      yazi -- "$first"
       ;;
     *)
       echo "vf: unknown action: $action" >&2
@@ -256,11 +257,6 @@ vf() {
   local query=""
   local selection
   local preview_cmd
-
-  if ! command -v fzf >/dev/null 2>&1; then
-    echo "vf: fzf is required" >&2
-    return 1
-  fi
 
   while [ "$#" -gt 0 ]; do
     case "$1" in
@@ -308,6 +304,11 @@ vf() {
     esac
     shift
   done
+
+  if ! command -v fzf >/dev/null 2>&1; then
+    echo "vf: fzf is required" >&2
+    return 1
+  fi
 
   preview_cmd="$(dotfiles_vf_preview_cmd)"
 

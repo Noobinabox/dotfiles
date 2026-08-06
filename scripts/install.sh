@@ -42,6 +42,7 @@ backup_path .config/doom
 backup_path .config/tmux/tmux.conf
 backup_path .config/glow/glow.yml
 backup_path .config/yazi
+backup_path .config/spotify-player/app.toml
 backup_path .config/htop/htoprc
 backup_path .config/bpytop/bpytop.conf
 backup_path .config/harper-ls/dictionary.txt

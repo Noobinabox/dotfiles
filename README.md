@@ -32,6 +32,7 @@ shell/.zshrc                   ~/.zshrc
 nvim/.config/nvim/init.lua     ~/.config/nvim/init.lua
 tmux/.config/tmux/tmux.conf    ~/.config/tmux/tmux.conf
 tools/.config/yazi             ~/.config/yazi
+tools/.config/spotify-player   ~/.config/spotify-player
 ```
 
 ## What This Manages
@@ -44,8 +45,9 @@ The repo is organized as stow packages:
 - `nvim`: Neovim config
 - `doom`: personal Doom Emacs config
 - `tmux`: tmux config
-- `tools`: small CLI/tool configs such as `glow`, `yazi`, `htop`, `bpytop`,
-  `harper-ls`, GitHub CLI config, Angular config, and Codex config
+- `tools`: small CLI/tool configs such as `glow`, `yazi`, `spotify-player`,
+  `htop`, `bpytop`, `harper-ls`, GitHub CLI config, Angular config, and Codex
+  config
 - `systemd`: user service and timer for automatic dotfiles sync
 - `secrets`: encrypted secret env files
 

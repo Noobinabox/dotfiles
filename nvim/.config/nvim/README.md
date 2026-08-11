@@ -281,7 +281,14 @@ Configured LSP servers include:
 - `lua_ls`
 - `marksman`
 - `omnisharp`
+- `pyright`
 - `ts_ls`
+
+`pyright` provides Python completion, hover, references, diagnostics, and type
+information. Its root detection includes common Python project files such as
+`requirements.txt`, so single-file Pulumi Python projects attach at the project
+root. If imports remain unresolved, check the active Python interpreter or
+Pyright path settings separately.
 
 `ts_ls` starts `tsserver` with a 6144 MB Node heap so large TypeScript projects,
 including Pulumi infrastructure repos, are less likely to hit the default V8

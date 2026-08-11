@@ -70,6 +70,7 @@ local servers = {
   },
   marksman = {},
   omnisharp = {},
+  pyright = {},
   ts_ls = {
     init_options = {
       maxTsServerMemory = 6144,

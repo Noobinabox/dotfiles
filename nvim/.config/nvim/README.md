@@ -283,6 +283,10 @@ Configured LSP servers include:
 - `omnisharp`
 - `ts_ls`
 
+`ts_ls` starts `tsserver` with a 6144 MB Node heap so large TypeScript projects,
+including Pulumi infrastructure repos, are less likely to hit the default V8
+heap limit while loading references and type information.
+
 ## Options
 
 Notable defaults:

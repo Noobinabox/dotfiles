@@ -70,7 +70,11 @@ local servers = {
   },
   marksman = {},
   omnisharp = {},
-  ts_ls = {},
+  ts_ls = {
+    init_options = {
+      maxTsServerMemory = 6144,
+    },
+  },
 }
 
 local server_names = vim.tbl_keys(servers)

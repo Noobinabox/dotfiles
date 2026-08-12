@@ -9,11 +9,35 @@ source "$repo_root/scripts/lib/gum.sh"
 
 cd "$repo_root"
 
+if [[ -L "$target/.codex" ]]; then
+  dotfiles_error "$target/.codex must be a real directory so Codex runtime state stays out of git"
+  exit 1
+fi
+
 dotfiles_heading "checking stow links"
 for package in "${packages[@]}"; do
   dotfiles_info "$package"
   stow --simulate --verbose --target="$target" "$package"
 done
+
+dotfiles_heading "checking clean Codex stow behavior"
+clean_target="$(mktemp -d)"
+trap 'rm -rf "$clean_target"' EXIT
+STOW_TARGET="$clean_target" DOTFILES_BACKUP_DIR="$clean_target/.backup" scripts/install.sh tools >/dev/null
+
+if [[ -L "$clean_target/.codex" ]]; then
+  dotfiles_error "clean tools install folded .codex into a symlink"
+  exit 1
+fi
+
+while IFS= read -r -d '' codex_doc; do
+  codex_target="$clean_target/.codex/$(basename "$codex_doc")"
+
+  if [[ ! -L "$codex_target" ]]; then
+    dotfiles_error "clean tools install did not stow .codex/$(basename "$codex_doc") as a file link"
+    exit 1
+  fi
+done < <(find tools/.codex -maxdepth 1 -type f -name '*.md' -print0 | sort -z)
 
 dotfiles_heading "scanning for plaintext secrets"
 matches="$(

@@ -15,17 +15,55 @@ fi
 
 cd "$repo_root"
 
+package_selected() {
+  local wanted="$1"
+  local package
+
+  for package in "${packages[@]}"; do
+    [[ "$package" == "$wanted" ]] && return 0
+  done
+
+  return 1
+}
+
+path_is_inside_repo() {
+  local resolved
+  resolved="$(realpath -m "$1")"
+  [[ "$resolved" == "$repo_root" || "$resolved" == "$repo_root/"* ]]
+}
+
+ensure_real_dir() {
+  local path="$1"
+  local full="$target/$path"
+
+  if [[ -L "$full" ]]; then
+    if path_is_inside_repo "$full"; then
+      rm "$full"
+    else
+      dotfiles_error "$full is a symlink outside this repo; move it before stowing"
+      exit 1
+    fi
+  fi
+
+  mkdir -p "$full"
+}
+
 backup_path() {
   local path="$1"
   local full="$target/$path"
 
   [[ -e "$full" || -L "$full" ]] || return 0
   [[ -L "$full" ]] && return 0
+  path_is_inside_repo "$full" && return 0
 
   mkdir -p "$backup_root/$(dirname "$path")"
   mv "$full" "$backup_root/$path"
   dotfiles_info "backed up $full"
 }
+
+if package_selected tools; then
+  ensure_real_dir .codex
+fi
 
 dotfiles_heading "backing up existing unmanaged files"
 backup_path .zshrc
@@ -47,8 +85,12 @@ backup_path .config/htop/htoprc
 backup_path .config/bpytop/bpytop.conf
 backup_path .config/harper-ls/dictionary.txt
 backup_path .config/gh/config.yml
-backup_path .codex/AGENTS.md
-backup_path .codex/config.toml
+if package_selected tools; then
+  while IFS= read -r -d '' codex_doc; do
+    backup_path ".codex/$(basename "$codex_doc")"
+  done < <(find tools/.codex -maxdepth 1 -type f -name '*.md' -print0 | sort -z)
+  backup_path .codex/config.toml
+fi
 backup_path .config/systemd/user/dotfiles-sync.service
 backup_path .config/systemd/user/dotfiles-sync.timer
 

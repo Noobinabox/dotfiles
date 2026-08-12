@@ -74,7 +74,7 @@ Prefer:
 
 ### SOLID Design Principles
 
-Apply SOLID principles first for every coding request. Treat them as implementation guidance, not only review criteria.
+Use SOLID principles as an early design lens for every coding request. Treat them as implementation guidance, not only review criteria, while keeping correctness and safety as the highest priorities.
 
 - Single Responsibility Principle: each module, class, function, and component should have one clear reason to change.
 - Open/Closed Principle: prefer extension through composition, interfaces, configuration, or narrow strategy points over modifying stable behavior in place.
@@ -195,7 +195,9 @@ Reviewers should confirm the change solves the problem, handles edge cases and f
 
 After implementing a requested change, do not immediately return the result to the user. Execute the following review workflow. The implementation is considered in review until every reviewer has completed their evaluation.
 
-Spawn each reviewer as a separate subagent. Keep each reviewer's context scoped to its review role, collect its findings, and close the subagent after that reviewer has completed. Do not leave review subagents running after their findings have been collected.
+When subagent tooling is available, spawn each reviewer as a separate subagent. Keep each reviewer's context scoped to its review role, collect its findings, and close the subagent after that reviewer has completed. Do not leave review subagents running after their findings have been collected.
+
+If the active Codex surface does not expose subagents or lifecycle controls, run isolated role-scoped review passes inline and explicitly state that subagent spawning or closure could not be performed.
 
 ### Agent 1 - Thranduil
 

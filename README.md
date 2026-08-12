@@ -33,7 +33,7 @@ nvim/.config/nvim/init.lua     ~/.config/nvim/init.lua
 tmux/.config/tmux/tmux.conf    ~/.config/tmux/tmux.conf
 tools/.config/yazi             ~/.config/yazi
 tools/.config/spotify-player   ~/.config/spotify-player
-tools/.codex/AGENTS.md         ~/.codex/AGENTS.md
+tools/.codex/*.md              ~/.codex/*.md
 ```
 
 ## What This Manages

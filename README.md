@@ -33,6 +33,7 @@ nvim/.config/nvim/init.lua     ~/.config/nvim/init.lua
 tmux/.config/tmux/tmux.conf    ~/.config/tmux/tmux.conf
 tools/.config/yazi             ~/.config/yazi
 tools/.config/spotify-player   ~/.config/spotify-player
+tools/.codex/AGENTS.md         ~/.codex/AGENTS.md
 ```
 
 ## What This Manages
@@ -47,7 +48,7 @@ The repo is organized as stow packages:
 - `tmux`: tmux config
 - `tools`: small CLI/tool configs such as `glow`, `yazi`, `spotify-player`,
   `htop`, `bpytop`, `harper-ls`, GitHub CLI config, Angular config, and Codex
-  config
+  config and instructions
 - `systemd`: user service and timer for automatic dotfiles sync
 - `secrets`: encrypted secret env files
 

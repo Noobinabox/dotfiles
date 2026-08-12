@@ -47,6 +47,7 @@ backup_path .config/htop/htoprc
 backup_path .config/bpytop/bpytop.conf
 backup_path .config/harper-ls/dictionary.txt
 backup_path .config/gh/config.yml
+backup_path .codex/AGENTS.md
 backup_path .codex/config.toml
 backup_path .config/systemd/user/dotfiles-sync.service
 backup_path .config/systemd/user/dotfiles-sync.timer

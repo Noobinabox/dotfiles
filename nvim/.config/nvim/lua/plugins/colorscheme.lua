@@ -1,25 +1,23 @@
 return {
   {
-    "folke/tokyonight.nvim",
+    dir = vim.fn.stdpath("config"),
+    name = "dotfiles-generated-theme",
     lazy = false,
     priority = 1000,
-    opts = {
-      style = "night",
-      terminal_colors = true,
-      on_highlights = function(hl, colors)
-        hl.SpellBad = { underline = true, sp = colors.red }
-        hl.SpellCap = { underline = true, sp = colors.yellow }
-        hl.SpellLocal = { underline = true, sp = colors.cyan }
-        hl.SpellRare = { underline = true, sp = colors.purple }
-        hl.RenderMarkdownCheckboxImportant = { fg = colors.yellow, bold = true }
-        hl.RenderMarkdownCheckboxWorking = { fg = colors.blue }
-        hl.RenderMarkdownCheckboxDeferred = { fg = colors.comment, strikethrough = true }
-        hl.RenderMarkdownCheckboxQuestion = { fg = colors.orange }
-      end,
-    },
-    config = function(_, opts)
-      require("tokyonight").setup(opts)
-      vim.cmd.colorscheme("tokyonight")
+    config = function()
+      local candidates = {
+        vim.fn.expand("~/.config/theme-pack/nvim/current.lua"),
+        vim.fn.getcwd() .. "/tools/.config/theme-pack/nvim/current.lua",
+      }
+
+      for _, path in ipairs(candidates) do
+        if vim.uv.fs_stat(path) then
+          dofile(path)
+          return
+        end
+      end
+
+      vim.cmd.colorscheme("habamax")
     end,
   },
 }

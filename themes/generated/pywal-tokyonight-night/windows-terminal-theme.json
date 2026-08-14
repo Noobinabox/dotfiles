@@ -1,0 +1,20 @@
+{
+  "name": "Pywal Tokyonight Night",
+  "tab": {
+    "background": "#1a1b26FF",
+    "iconStyle": "default",
+    "showCloseButton": "always",
+    "unfocusedBackground": null
+  },
+  "tabRow": {
+    "background": "#1a1b26FF",
+    "unfocusedBackground": "#1a1b26FF"
+  },
+  "window": {
+    "applicationTheme": "dark",
+    "experimental.rainbowFrame": false,
+    "frame": null,
+    "unfocusedFrame": null,
+    "useMica": false
+  }
+}

@@ -29,7 +29,7 @@ require("lazy").setup({
     { import = "plugins" },
   },
   install = {
-    colorscheme = { "tokyonight" },
+    colorscheme = { "habamax" },
   },
   checker = {
     enabled = true,

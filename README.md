@@ -185,7 +185,7 @@ vf --help
 
 Preview behavior:
 
-- Markdown files use Glow with the managed Tokyo Night style.
+- Markdown files use Glow with the active managed theme style.
 - Other files use `batcat` or `bat` when available.
 - Plain `sed` output is the fallback.
 
@@ -218,7 +218,8 @@ entry. Once Yazi is open, use its own Vim-style selection workflow:
 
 Yazi is the richer file browsing and management layer. Its config is stowed
 from `tools/.config/yazi` to `~/.config/yazi`, uses Vim-style navigation, and
-loads the Tokyo Night flavor. Restore managed Yazi packages and flavors with:
+loads the active managed theme flavor. Restore managed Yazi packages and
+flavors with:
 
 ```sh
 scripts/install.sh tools
@@ -230,6 +231,71 @@ To restore the Yazi packages against the repo config without stowing first:
 ```sh
 YAZI_CONFIG_HOME="$PWD/tools/.config/yazi" ya pkg install
 ```
+
+## Themes
+
+Theme definitions live in `themes/`. Generate app-specific theme files, then
+apply one theme across the supported repo configs:
+
+```sh
+scripts/generate-themes.py --write
+scripts/apply-theme.sh
+```
+
+The picker uses `fzf` when available and falls back to a numbered shell prompt.
+It lists repository themes and pywal16 built-in themes. Selecting a pywal16
+theme creates `themes/pywal-<theme>.json` first if that repo theme does not
+exist yet, then applies it like any other managed theme.
+
+Apply a repository theme without prompting:
+
+```sh
+scripts/apply-theme.sh tokyo-night
+scripts/apply-theme.sh rose-pine-moon
+```
+
+Create and apply a pywal16 built-in theme without prompting:
+
+```sh
+scripts/apply-theme.sh --wal-theme tokyonight-night
+scripts/apply-theme.sh --wal-theme rose-pine-moon
+```
+
+Use `--repo-only` to update only repo-managed Linux-side configs. Without that
+flag, the script also backs up and updates the Windows-side terminal files:
+
+```text
+/mnt/c/Users/slyon/AppData/Roaming/alacritty/alacritty.toml
+/mnt/c/Users/slyon/AppData/Local/Packages/Microsoft.WindowsTerminal_8wekyb3d8bbwe/LocalState/settings.json
+```
+
+Check generated theme files without applying anything:
+
+```sh
+scripts/apply-theme.sh --check
+```
+
+List selectable themes:
+
+```sh
+scripts/apply-theme.sh --list
+scripts/apply-theme.sh --list-wal
+scripts/apply-theme.sh --list-all
+```
+
+Create a new theme from a pywal16 palette:
+
+```sh
+scripts/create-theme.sh --name my-wallpaper --image ~/Pictures/wallpaper.jpg
+scripts/create-theme.sh --name pywal-theme --wal-theme base16-gruvbox-dark-hard
+```
+
+The script runs `wal` with an isolated output directory, imports the generated
+pywal colors into `themes/<name>.json`, regenerates app-specific theme files,
+and runs the theme drift check. Pywal's `color0` through `color15` become the
+ANSI terminal keys in the canonical JSON; app accent colors such as comments,
+borders, and errors are derived from that same palette unless explicitly set
+later. Use `./setup.sh --check` to confirm `pywal16` is installed.
 
 ## Auto-Sync
 

@@ -1,0 +1,20 @@
+{
+  "name": "Rose Pine Moon",
+  "tab": {
+    "background": "#232136FF",
+    "iconStyle": "default",
+    "showCloseButton": "always",
+    "unfocusedBackground": null
+  },
+  "tabRow": {
+    "background": "#191724FF",
+    "unfocusedBackground": "#232136FF"
+  },
+  "window": {
+    "applicationTheme": "dark",
+    "experimental.rainbowFrame": false,
+    "frame": null,
+    "unfocusedFrame": null,
+    "useMica": false
+  }
+}

@@ -9,6 +9,10 @@ fi
 # If you come from bash you might have to change your $PATH.
 export PATH=$HOME/bin:$HOME/.local/bin:/usr/local/bin:$PATH
 
+if [[ -d "$HOME/.local/lib/python/bin" ]]; then
+  export PATH="$HOME/.local/lib/python/bin:$PATH"
+fi
+
 # Path to your Oh My Zsh installation.
 export ZSH="$HOME/.oh-my-zsh"
 export EDITOR="nvim"

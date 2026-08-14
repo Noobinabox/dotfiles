@@ -1,5 +1,5 @@
 # style name or JSON path (default "auto")
-style: "/home/seth/.config/glow/tokyo-night.json"
+style: "/home/seth/.config/glow/theme.json"
 # mouse support (TUI-mode only)
 mouse: false
 # use pager to display markdown

@@ -1,0 +1,20 @@
+{
+  "name": "Pywal Darktooth",
+  "tab": {
+    "background": "#1d2021FF",
+    "iconStyle": "default",
+    "showCloseButton": "always",
+    "unfocusedBackground": null
+  },
+  "tabRow": {
+    "background": "#1d2021FF",
+    "unfocusedBackground": "#1d2021FF"
+  },
+  "window": {
+    "applicationTheme": "dark",
+    "experimental.rainbowFrame": false,
+    "frame": null,
+    "unfocusedFrame": null,
+    "useMica": false
+  }
+}

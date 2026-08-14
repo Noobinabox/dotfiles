@@ -1,0 +1,23 @@
+{
+  "name": "Pywal Darktooth",
+  "black": "#1d2021",
+  "red": "#fb543f",
+  "green": "#95c085",
+  "yellow": "#fac03b",
+  "blue": "#0d6678",
+  "purple": "#8f4673",
+  "cyan": "#8ba59b",
+  "white": "#a89984",
+  "brightBlack": "#665c54",
+  "brightRed": "#fb543f",
+  "brightGreen": "#95c085",
+  "brightYellow": "#fac03b",
+  "brightBlue": "#0d6678",
+  "brightPurple": "#8f4673",
+  "brightCyan": "#8ba59b",
+  "brightWhite": "#fdf4c1",
+  "background": "#1d2021",
+  "foreground": "#a89984",
+  "selectionBackground": "#665c54",
+  "cursorColor": "#fb543f"
+}

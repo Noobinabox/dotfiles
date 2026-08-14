@@ -1,5 +1,5 @@
 #:schema https://yazi-rs.github.io/schemas/theme.json
 
 [flavor]
-dark = "pywal-tokyonight-night"
-light = "pywal-tokyonight-night"
+dark = "tokyo-night"
+light = "tokyo-night"

@@ -1,0 +1,20 @@
+{
+  "name": "Pywal Base16 Black Metal",
+  "tab": {
+    "background": "#000000FF",
+    "iconStyle": "default",
+    "showCloseButton": "always",
+    "unfocusedBackground": null
+  },
+  "tabRow": {
+    "background": "#000000FF",
+    "unfocusedBackground": "#000000FF"
+  },
+  "window": {
+    "applicationTheme": "dark",
+    "experimental.rainbowFrame": false,
+    "frame": null,
+    "unfocusedFrame": null,
+    "useMica": false
+  }
+}

@@ -1,6 +1,8 @@
 .local/
 !tools/.local/
+tools/.local/*
 !tools/.local/bin/
+tools/.local/bin/*
 !tools/.local/bin/tintin-lsp
 *.log
 *.tmp

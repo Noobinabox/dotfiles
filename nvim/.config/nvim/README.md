@@ -297,7 +297,7 @@ heap limit while loading references and type information.
 
 `tintin_lsp` is a local Node.js stdio language server for TinTin++ scripts. It
 is stowed from `tools/.local/bin/tintin-lsp`, is not managed by Mason, and
-provides command completions plus hover documentation for `.tt++` files.
+provides command completions plus hover documentation for the `tintin` filetype.
 
 ## Language Syntax
 

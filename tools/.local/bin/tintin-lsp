@@ -80,6 +80,7 @@ const commandDocs = [
   ["#showme", "#showme {text}", "Shows text locally using TinTin++ output handling."],
   ["#snoop", "#snoop {session} {on|off}", "Shows or hides another session's output."],
   ["#split", "#split", "Splits the screen into input and output regions."],
+  ["#ssl", "#ssl {name} {host} {port} {file}", "Creates a secure SSL session."],
   ["#substitute", "#substitute {pattern} {replacement}", "Substitutes matching incoming text."],
   ["#suspend", "#suspend", "Suspends TinTin++."],
   ["#switch", "#switch {value} {commands}", "Selects a command branch by value."],
@@ -194,8 +195,8 @@ function lineAt(text, line) {
 }
 
 function tokenAt(line, character) {
-  const left = line.slice(0, character);
-  const right = line.slice(character);
+  const left = line.slice(0, character + 1);
+  const right = line.slice(character + 1);
   const startMatch = left.match(/[#%$&*@]?[A-Za-z0-9_*]*$/);
   const endMatch = right.match(/^[A-Za-z0-9_*]*/);
   return `${startMatch ? startMatch[0] : ""}${endMatch ? endMatch[0] : ""}`;

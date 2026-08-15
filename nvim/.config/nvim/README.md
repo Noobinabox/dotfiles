@@ -294,6 +294,14 @@ Pyright path settings separately.
 including Pulumi infrastructure repos, are less likely to hit the default V8
 heap limit while loading references and type information.
 
+## Language Syntax
+
+TinTin++ scripts ending in `.tt++` are detected as the `tintin` filetype and
+use local Vim syntax highlighting for common commands, variables, parameters,
+comments, braces, command separators, strings, numbers, and escapes. No
+TinTin++ LSP is configured because there is no maintained language server wired
+into Mason or `nvim-lspconfig` for this setup.
+
 ## Options
 
 Notable defaults:

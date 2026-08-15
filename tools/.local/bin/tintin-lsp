@@ -1,0 +1,372 @@
+#!/usr/bin/env node
+"use strict";
+
+const documents = new Map();
+let buffer = Buffer.alloc(0);
+let shutdownRequested = false;
+
+const CompletionItemKind = {
+  Text: 1,
+  Function: 3,
+  Variable: 6,
+  Keyword: 14,
+};
+
+const commandDocs = [
+  ["#action", "#action {pattern} {commands} {priority}", "Runs commands when incoming text matches a trigger pattern."],
+  ["#alias", "#alias {name} {commands}", "Creates a named command alias."],
+  ["#all", "#all {commands}", "Runs commands for all active sessions."],
+  ["#bell", "#bell", "Rings the terminal bell."],
+  ["#break", "#break", "Stops the active loop or switch block."],
+  ["#buffer", "#buffer {option} {arguments}", "Inspects or manipulates the scrollback buffer."],
+  ["#button", "#button {square} {commands}", "Creates a clickable screen button."],
+  ["#case", "#case {value} {commands}", "Adds a case branch inside a switch block."],
+  ["#cat", "#cat {file}", "Displays a file locally."],
+  ["#chat", "#chat {option} {arguments}", "Controls TinTin++ chat features."],
+  ["#class", "#class {name} {open|close|read|write|kill}", "Groups related triggers, aliases, variables, and other settings."],
+  ["#commands", "#commands", "Lists available TinTin++ commands."],
+  ["#config", "#config {option} {value}", "Reads or changes a TinTin++ configuration option."],
+  ["#continue", "#continue", "Skips to the next iteration of the active loop."],
+  ["#cr", "#cr", "Sends a carriage return to the active session."],
+  ["#cursor", "#cursor {option} {arguments}", "Controls cursor movement and input-line behavior."],
+  ["#debug", "#debug {list} {on|off}", "Enables or disables debugging for TinTin++ lists."],
+  ["#default", "#default {commands}", "Runs commands when no switch case matches."],
+  ["#delay", "#delay {name} {seconds} {commands}", "Runs commands after a delay."],
+  ["#draw", "#draw {option} {arguments}", "Draws text or shapes on the terminal screen."],
+  ["#echo", "#echo {text}", "Prints text locally."],
+  ["#edit", "#edit {filename}", "Opens a file for editing."],
+  ["#else", "#else {commands}", "Fallback branch for an #if or #elseif block."],
+  ["#elseif", "#elseif {expression} {commands}", "Conditional branch after an #if block."],
+  ["#end", "#end", "Ends a command block."],
+  ["#event", "#event {event name} {commands}", "Runs commands when a TinTin++ event fires."],
+  ["#foreach", "#foreach {list} {variable} {commands}", "Iterates over each item in a list."],
+  ["#format", "#format {variable} {format} {arguments}", "Formats text and stores it in a variable."],
+  ["#function", "#function {name} {commands}", "Defines a function that can return a value."],
+  ["#gag", "#gag {pattern}", "Suppresses matching incoming text."],
+  ["#grep", "#grep {pattern}", "Searches buffer output for matching text."],
+  ["#help", "#help {topic}", "Shows TinTin++ help for a topic."],
+  ["#highlight", "#highlight {pattern} {color}", "Highlights matching incoming text."],
+  ["#history", "#history {option} {arguments}", "Inspects or manipulates command history."],
+  ["#if", "#if {expression} {commands}", "Runs commands when an expression is true."],
+  ["#ignore", "#ignore {on|off}", "Enables or disables command processing for selected lists."],
+  ["#info", "#info", "Displays information about sessions, lists, or settings."],
+  ["#kill", "#kill", "Removes matching entries from a list."],
+  ["#line", "#line {option} {commands}", "Changes how a command line is parsed or executed."],
+  ["#list", "#list {variable} {operation} {arguments}", "Creates and manipulates list variables."],
+  ["#local", "#local {variable} {value}", "Creates a local variable scoped to the current command block."],
+  ["#log", "#log {append|overwrite|off} {file}", "Controls session logging."],
+  ["#loop", "#loop {start} {end} {variable} {commands}", "Repeats commands over a numeric range."],
+  ["#macro", "#macro {key} {commands}", "Binds commands to a key sequence."],
+  ["#map", "#map {option} {arguments}", "Controls TinTin++ mapper features."],
+  ["#math", "#math {variable} {expression}", "Evaluates a math expression and stores the result."],
+  ["#message", "#message {list} {on|off}", "Controls informational messages."],
+  ["#nop", "#nop {comment}", "Comment command; TinTin++ ignores the rest of the command."],
+  ["#parse", "#parse {string} {variable} {commands}", "Parses a string and runs commands for matches."],
+  ["#path", "#path {option} {arguments}", "Records, manipulates, or plays movement paths."],
+  ["#pathdir", "#pathdir {direction} {reverse direction}", "Defines path direction metadata for path tracking."],
+  ["#port", "#port {option} {arguments}", "Controls TinTin++ port features."],
+  ["#prompt", "#prompt {pattern} {commands}", "Handles prompt lines separately from normal output."],
+  ["#read", "#read {file}", "Reads and executes commands from a file."],
+  ["#regexp", "#regexp {string} {pattern} {commands}", "Runs commands when a string matches a regular expression."],
+  ["#repeat", "#repeat {seconds} {commands}", "Runs commands repeatedly after a delay."],
+  ["#replace", "#replace {pattern} {replacement}", "Replaces matching incoming text."],
+  ["#return", "#return {value}", "Returns a value from a function."],
+  ["#run", "#run {session} {command}", "Starts a shell command as a session."],
+  ["#scan", "#scan {file}", "Scans a file as if it were incoming text."],
+  ["#screen", "#screen {option} {arguments}", "Controls screen and terminal features."],
+  ["#script", "#script {variable} {shell command}", "Runs a shell command and stores its output."],
+  ["#send", "#send {text}", "Sends text to the active session."],
+  ["#session", "#session {name} {host} {port}", "Creates or switches to a MUD session."],
+  ["#showme", "#showme {text}", "Shows text locally using TinTin++ output handling."],
+  ["#snoop", "#snoop {session} {on|off}", "Shows or hides another session's output."],
+  ["#split", "#split", "Splits the screen into input and output regions."],
+  ["#substitute", "#substitute {pattern} {replacement}", "Substitutes matching incoming text."],
+  ["#suspend", "#suspend", "Suspends TinTin++."],
+  ["#switch", "#switch {value} {commands}", "Selects a command branch by value."],
+  ["#system", "#system {command}", "Runs a shell command."],
+  ["#tab", "#tab {word}", "Adds or manages tab-completion words."],
+  ["#textin", "#textin {file}", "Sends a text file to the active session."],
+  ["#ticker", "#ticker {name} {commands} {seconds}", "Runs commands on a repeated timer."],
+  ["#time", "#time {format}", "Displays or formats time information."],
+  ["#unaction", "#unaction {pattern}", "Removes matching actions."],
+  ["#unalias", "#unalias {name}", "Removes matching aliases."],
+  ["#unclass", "#unclass {name}", "Removes a class."],
+  ["#unfunction", "#unfunction {name}", "Removes matching functions."],
+  ["#unvariable", "#unvariable {name}", "Removes matching variables."],
+  ["#variable", "#variable {name} {value}", "Sets a variable."],
+  ["#while", "#while {expression} {commands}", "Repeats commands while an expression is true."],
+  ["#write", "#write {file}", "Writes current settings or lists to a file."],
+  ["#zap", "#zap", "Closes the active session."],
+].map(([label, detail, documentation]) => ({
+  label,
+  detail,
+  documentation: `${documentation}\n\nSource: https://tintin.mudhalla.net/manual/`,
+}));
+
+const numberedSubstitutions = Array.from({ length: 100 }, (_, index) => [
+  `%${index}`,
+  index === 0 ? "Full trigger match." : `Captured wildcard or pattern argument ${index}.`,
+]);
+
+const numberedMetadataSubstitutions = Array.from({ length: 100 }, (_, index) => [
+  `&${index}`,
+  index === 0 ? "Metadata for the full trigger match." : `Metadata for captured wildcard or pattern argument ${index}.`,
+]);
+
+const substitutionDocs = [
+  ...numberedSubstitutions,
+  ...numberedMetadataSubstitutions,
+  ["%*", "All available wildcard or pattern arguments."],
+  ["%d", "Digit pattern token."],
+  ["%D", "Non-digit pattern token."],
+  ["%s", "Whitespace pattern token."],
+  ["%S", "Non-whitespace pattern token."],
+  ["%w", "Word pattern token."],
+  ["%W", "Non-word pattern token."],
+].map(([label, documentation]) => ({
+  label,
+  detail: "TinTin++ substitution",
+  documentation: `${documentation}\n\nSource: https://tintin.mudhalla.net/manual/substitutions.php`,
+}));
+
+const variableItems = [
+  {
+    label: "$variable",
+    detail: "TinTin++ variable substitution",
+    documentation: "Use `$name` to substitute a TinTin++ variable value.",
+  },
+  {
+    label: "&variable",
+    detail: "TinTin++ variable metadata substitution",
+    documentation: "Use `&name` for variable metadata where supported by TinTin++.",
+  },
+  {
+    label: "*variable",
+    detail: "TinTin++ variable index substitution",
+    documentation: "Use `*name` for variable index-oriented substitution where supported by TinTin++.",
+  },
+  {
+    label: "@function",
+    detail: "TinTin++ function substitution",
+    documentation: "Use `@name` to substitute a TinTin++ function result.",
+  },
+];
+
+function makeCompletionItem(entry, kind) {
+  return {
+    label: entry.label,
+    kind,
+    detail: entry.detail,
+    documentation: {
+      kind: "markdown",
+      value: entry.documentation,
+    },
+  };
+}
+
+const completionItems = [
+  ...commandDocs.map((entry) => makeCompletionItem(entry, CompletionItemKind.Function)),
+  ...substitutionDocs.map((entry) => makeCompletionItem(entry, CompletionItemKind.Keyword)),
+  ...variableItems.map((entry) => makeCompletionItem(entry, CompletionItemKind.Variable)),
+];
+
+const hoverDocs = new Map([
+  ...commandDocs.map((entry) => [entry.label.toLowerCase(), entry]),
+  ...substitutionDocs.map((entry) => [entry.label, entry]),
+  ...variableItems.map((entry) => [entry.label, entry]),
+]);
+
+function send(payload) {
+  const body = JSON.stringify(payload);
+  process.stdout.write(`Content-Length: ${Buffer.byteLength(body, "utf8")}\r\n\r\n${body}`);
+}
+
+function respond(id, result) {
+  send({ jsonrpc: "2.0", id, result });
+}
+
+function respondError(id, code, message) {
+  send({ jsonrpc: "2.0", id, error: { code, message } });
+}
+
+function lineAt(text, line) {
+  return (text || "").split(/\r?\n/)[line] || "";
+}
+
+function tokenAt(line, character) {
+  const left = line.slice(0, character);
+  const right = line.slice(character);
+  const startMatch = left.match(/[#%$&*@]?[A-Za-z0-9_*]*$/);
+  const endMatch = right.match(/^[A-Za-z0-9_*]*/);
+  return `${startMatch ? startMatch[0] : ""}${endMatch ? endMatch[0] : ""}`;
+}
+
+function completionPrefix(line, character) {
+  const prefix = line.slice(0, character).match(/[#%$&*@]?[A-Za-z0-9_*]*$/);
+  return prefix ? prefix[0].toLowerCase() : "";
+}
+
+function completion(params) {
+  const text = documents.get(params.textDocument.uri) || "";
+  const line = lineAt(text, params.position.line);
+  const prefix = completionPrefix(line, params.position.character);
+
+  if (!prefix) {
+    return completionItems;
+  }
+
+  return completionItems.filter((item) => item.label.toLowerCase().startsWith(prefix));
+}
+
+function hover(params) {
+  const text = documents.get(params.textDocument.uri) || "";
+  const line = lineAt(text, params.position.line);
+  const rawToken = tokenAt(line, params.position.character);
+  const token = rawToken.startsWith("#") ? rawToken.toLowerCase() : rawToken;
+
+  if (/^\$[A-Za-z_][A-Za-z0-9_]*$/.test(rawToken)) {
+    return {
+      contents: {
+        kind: "markdown",
+        value: "**TinTin++ variable**\n\nSubstitutes the value of a variable.",
+      },
+    };
+  }
+
+  if (/^&[A-Za-z_][A-Za-z0-9_]*$/.test(rawToken)) {
+    return {
+      contents: {
+        kind: "markdown",
+        value: "**TinTin++ variable metadata**\n\nSubstitutes variable metadata where supported by TinTin++.",
+      },
+    };
+  }
+
+  if (/^\*[A-Za-z_][A-Za-z0-9_]*$/.test(rawToken)) {
+    return {
+      contents: {
+        kind: "markdown",
+        value: "**TinTin++ variable index substitution**\n\nSubstitutes variable index data where supported by TinTin++.",
+      },
+    };
+  }
+
+  if (/^@[A-Za-z_][A-Za-z0-9_]*$/.test(rawToken)) {
+    return {
+      contents: {
+        kind: "markdown",
+        value: "**TinTin++ function**\n\nSubstitutes the result of a TinTin++ function.",
+      },
+    };
+  }
+
+  const entry = hoverDocs.get(token);
+  if (!entry) {
+    return null;
+  }
+
+  return {
+    contents: {
+      kind: "markdown",
+      value: `**${entry.label}**\n\n${entry.detail}\n\n${entry.documentation}`,
+    },
+  };
+}
+
+function handleMessage(message) {
+  if (message.method === "initialize") {
+    respond(message.id, {
+      capabilities: {
+        textDocumentSync: 1,
+        completionProvider: {
+          triggerCharacters: ["#", "%", "$", "&", "*", "@"],
+        },
+        hoverProvider: true,
+      },
+      serverInfo: {
+        name: "tintin-lsp",
+        version: "0.1.0",
+      },
+    });
+    return;
+  }
+
+  if (message.method === "shutdown") {
+    shutdownRequested = true;
+    respond(message.id, null);
+    return;
+  }
+
+  if (message.method === "exit") {
+    process.exit(shutdownRequested ? 0 : 1);
+  }
+
+  if (message.method === "textDocument/didOpen") {
+    documents.set(message.params.textDocument.uri, message.params.textDocument.text || "");
+    return;
+  }
+
+  if (message.method === "textDocument/didChange") {
+    const change = message.params.contentChanges && message.params.contentChanges[0];
+    if (change && typeof change.text === "string") {
+      documents.set(message.params.textDocument.uri, change.text);
+    }
+    return;
+  }
+
+  if (message.method === "textDocument/didClose") {
+    documents.delete(message.params.textDocument.uri);
+    return;
+  }
+
+  if (message.method === "textDocument/completion") {
+    respond(message.id, completion(message.params));
+    return;
+  }
+
+  if (message.method === "textDocument/hover") {
+    respond(message.id, hover(message.params));
+    return;
+  }
+
+  if (Object.prototype.hasOwnProperty.call(message, "id")) {
+    respondError(message.id, -32601, `Method not found: ${message.method}`);
+  }
+}
+
+function parseBuffer() {
+  while (true) {
+    const headerEnd = buffer.indexOf("\r\n\r\n");
+    if (headerEnd === -1) {
+      return;
+    }
+
+    const header = buffer.slice(0, headerEnd).toString("utf8");
+    const match = header.match(/Content-Length:\s*(\d+)/i);
+    if (!match) {
+      buffer = buffer.slice(headerEnd + 4);
+      continue;
+    }
+
+    const length = Number(match[1]);
+    const bodyStart = headerEnd + 4;
+    const bodyEnd = bodyStart + length;
+    if (buffer.length < bodyEnd) {
+      return;
+    }
+
+    const body = buffer.slice(bodyStart, bodyEnd).toString("utf8");
+    buffer = buffer.slice(bodyEnd);
+
+    try {
+      handleMessage(JSON.parse(body));
+    } catch (error) {
+      respondError(null, -32700, error instanceof Error ? error.message : String(error));
+    }
+  }
+}
+
+process.stdin.on("data", (chunk) => {
+  buffer = Buffer.concat([buffer, chunk]);
+  parseBuffer();
+});

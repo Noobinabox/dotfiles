@@ -1,4 +1,7 @@
 .local/
+!tools/.local/
+!tools/.local/bin/
+!tools/.local/bin/tintin-lsp
 *.log
 *.tmp
 *.bak
@@ -22,4 +25,3 @@ secrets/*.json
 **/id_*
 **/.zsh_history
 **/.bash_history
-

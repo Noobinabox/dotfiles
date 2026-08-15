@@ -89,7 +89,19 @@ local function tintin_lsp_cmd()
     return home_executable
   end
 
-  local repo_executable = vim.fn.fnamemodify(vim.fn.stdpath("config") .. "/../../../tools/.local/bin/tintin-lsp", ":p")
+  local source = debug.getinfo(1, "S").source
+  if vim.startswith(source, "@") then
+    local source_path = source:sub(2)
+    local real_source_path = vim.uv.fs_realpath(source_path) or source_path
+    local source_executable =
+      vim.fn.fnamemodify(real_source_path, ":h:h:h:h:h:h") .. "/tools/.local/bin/tintin-lsp"
+    if vim.fn.executable(source_executable) == 1 then
+      return source_executable
+    end
+  end
+
+  local repo_executable =
+    vim.fn.fnamemodify(vim.fn.stdpath("config") .. "/../../../tools/.local/bin/tintin-lsp", ":p")
   if vim.fn.executable(repo_executable) == 1 then
     return repo_executable
   end

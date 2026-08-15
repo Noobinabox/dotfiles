@@ -1,1 +1,1 @@
-autocmd BufRead,BufNewFile *.tt++ setfiletype tintin
+autocmd BufRead,BufNewFile *.tintin,*.tt,*.tt++ setfiletype tintin

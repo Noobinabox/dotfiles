@@ -301,9 +301,10 @@ provides command completions plus hover documentation for `.tt++` files.
 
 ## Language Syntax
 
-TinTin++ scripts ending in `.tt++` are detected as the `tintin` filetype and
-use local Vim syntax highlighting for common commands, variables, parameters,
-comments, braces, command separators, strings, numbers, and escapes.
+TinTin++ scripts ending in `.tintin`, `.tt`, or `.tt++` are detected as the
+`tintin` filetype and use local Vim syntax highlighting for common commands,
+variables, parameters, comments, braces, command separators, strings, numbers,
+and escapes.
 
 ## Options
 

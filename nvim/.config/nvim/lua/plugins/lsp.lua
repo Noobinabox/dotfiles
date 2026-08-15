@@ -23,7 +23,7 @@ local codebook_filetypes = {
   "zig",
 }
 
-local servers = {
+local mason_servers = {
   clangd = {
     cmd = {
       "clangd",
@@ -78,7 +78,34 @@ local servers = {
   },
 }
 
-local server_names = vim.tbl_keys(servers)
+local function tintin_lsp_cmd()
+  local executable = vim.fn.exepath("tintin-lsp")
+  if executable ~= "" then
+    return executable
+  end
+
+  local home_executable = vim.fn.expand("~/.local/bin/tintin-lsp")
+  if vim.fn.executable(home_executable) == 1 then
+    return home_executable
+  end
+
+  local repo_executable = vim.fn.fnamemodify(vim.fn.stdpath("config") .. "/../../../tools/.local/bin/tintin-lsp", ":p")
+  if vim.fn.executable(repo_executable) == 1 then
+    return repo_executable
+  end
+
+  return "tintin-lsp"
+end
+
+local custom_servers = {
+  tintin_lsp = {
+    cmd = { tintin_lsp_cmd() },
+    filetypes = { "tintin" },
+  },
+}
+
+local servers = vim.tbl_extend("force", mason_servers, custom_servers)
+local mason_server_names = vim.tbl_keys(mason_servers)
 
 return {
   {
@@ -111,7 +138,7 @@ return {
       "saghen/blink.cmp",
     },
     opts = {
-      ensure_installed = server_names,
+      ensure_installed = mason_server_names,
       automatic_enable = false,
     },
     config = function(_, opts)

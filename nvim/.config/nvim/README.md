@@ -282,6 +282,7 @@ Configured LSP servers include:
 - `marksman`
 - `omnisharp`
 - `pyright`
+- `tintin_lsp`
 - `ts_ls`
 
 `pyright` provides Python completion, hover, references, diagnostics, and type
@@ -294,13 +295,15 @@ Pyright path settings separately.
 including Pulumi infrastructure repos, are less likely to hit the default V8
 heap limit while loading references and type information.
 
+`tintin_lsp` is a local Node.js stdio language server for TinTin++ scripts. It
+is stowed from `tools/.local/bin/tintin-lsp`, is not managed by Mason, and
+provides command completions plus hover documentation for `.tt++` files.
+
 ## Language Syntax
 
 TinTin++ scripts ending in `.tt++` are detected as the `tintin` filetype and
 use local Vim syntax highlighting for common commands, variables, parameters,
-comments, braces, command separators, strings, numbers, and escapes. No
-TinTin++ LSP is configured because there is no maintained language server wired
-into Mason or `nvim-lspconfig` for this setup.
+comments, braces, command separators, strings, numbers, and escapes.
 
 ## Options
 

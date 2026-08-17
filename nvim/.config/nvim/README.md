@@ -298,13 +298,15 @@ including Pulumi infrastructure repos, are less likely to hit the default V8
 heap limit while loading references and type information.
 
 `tintin_lsp` is a local Node.js stdio language server for TinTin++ scripts. It
-is stowed from `tools/.local/bin/tintin-lsp`, is not managed by Mason, and
-provides parser-backed diagnostics, document formatting, symbol rename, command
-completions, and hover documentation for the `tintin` filetype.
+is packaged in `tintin-lsp/`, exposed locally through
+`tools/.local/bin/tintin-lsp`, is not managed by Mason, and provides
+parser-backed diagnostics, document formatting, symbol rename, command
+completions, hover documentation, document symbols, definitions, and references
+for the `tintin` filetype.
 Diagnostics are heuristic and rename is limited to variable/function-style
 symbols, so the local server does not replace TinTin++ runtime validation.
-Protocol regressions are covered by `node scripts/test-tintin-lsp.js` from the
-dotfiles repository root, and that test is included in `scripts/check.sh`.
+Protocol regressions are covered by `npm test --prefix tintin-lsp`, and that
+test is included in `scripts/check.sh` through `node scripts/test-tintin-lsp.js`.
 
 ## Language Syntax
 

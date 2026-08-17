@@ -1,0 +1,23 @@
+{
+  "name": "tintin-lsp",
+  "version": "0.2.0",
+  "description": "Language server for TinTin++ scripts.",
+  "license": "MIT",
+  "type": "commonjs",
+  "bin": {
+    "tintin-lsp": "bin/tintin-lsp"
+  },
+  "files": [
+    "bin",
+    "test",
+    "LICENSE",
+    "README.md"
+  ],
+  "scripts": {
+    "start": "node bin/tintin-lsp",
+    "test": "node --check bin/tintin-lsp && node --check test/protocol.test.js && node test/protocol.test.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

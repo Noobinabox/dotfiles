@@ -1,0 +1,64 @@
+# TinTin++ Language Server
+
+`tintin-lsp` is a dependency-free stdio language server for TinTin++ scripts.
+It is currently developed inside this dotfiles repository and used by the local
+Neovim config for the `tintin` filetype.
+
+## Features
+
+- TinTin++ command, substitution, variable, and function completions.
+- Hover documentation for known commands and substitutions.
+- Heuristic parser-backed diagnostics for command names, argument counts,
+  braces, strings, block comments, and nested command blocks.
+- Whole-document formatting that splits top-level commands while preserving
+  multiline braced argument payloads.
+- Rename support for TinTin variable/function-style symbols.
+- Document symbols, go-to-definition, and references for variable/function-style
+  symbols across open TinTin documents.
+- JSON-RPC/LSP protocol validation for malformed envelopes and params.
+
+## Install
+
+From this package directory:
+
+```sh
+npm link
+```
+
+Or run directly:
+
+```sh
+node bin/tintin-lsp
+```
+
+## Neovim
+
+With `nvim-lspconfig`:
+
+```lua
+vim.lsp.config("tintin_lsp", {
+  cmd = { "tintin-lsp" },
+  filetypes = { "tintin" },
+})
+vim.lsp.enable("tintin_lsp")
+```
+
+The dotfiles package also exposes `tools/.local/bin/tintin-lsp` as a wrapper
+around this package binary so the local Neovim config can keep using the same
+command.
+
+## Test
+
+```sh
+npm test
+```
+
+The protocol suite launches the server over stdio and verifies LSP framing,
+completion item shape, diagnostics, formatting, rename, and invalid-request
+handling.
+
+## Current Limits
+
+Diagnostics are heuristic and do not replace TinTin++ runtime validation. The
+parser covers common command-body shapes but is not yet a formal complete
+grammar for every TinTin++ language construct.

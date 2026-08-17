@@ -5,6 +5,14 @@ const documents = new Map();
 let buffer = Buffer.alloc(0);
 let shutdownRequested = false;
 
+const ErrorCodes = {
+  ParseError: -32700,
+  InvalidRequest: -32600,
+  MethodNotFound: -32601,
+  InvalidParams: -32602,
+  InternalError: -32603,
+};
+
 const CompletionItemKind = {
   Text: 1,
   Variable: 6,
@@ -179,6 +187,13 @@ const hoverDocs = new Map([
   ...variableItems.map((entry) => [entry.label, entry]),
 ]);
 
+class LspError extends Error {
+  constructor(code, message) {
+    super(message);
+    this.code = code;
+  }
+}
+
 const DiagnosticSeverity = {
   Error: 1,
   Warning: 2,
@@ -260,6 +275,46 @@ function respondError(id, code, message) {
   send({ jsonrpc: "2.0", id, error: { code, message } });
 }
 
+function invalidParams(message) {
+  throw new LspError(ErrorCodes.InvalidParams, message);
+}
+
+function requireObject(value, name) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    invalidParams(`Expected ${name}.`);
+  }
+  return value;
+}
+
+function requireString(value, name) {
+  if (typeof value !== "string") {
+    invalidParams(`Expected ${name} to be a string.`);
+  }
+  return value;
+}
+
+function requirePosition(params) {
+  const position = requireObject(params.position, "position");
+  if (
+    !Number.isInteger(position.line) ||
+    !Number.isInteger(position.character) ||
+    position.line < 0 ||
+    position.character < 0
+  ) {
+    invalidParams("Expected position.line and position.character to be non-negative integers.");
+  }
+  return position;
+}
+
+function requireTextDocumentUri(params) {
+  const textDocument = requireObject(params.textDocument, "textDocument");
+  return requireString(textDocument.uri, "textDocument.uri");
+}
+
+function requestParams(params) {
+  return requireObject(params, "params");
+}
+
 function lineAt(text, line) {
   return (text || "").split(/\r?\n/)[line] || "";
 }
@@ -278,9 +333,12 @@ function completionPrefix(line, character) {
 }
 
 function completion(params) {
-  const text = documents.get(params.textDocument.uri) || "";
-  const line = lineAt(text, params.position.line);
-  const prefix = completionPrefix(line, params.position.character);
+  const checkedParams = requestParams(params);
+  const uri = requireTextDocumentUri(checkedParams);
+  const position = requirePosition(checkedParams);
+  const text = documents.get(uri) || "";
+  const line = lineAt(text, position.line);
+  const prefix = completionPrefix(line, position.character);
 
   if (!prefix) {
     return completionItems;
@@ -290,9 +348,12 @@ function completion(params) {
 }
 
 function hover(params) {
-  const text = documents.get(params.textDocument.uri) || "";
-  const line = lineAt(text, params.position.line);
-  const rawToken = tokenAt(line, params.position.character);
+  const checkedParams = requestParams(params);
+  const uri = requireTextDocumentUri(checkedParams);
+  const position = requirePosition(checkedParams);
+  const text = documents.get(uri) || "";
+  const line = lineAt(text, position.line);
+  const rawToken = tokenAt(line, position.character);
   const token = rawToken.startsWith("#") ? rawToken.toLowerCase() : rawToken;
 
   if (/^\$[A-Za-z_][A-Za-z0-9_]*$/.test(rawToken)) {
@@ -898,7 +959,7 @@ function formatTintin(text, tabSize) {
     formatted.pop();
   }
 
-  return `${formatted.join("\n").replace(/[ \t]+$/gm, "")}\n`;
+  return `${formatted.join("\n")}\n`;
 }
 
 function fullDocumentRange(text) {
@@ -910,8 +971,11 @@ function fullDocumentRange(text) {
 }
 
 function formatting(params) {
-  const text = documents.get(params.textDocument.uri) || "";
-  const newText = formatTintin(text, params.options && params.options.tabSize);
+  const checkedParams = requestParams(params);
+  const uri = requireTextDocumentUri(checkedParams);
+  const options = requireObject(checkedParams.options, "options");
+  const text = documents.get(uri) || "";
+  const newText = formatTintin(text, options.tabSize);
   if (newText === text) {
     return [];
   }
@@ -941,9 +1005,12 @@ function validRenameName(name) {
 }
 
 function prepareRename(params) {
-  const text = documents.get(params.textDocument.uri) || "";
+  const checkedParams = requestParams(params);
+  const uri = requireTextDocumentUri(checkedParams);
+  const position = requirePosition(checkedParams);
+  const text = documents.get(uri) || "";
   const ast = parseTintin(text);
-  const symbol = symbolAtPosition(ast, params.position);
+  const symbol = symbolAtPosition(ast, position);
   if (!symbol) {
     return null;
   }
@@ -954,29 +1021,38 @@ function prepareRename(params) {
 }
 
 function rename(params) {
-  const text = documents.get(params.textDocument.uri) || "";
+  const checkedParams = requestParams(params);
+  const uri = requireTextDocumentUri(checkedParams);
+  const position = requirePosition(checkedParams);
+  const text = documents.get(uri) || "";
   const ast = parseTintin(text);
-  const symbol = symbolAtPosition(ast, params.position);
+  const symbol = symbolAtPosition(ast, position);
   if (!symbol) {
     return null;
   }
-  if (!validRenameName(params.newName)) {
+  if (typeof checkedParams.newName !== "string") {
+    invalidParams("Expected newName to be a string.");
+  }
+  if (!validRenameName(checkedParams.newName)) {
     return null;
   }
 
   const edits = ast.symbols
     .filter((candidate) => candidate.kind === symbol.kind && candidate.name === symbol.name)
-    .map((candidate) => ({ range: candidate.range, newText: params.newName }));
+    .map((candidate) => ({ range: candidate.range, newText: checkedParams.newName }));
 
   return {
     changes: {
-      [params.textDocument.uri]: edits,
+      [uri]: edits,
     },
   };
 }
 
 function handleMessage(message) {
   if (message.method === "initialize") {
+    if (!Object.prototype.hasOwnProperty.call(message, "id")) {
+      return;
+    }
     respond(message.id, {
       capabilities: {
         textDocumentSync: 1,
@@ -1008,23 +1084,34 @@ function handleMessage(message) {
   }
 
   if (message.method === "textDocument/didOpen") {
-    documents.set(message.params.textDocument.uri, message.params.textDocument.text || "");
-    publishDiagnostics(message.params.textDocument.uri);
+    const params = requestParams(message.params);
+    const textDocument = requireObject(params.textDocument, "textDocument");
+    const uri = requireString(textDocument.uri, "textDocument.uri");
+    const text = requireString(textDocument.text, "textDocument.text");
+    documents.set(uri, text);
+    publishDiagnostics(uri);
     return;
   }
 
   if (message.method === "textDocument/didChange") {
-    const change = message.params.contentChanges && message.params.contentChanges[0];
+    const params = requestParams(message.params);
+    const uri = requireTextDocumentUri(params);
+    if (!Array.isArray(params.contentChanges)) {
+      invalidParams("Expected contentChanges to be an array.");
+    }
+    const change = params.contentChanges[0];
     if (change && typeof change.text === "string") {
-      documents.set(message.params.textDocument.uri, change.text);
-      publishDiagnostics(message.params.textDocument.uri);
+      documents.set(uri, change.text);
+      publishDiagnostics(uri);
     }
     return;
   }
 
   if (message.method === "textDocument/didClose") {
-    documents.delete(message.params.textDocument.uri);
-    publishDiagnostics(message.params.textDocument.uri);
+    const params = requestParams(message.params);
+    const uri = requireTextDocumentUri(params);
+    documents.delete(uri);
+    publishDiagnostics(uri);
     return;
   }
 
@@ -1054,7 +1141,7 @@ function handleMessage(message) {
   }
 
   if (Object.prototype.hasOwnProperty.call(message, "id")) {
-    respondError(message.id, -32601, `Method not found: ${message.method}`);
+    respondError(message.id, ErrorCodes.MethodNotFound, `Method not found: ${message.method}`);
   }
 }
 
@@ -1082,10 +1169,26 @@ function parseBuffer() {
     const body = buffer.slice(bodyStart, bodyEnd).toString("utf8");
     buffer = buffer.slice(bodyEnd);
 
+    let message;
     try {
-      handleMessage(JSON.parse(body));
+      message = JSON.parse(body);
     } catch (error) {
-      respondError(null, -32700, error instanceof Error ? error.message : String(error));
+      respondError(null, ErrorCodes.ParseError, error instanceof Error ? error.message : String(error));
+      continue;
+    }
+
+    try {
+      if (!message || typeof message !== "object" || Array.isArray(message)) {
+        throw new LspError(ErrorCodes.InvalidRequest, "Expected a JSON-RPC request object.");
+      }
+      handleMessage(message);
+    } catch (error) {
+      const id = Object.prototype.hasOwnProperty.call(message, "id") ? message.id : null;
+      const code = error instanceof LspError ? error.code : ErrorCodes.InternalError;
+      const messageText = error instanceof Error ? error.message : String(error);
+      if (Object.prototype.hasOwnProperty.call(message, "id")) {
+        respondError(id, code, messageText);
+      }
     }
   }
 }

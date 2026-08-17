@@ -303,6 +303,8 @@ provides parser-backed diagnostics, document formatting, symbol rename, command
 completions, and hover documentation for the `tintin` filetype.
 Diagnostics are heuristic and rename is limited to variable/function-style
 symbols, so the local server does not replace TinTin++ runtime validation.
+Protocol regressions are covered by `node scripts/test-tintin-lsp.js` from the
+dotfiles repository root, and that test is included in `scripts/check.sh`.
 
 ## Language Syntax
 

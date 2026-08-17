@@ -42,6 +42,9 @@ done < <(find tools/.codex -maxdepth 1 -type f -name '*.md' -print0 | sort -z)
 dotfiles_heading "checking generated themes"
 scripts/generate-themes.py --check
 
+dotfiles_heading "checking TinTin++ LSP"
+node scripts/test-tintin-lsp.js
+
 dotfiles_heading "scanning for plaintext secrets"
 matches="$(
 	rg -l -P --hidden \
@@ -59,4 +62,4 @@ if [[ -n "$matches" ]]; then
 	exit 1
 fi
 
-dotfiles_success "stow simulation and secret scan passed"
+dotfiles_success "dotfiles validation passed"

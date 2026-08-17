@@ -1,0 +1,20 @@
+{
+  "name": "Pywal Catppuccin Frappe",
+  "tab": {
+    "background": "#303446FF",
+    "iconStyle": "default",
+    "showCloseButton": "always",
+    "unfocusedBackground": null
+  },
+  "tabRow": {
+    "background": "#303446FF",
+    "unfocusedBackground": "#303446FF"
+  },
+  "window": {
+    "applicationTheme": "dark",
+    "experimental.rainbowFrame": false,
+    "frame": null,
+    "unfocusedFrame": null,
+    "useMica": false
+  }
+}

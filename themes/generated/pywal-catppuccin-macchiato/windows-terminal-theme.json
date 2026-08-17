@@ -1,0 +1,20 @@
+{
+  "name": "Pywal Catppuccin Macchiato",
+  "tab": {
+    "background": "#24273aFF",
+    "iconStyle": "default",
+    "showCloseButton": "always",
+    "unfocusedBackground": null
+  },
+  "tabRow": {
+    "background": "#24273aFF",
+    "unfocusedBackground": "#24273aFF"
+  },
+  "window": {
+    "applicationTheme": "dark",
+    "experimental.rainbowFrame": false,
+    "frame": null,
+    "unfocusedFrame": null,
+    "useMica": false
+  }
+}

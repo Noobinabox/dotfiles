@@ -1,0 +1,20 @@
+{
+  "name": "Pywal Catppuccin Mocha",
+  "tab": {
+    "background": "#1e1e2eFF",
+    "iconStyle": "default",
+    "showCloseButton": "always",
+    "unfocusedBackground": null
+  },
+  "tabRow": {
+    "background": "#1e1e2eFF",
+    "unfocusedBackground": "#1e1e2eFF"
+  },
+  "window": {
+    "applicationTheme": "dark",
+    "experimental.rainbowFrame": false,
+    "frame": null,
+    "unfocusedFrame": null,
+    "useMica": false
+  }
+}

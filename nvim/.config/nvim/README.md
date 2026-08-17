@@ -24,6 +24,7 @@ Run from this directory:
 ```sh
 luac -p init.lua lua/config/*.lua lua/plugins/*.lua
 nvim --headless "+lua print('startup-ok')" +qa
+nvim --headless "+lua print(vim.g.colors_name or 'no-colorscheme')" +qa
 nvim --headless "+checkhealth nvim-treesitter mason obsidian" +qa
 ```
 
@@ -65,6 +66,7 @@ Leader is `<Space>`.
 
 - Insert mode uses a thicker blinking vertical cursor.
 - Folding is available broadly through `nvim-ufo`; buffers open expanded by default with a compact unpadded line-number and fold-marker column.
+- The colorscheme loads the generated dotfiles theme from `~/.config/theme-pack/nvim/current.lua`, or from the repo-local `tools/.config/theme-pack/nvim/current.lua` during local checks. If no generated theme is available, it falls back to `folke/tokyonight.nvim` with the Tokyo Night night style, then `habamax` as the emergency built-in fallback.
 
 | Key                | Mode                 | Action                                  |
 | ------------------ | -------------------- | --------------------------------------- |

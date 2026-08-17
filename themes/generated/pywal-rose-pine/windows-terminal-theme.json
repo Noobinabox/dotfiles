@@ -1,0 +1,20 @@
+{
+  "name": "Pywal Rose Pine",
+  "tab": {
+    "background": "#191724FF",
+    "iconStyle": "default",
+    "showCloseButton": "always",
+    "unfocusedBackground": null
+  },
+  "tabRow": {
+    "background": "#191724FF",
+    "unfocusedBackground": "#191724FF"
+  },
+  "window": {
+    "applicationTheme": "dark",
+    "experimental.rainbowFrame": false,
+    "frame": null,
+    "unfocusedFrame": null,
+    "useMica": false
+  }
+}

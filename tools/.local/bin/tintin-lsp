@@ -315,6 +315,30 @@ function requestParams(params) {
   return requireObject(params, "params");
 }
 
+function hasRequestId(message) {
+  return Object.prototype.hasOwnProperty.call(message, "id");
+}
+
+function validateJsonRpcEnvelope(message) {
+  if (!message || typeof message !== "object" || Array.isArray(message)) {
+    throw new LspError(ErrorCodes.InvalidRequest, "Expected a JSON-RPC request object.");
+  }
+  if (message.jsonrpc !== "2.0") {
+    throw new LspError(ErrorCodes.InvalidRequest, "Expected jsonrpc to be \"2.0\".");
+  }
+  if (typeof message.method !== "string") {
+    throw new LspError(ErrorCodes.InvalidRequest, "Expected method to be a string.");
+  }
+  if (
+    hasRequestId(message) &&
+    message.id !== null &&
+    typeof message.id !== "string" &&
+    typeof message.id !== "number"
+  ) {
+    throw new LspError(ErrorCodes.InvalidRequest, "Expected id to be a string, number, or null.");
+  }
+}
+
 function lineAt(text, line) {
   return (text || "").split(/\r?\n/)[line] || "";
 }
@@ -1024,14 +1048,14 @@ function rename(params) {
   const checkedParams = requestParams(params);
   const uri = requireTextDocumentUri(checkedParams);
   const position = requirePosition(checkedParams);
+  if (typeof checkedParams.newName !== "string") {
+    invalidParams("Expected newName to be a string.");
+  }
   const text = documents.get(uri) || "";
   const ast = parseTintin(text);
   const symbol = symbolAtPosition(ast, position);
   if (!symbol) {
     return null;
-  }
-  if (typeof checkedParams.newName !== "string") {
-    invalidParams("Expected newName to be a string.");
   }
   if (!validRenameName(checkedParams.newName)) {
     return null;
@@ -1050,7 +1074,7 @@ function rename(params) {
 
 function handleMessage(message) {
   if (message.method === "initialize") {
-    if (!Object.prototype.hasOwnProperty.call(message, "id")) {
+    if (!hasRequestId(message)) {
       return;
     }
     respond(message.id, {
@@ -1075,7 +1099,9 @@ function handleMessage(message) {
 
   if (message.method === "shutdown") {
     shutdownRequested = true;
-    respond(message.id, null);
+    if (hasRequestId(message)) {
+      respond(message.id, null);
+    }
     return;
   }
 
@@ -1140,7 +1166,7 @@ function handleMessage(message) {
     return;
   }
 
-  if (Object.prototype.hasOwnProperty.call(message, "id")) {
+  if (hasRequestId(message)) {
     respondError(message.id, ErrorCodes.MethodNotFound, `Method not found: ${message.method}`);
   }
 }
@@ -1178,15 +1204,19 @@ function parseBuffer() {
     }
 
     try {
-      if (!message || typeof message !== "object" || Array.isArray(message)) {
-        throw new LspError(ErrorCodes.InvalidRequest, "Expected a JSON-RPC request object.");
-      }
+      validateJsonRpcEnvelope(message);
       handleMessage(message);
     } catch (error) {
-      const id = Object.prototype.hasOwnProperty.call(message, "id") ? message.id : null;
+      const validId =
+        message &&
+        typeof message === "object" &&
+        hasRequestId(message) &&
+        (message.id === null || typeof message.id === "string" || typeof message.id === "number");
+      const shouldRespond = message && typeof message === "object" && hasRequestId(message);
+      const id = validId ? message.id : null;
       const code = error instanceof LspError ? error.code : ErrorCodes.InternalError;
       const messageText = error instanceof Error ? error.message : String(error);
-      if (Object.prototype.hasOwnProperty.call(message, "id")) {
+      if (shouldRespond) {
         respondError(id, code, messageText);
       }
     }

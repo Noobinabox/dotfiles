@@ -37,6 +37,7 @@ function runLsp(messages) {
   while (index < output.length) {
     const headerEnd = output.indexOf(separator, index);
     if (headerEnd === -1) {
+      assert(output.slice(index).toString("utf8").trim() === "", `unexpected unframed stdout near offset ${index}`);
       break;
     }
 
@@ -184,7 +185,7 @@ function testInvalidParamsKeepRequestId() {
   }
 }
 
-function testInvalidRenameNamesReturnNull() {
+function testRenameNameValidation() {
   const uri = "file:///tmp/tintin-invalid-rename.tt++";
   const text = "#variable {hp} {10}\n#send $hp\n";
   const malformedNames = [undefined, null, 42];
@@ -204,6 +205,21 @@ function testInvalidRenameNamesReturnNull() {
     const response = byId(responses, 2 + index);
     assert(response.error && response.error.code === -32602, `expected Invalid params for ${String(newName)}`);
   }
+
+  const missingSymbolResponses = runLsp([
+    initialize(),
+    open(uri, text),
+    {
+      jsonrpc: "2.0",
+      id: 10,
+      method: "textDocument/rename",
+      params: { textDocument: { uri }, position: { line: 1, character: 0 }, newName: null },
+    },
+  ]);
+  assert(
+    byId(missingSymbolResponses, 10).error && byId(missingSymbolResponses, 10).error.code === -32602,
+    "malformed newName should return Invalid params before symbol lookup"
+  );
 
   for (const newName of ["", "bad-name"]) {
     const responses = runLsp([
@@ -247,14 +263,31 @@ function testInitializeNotificationDoesNotRespond() {
   assert(responses.length === 0, "initialize notification should not produce a response");
 }
 
+function testJsonRpcEnvelopeValidation() {
+  let responses = runLsp([{ jsonrpc: "2.0", id: 2, method: 42, params: {} }]);
+  assert(byId(responses, 2).error.code === -32600, "non-string method should return Invalid Request");
+
+  responses = runLsp([{ jsonrpc: "2.0", id: { bad: true }, method: "initialize", params: { capabilities: {} } }]);
+  assert(responses.length === 1, "invalid id request should produce one error response");
+  assert(responses[0].id === null, "invalid id shape should respond with null id");
+  assert(responses[0].error.code === -32600, "invalid id shape should return Invalid Request");
+
+  responses = runLsp([{ jsonrpc: "1.0", id: 2, method: "initialize", params: { capabilities: {} } }]);
+  assert(byId(responses, 2).error.code === -32600, "wrong jsonrpc version should return Invalid Request");
+
+  responses = runLsp([{ jsonrpc: "2.0", method: "shutdown" }]);
+  assert(responses.length === 0, "shutdown notification should not produce a response");
+}
+
 const tests = [
   testCompletionItemsArePlainText,
   testParserDiagnosticsAndRename,
   testFormatterPreservesMultilineValues,
   testInvalidParamsKeepRequestId,
-  testInvalidRenameNamesReturnNull,
+  testRenameNameValidation,
   testKnownCommandsAndEmptyFormatting,
   testInitializeNotificationDoesNotRespond,
+  testJsonRpcEnvelopeValidation,
 ];
 
 for (const test of tests) {

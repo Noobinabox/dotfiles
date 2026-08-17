@@ -15,6 +15,10 @@ Neovim config for the `tintin` filetype.
 - Rename support for TinTin variable/function-style symbols.
 - Document symbols, go-to-definition, and references for variable/function-style
   symbols across open TinTin documents.
+- Workspace symbol search across open TinTin documents.
+- Folding ranges for multiline braced command arguments.
+- Document links for static file arguments in file-oriented commands such as
+  `#read`, `#write`, `#cat`, `#scan`, and `#textin`.
 - JSON-RPC/LSP protocol validation for malformed envelopes and params.
 
 ## Install
@@ -29,6 +33,13 @@ Or run directly:
 
 ```sh
 node bin/tintin-lsp
+```
+
+The binary also supports:
+
+```sh
+tintin-lsp --help
+tintin-lsp --version
 ```
 
 ## Neovim
@@ -51,11 +62,12 @@ command.
 
 ```sh
 npm test
+npm run pack:check
 ```
 
 The protocol suite launches the server over stdio and verifies LSP framing,
-completion item shape, diagnostics, formatting, rename, and invalid-request
-handling.
+completion item shape, diagnostics, formatting, rename, symbols, folding ranges,
+document links, CLI flags, and invalid-request handling.
 
 ## Current Limits
 

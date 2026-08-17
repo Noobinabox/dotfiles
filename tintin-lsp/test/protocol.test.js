@@ -238,6 +238,59 @@ function testFormatterPreservesMultilineValues() {
   );
 }
 
+function testWorkspaceSymbolsFoldingRangesDocumentLinksAndCli() {
+  const uri = "file:///tmp/tintin-project/main.tt++";
+  const text = [
+    "#variable {hp} {10}",
+    "#alias {heal} {",
+    "  say $hp",
+    "}",
+    "#read {scripts/common.tt}",
+    "",
+  ].join("\n");
+
+  const responses = runLsp([
+    initialize(),
+    open(uri, text),
+    {
+      jsonrpc: "2.0",
+      id: 2,
+      method: "workspace/symbol",
+      params: { query: "hp" },
+    },
+    {
+      jsonrpc: "2.0",
+      id: 3,
+      method: "textDocument/foldingRange",
+      params: { textDocument: { uri } },
+    },
+    {
+      jsonrpc: "2.0",
+      id: 4,
+      method: "textDocument/documentLink",
+      params: { textDocument: { uri } },
+    },
+  ]);
+
+  const workspaceSymbols = byId(responses, 2).result;
+  assert(workspaceSymbols.some((symbol) => symbol.name === "hp" && symbol.location.uri === uri), "expected workspace symbol for hp");
+
+  const folds = byId(responses, 3).result;
+  assert(folds.some((fold) => fold.startLine === 1 && fold.endLine === 3), "expected multiline alias body folding range");
+
+  const links = byId(responses, 4).result;
+  assert(links.length === 1, `expected one document link, got ${links.length}`);
+  assert(links[0].target === "file:///tmp/tintin-project/scripts/common.tt", `unexpected document link target ${links[0].target}`);
+
+  const version = spawnSync(server, ["--version"], { cwd: packageRoot, encoding: "utf8" });
+  assert(version.status === 0, "--version should exit successfully");
+  assert(version.stdout.trim() === packageJson.version, "--version should print package version");
+
+  const help = spawnSync(server, ["--help"], { cwd: packageRoot, encoding: "utf8" });
+  assert(help.status === 0, "--help should exit successfully");
+  assert(help.stdout.includes("Usage:"), "--help should print usage");
+}
+
 function testInvalidParamsKeepRequestId() {
   const responses = runLsp([
     initialize(),
@@ -256,9 +309,12 @@ function testInvalidParamsKeepRequestId() {
       method: "textDocument/completion",
       params: { textDocument: { uri: "file:///tmp/a.tt++" }, position: { line: 0, character: -1 } },
     },
+    { jsonrpc: "2.0", id: 7, method: "workspace/symbol", params: { query: 42 } },
+    { jsonrpc: "2.0", id: 8, method: "textDocument/foldingRange", params: {} },
+    { jsonrpc: "2.0", id: 9, method: "textDocument/documentLink", params: {} },
   ]);
 
-  for (const id of [2, 3, 4, 5, 6]) {
+  for (const id of [2, 3, 4, 5, 6, 7, 8, 9]) {
     const response = byId(responses, id);
     assert(response, `expected error response for request ${id}`);
     assert(response.error && response.error.code === -32602, `expected Invalid params for request ${id}`);
@@ -363,6 +419,21 @@ function testRequestMethodNotificationsDoNotRespond() {
       method: "textDocument/rename",
       params: { textDocument: { uri }, position: { line: 1, character: 7 }, newName: "health" },
     },
+    {
+      jsonrpc: "2.0",
+      method: "workspace/symbol",
+      params: { query: "hp" },
+    },
+    {
+      jsonrpc: "2.0",
+      method: "textDocument/foldingRange",
+      params: { textDocument: { uri } },
+    },
+    {
+      jsonrpc: "2.0",
+      method: "textDocument/documentLink",
+      params: { textDocument: { uri } },
+    },
   ]);
 
   assert(
@@ -389,6 +460,10 @@ function testJsonRpcEnvelopeValidation() {
 
 function testServerInfoVersionMatchesPackage() {
   const responses = runLsp([initialize()]);
+  const capabilities = byId(responses, 1).result.capabilities;
+  assert(capabilities.workspaceSymbolProvider === true, "expected workspace symbol provider capability");
+  assert(capabilities.foldingRangeProvider === true, "expected folding range provider capability");
+  assert(capabilities.documentLinkProvider.resolveProvider === false, "expected document link provider capability");
   assert(
     byId(responses, 1).result.serverInfo.version === packageJson.version,
     "serverInfo.version should match package.json version"
@@ -400,6 +475,7 @@ const tests = [
   testParserDiagnosticsAndRename,
   testSymbolsDefinitionsReferencesAndCrossDocumentRename,
   testFormatterPreservesMultilineValues,
+  testWorkspaceSymbolsFoldingRangesDocumentLinksAndCli,
   testInvalidParamsKeepRequestId,
   testRenameNameValidation,
   testKnownCommandsAndEmptyFormatting,

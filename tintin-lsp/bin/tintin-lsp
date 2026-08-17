@@ -1,7 +1,33 @@
 #!/usr/bin/env node
 "use strict";
 
+const path = require("node:path");
+const { fileURLToPath, pathToFileURL } = require("node:url");
 const packageMetadata = require("../package.json");
+
+function printUsage() {
+  process.stdout.write(
+    [
+      "TinTin++ Language Server",
+      "",
+      "Usage:",
+      "  tintin-lsp          Start the stdio language server",
+      "  tintin-lsp --help   Show this help",
+      "  tintin-lsp --version",
+      "",
+    ].join("\n")
+  );
+}
+
+if (process.argv.includes("--help") || process.argv.includes("-h")) {
+  printUsage();
+  process.exit(0);
+}
+
+if (process.argv.includes("--version") || process.argv.includes("-v")) {
+  process.stdout.write(`${packageMetadata.version}\n`);
+  process.exit(0);
+}
 
 const documents = new Map();
 let buffer = Buffer.alloc(0);
@@ -266,6 +292,13 @@ const commandBlockArgIndexes = new Map([
   ["switch", [1]],
   ["ticker", [1]],
   ["while", [1]],
+]);
+const fileArgIndexes = new Map([
+  ["cat", [0]],
+  ["read", [0]],
+  ["scan", [0]],
+  ["textin", [0]],
+  ["write", [0]],
 ]);
 const wordPattern = /[A-Za-z0-9_]/;
 
@@ -1060,6 +1093,103 @@ function documentSymbols(params) {
     }));
 }
 
+function workspaceSymbols(params) {
+  const checkedParams = requestParams(params);
+  if (typeof checkedParams.query !== "string") {
+    invalidParams("Expected query to be a string.");
+  }
+  const query = checkedParams.query.toLowerCase();
+
+  return parseOpenDocuments()
+    .flatMap((document) =>
+      document.ast.symbols
+        .filter((symbol) => symbol.role === "definition" && symbol.name.toLowerCase().includes(query))
+        .map((symbol) => ({
+          name: symbol.name,
+          kind: symbolKind(symbol),
+          location: {
+            uri: document.uri,
+            range: symbol.range,
+          },
+          containerName: "TinTin++",
+        }))
+    );
+}
+
+function foldingRanges(params) {
+  const checkedParams = requestParams(params);
+  const uri = requireTextDocumentUri(checkedParams);
+  const text = documents.get(uri) || "";
+  const ast = parseTintin(text);
+  const lineStarts = lineStartsFor(text);
+  const ranges = [];
+
+  for (const command of ast.commands) {
+    for (const arg of command.args) {
+      const start = rangeFromOffsets(lineStarts, arg.contentStart, arg.contentStart).start;
+      const end = rangeFromOffsets(lineStarts, arg.contentEnd, arg.contentEnd).end;
+      if (start.line < end.line) {
+        ranges.push({
+          startLine: start.line,
+          startCharacter: start.character,
+          endLine: end.line,
+          endCharacter: end.character,
+        });
+      }
+    }
+  }
+
+  return ranges;
+}
+
+function targetUriForPathArgument(documentUri, value) {
+  if (!documentUri.startsWith("file://") || /[$%&*@]/.test(value)) {
+    return null;
+  }
+
+  try {
+    const documentDirectory = path.dirname(fileURLToPath(documentUri));
+    const resolvedPath = path.isAbsolute(value) ? value : path.resolve(documentDirectory, value);
+    return pathToFileURL(resolvedPath).href;
+  } catch {
+    return null;
+  }
+}
+
+function documentLinks(params) {
+  const checkedParams = requestParams(params);
+  const uri = requireTextDocumentUri(checkedParams);
+  const text = documents.get(uri) || "";
+  const ast = parseTintin(text);
+  const lineStarts = lineStartsFor(text);
+  const links = [];
+
+  for (const command of ast.commands) {
+    const argIndexes = fileArgIndexes.get(command.canonicalName);
+    if (!argIndexes) {
+      continue;
+    }
+
+    for (const argIndex of argIndexes) {
+      const arg = command.args[argIndex];
+      if (!arg) {
+        continue;
+      }
+
+      const target = targetUriForPathArgument(uri, arg.value);
+      if (target) {
+        links.push({
+          range: rangeFromOffsets(lineStarts, arg.start, arg.end),
+          target,
+          tooltip: "Open TinTin++ script file",
+        });
+      }
+    }
+  }
+
+  return links;
+}
+
 function references(params) {
   const checkedParams = requestParams(params);
   const uri = requireTextDocumentUri(checkedParams);
@@ -1178,6 +1308,11 @@ function handleMessage(message) {
         hoverProvider: true,
         documentFormattingProvider: true,
         documentSymbolProvider: true,
+        workspaceSymbolProvider: true,
+        foldingRangeProvider: true,
+        documentLinkProvider: {
+          resolveProvider: false,
+        },
         referencesProvider: true,
         definitionProvider: true,
         renameProvider: {
@@ -1265,6 +1400,30 @@ function handleMessage(message) {
       return;
     }
     respond(message.id, documentSymbols(message.params));
+    return;
+  }
+
+  if (message.method === "workspace/symbol") {
+    if (!hasRequestId(message)) {
+      return;
+    }
+    respond(message.id, workspaceSymbols(message.params));
+    return;
+  }
+
+  if (message.method === "textDocument/foldingRange") {
+    if (!hasRequestId(message)) {
+      return;
+    }
+    respond(message.id, foldingRanges(message.params));
+    return;
+  }
+
+  if (message.method === "textDocument/documentLink") {
+    if (!hasRequestId(message)) {
+      return;
+    }
+    respond(message.id, documentLinks(message.params));
     return;
   }
 

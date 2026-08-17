@@ -4,6 +4,12 @@
   "description": "Language server for TinTin++ scripts.",
   "license": "MIT",
   "type": "commonjs",
+  "keywords": [
+    "tintin",
+    "tintin++",
+    "lsp",
+    "language-server"
+  ],
   "bin": {
     "tintin-lsp": "bin/tintin-lsp"
   },
@@ -14,8 +20,10 @@
     "README.md"
   ],
   "scripts": {
+    "check": "node --check bin/tintin-lsp && node --check test/protocol.test.js",
+    "pack:check": "npm pack --dry-run",
     "start": "node bin/tintin-lsp",
-    "test": "node --check bin/tintin-lsp && node --check test/protocol.test.js && node test/protocol.test.js"
+    "test": "npm run check && node test/protocol.test.js"
   },
   "engines": {
     "node": ">=18"

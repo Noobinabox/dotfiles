@@ -301,8 +301,8 @@ heap limit while loading references and type information.
 is packaged in `tintin-lsp/`, exposed locally through
 `tools/.local/bin/tintin-lsp`, is not managed by Mason, and provides
 parser-backed diagnostics, document formatting, symbol rename, command
-completions, hover documentation, document symbols, definitions, and references
-for the `tintin` filetype.
+completions, hover documentation, document symbols, workspace symbols, folding
+ranges, document links, definitions, and references for the `tintin` filetype.
 Diagnostics are heuristic and rename is limited to variable/function-style
 symbols, so the local server does not replace TinTin++ runtime validation.
 Protocol regressions are covered by `npm test --prefix tintin-lsp`, and that

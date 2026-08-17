@@ -142,7 +142,7 @@ function testSymbolsDefinitionsReferencesAndCrossDocumentRename() {
   const mainUri = "file:///tmp/tintin-main.tt++";
   const otherUri = "file:///tmp/tintin-other.tt++";
   const mainText = "#variable {hp} {10}\n#function {heal} {#return $hp}\n#send $hp\n";
-  const otherText = "#alias {tick} {#send $hp;#send @heal}\n";
+  const otherText = "#alias {tick} {say $hp}\n#alias {cast} {#send @heal}\n";
 
   const responses = runLsp([
     initialize(),
@@ -158,31 +158,31 @@ function testSymbolsDefinitionsReferencesAndCrossDocumentRename() {
       jsonrpc: "2.0",
       id: 3,
       method: "textDocument/definition",
-      params: { textDocument: { uri: otherUri }, position: { line: 0, character: 23 } },
+      params: { textDocument: { uri: otherUri }, position: { line: 0, character: 20 } },
     },
     {
       jsonrpc: "2.0",
       id: 4,
       method: "textDocument/references",
-      params: { textDocument: { uri: otherUri }, position: { line: 0, character: 23 }, context: { includeDeclaration: true } },
+      params: { textDocument: { uri: otherUri }, position: { line: 0, character: 20 }, context: { includeDeclaration: true } },
     },
     {
       jsonrpc: "2.0",
       id: 5,
       method: "textDocument/definition",
-      params: { textDocument: { uri: otherUri }, position: { line: 0, character: 33 } },
+      params: { textDocument: { uri: otherUri }, position: { line: 1, character: 23 } },
     },
     {
       jsonrpc: "2.0",
       id: 6,
       method: "textDocument/rename",
-      params: { textDocument: { uri: otherUri }, position: { line: 0, character: 23 }, newName: "health" },
+      params: { textDocument: { uri: otherUri }, position: { line: 0, character: 20 }, newName: "health" },
     },
     {
       jsonrpc: "2.0",
       id: 7,
       method: "textDocument/references",
-      params: { textDocument: { uri: otherUri }, position: { line: 0, character: 23 }, context: { includeDeclaration: false } },
+      params: { textDocument: { uri: otherUri }, position: { line: 0, character: 20 }, context: { includeDeclaration: false } },
     },
   ]);
 
@@ -204,7 +204,7 @@ function testSymbolsDefinitionsReferencesAndCrossDocumentRename() {
 
   const renameChanges = byId(responses, 6).result.changes;
   assert(renameChanges[mainUri].length === 3, `expected three main-document hp rename edits, got ${renameChanges[mainUri].length}`);
-  assert(renameChanges[otherUri].length === 1, `expected one other-document hp rename edit, got ${renameChanges[otherUri].length}`);
+  assert(renameChanges[otherUri].length === 1, `expected one raw-only other-document hp rename edit, got ${renameChanges[otherUri].length}`);
 
   const hpReferencesWithoutDefinition = byId(responses, 7).result;
   assert(

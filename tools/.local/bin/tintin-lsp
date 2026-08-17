@@ -11,7 +11,27 @@ const child = spawn(process.execPath, [packageBin], {
   stdio: "inherit",
 });
 
+const signalExitCodes = {
+  SIGHUP: 129,
+  SIGINT: 130,
+  SIGTERM: 143,
+};
+let forwardedSignal = null;
+
+for (const signal of Object.keys(signalExitCodes)) {
+  process.once(signal, () => {
+    forwardedSignal = signal;
+    if (!child.killed) {
+      child.kill(signal);
+    }
+  });
+}
+
 child.on("exit", (code, signal) => {
+  if (forwardedSignal) {
+    process.exit(signalExitCodes[forwardedSignal]);
+  }
+
   if (signal) {
     process.kill(process.pid, signal);
     return;

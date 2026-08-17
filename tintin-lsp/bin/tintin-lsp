@@ -1,6 +1,8 @@
 #!/usr/bin/env node
 "use strict";
 
+const packageMetadata = require("../package.json");
+
 const documents = new Map();
 let buffer = Buffer.alloc(0);
 let shutdownRequested = false;
@@ -740,9 +742,11 @@ function parseTintin(text) {
       }
 
       if (char !== "#") {
+        const rawCommandStart = index;
         while (index < end && text[index] !== "\n" && text[index] !== ";") {
           index += 1;
         }
+        collectVariableReferences(text, lineStarts, symbols, rawCommandStart, index);
         continue;
       }
 
@@ -821,7 +825,7 @@ function parseTintin(text) {
 
       for (const bodyIndex of commandBlockArgIndexes.get(canonicalName) || []) {
         const arg = parsedArgs.args[bodyIndex];
-        if (arg && text.slice(arg.contentStart, arg.contentEnd).includes("#")) {
+        if (arg) {
           parseRange(arg.contentStart, arg.contentEnd);
         }
       }
@@ -1182,7 +1186,7 @@ function handleMessage(message) {
       },
       serverInfo: {
         name: "tintin-lsp",
-        version: "0.2.0",
+        version: packageMetadata.version,
       },
     });
     return;

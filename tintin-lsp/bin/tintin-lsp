@@ -1143,17 +1143,42 @@ function foldingRanges(params) {
 }
 
 function targetUriForPathArgument(documentUri, value) {
-  if (!documentUri.startsWith("file://") || /[$%&*@]/.test(value)) {
+  if (!documentUri.startsWith("file://")) {
+    return null;
+  }
+
+  const normalizedValue = normalizeStaticPathArgument(value);
+  if (!normalizedValue) {
     return null;
   }
 
   try {
     const documentDirectory = path.dirname(fileURLToPath(documentUri));
-    const resolvedPath = path.isAbsolute(value) ? value : path.resolve(documentDirectory, value);
+    const resolvedPath = path.isAbsolute(normalizedValue)
+      ? normalizedValue
+      : path.resolve(documentDirectory, normalizedValue);
     return pathToFileURL(resolvedPath).href;
   } catch {
     return null;
   }
+}
+
+function normalizeStaticPathArgument(value) {
+  if (typeof value !== "string") {
+    return "";
+  }
+
+  const trimmed = value.trim();
+  if (trimmed.length < 2) {
+    return trimmed;
+  }
+
+  const quote = trimmed[0];
+  if ((quote === "\"" || quote === "'") && trimmed[trimmed.length - 1] === quote) {
+    return trimmed.slice(1, -1);
+  }
+
+  return trimmed;
 }
 
 function documentLinks(params) {

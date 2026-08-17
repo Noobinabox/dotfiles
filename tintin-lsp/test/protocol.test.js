@@ -246,6 +246,8 @@ function testWorkspaceSymbolsFoldingRangesDocumentLinksAndCli() {
     "  say $hp",
     "}",
     "#read {scripts/common.tt}",
+    "#textin \"scripts/quoted.tt\"",
+    "#read {maps/@zone$1.tt}",
     "",
   ].join("\n");
 
@@ -279,8 +281,19 @@ function testWorkspaceSymbolsFoldingRangesDocumentLinksAndCli() {
   assert(folds.some((fold) => fold.startLine === 1 && fold.endLine === 3), "expected multiline alias body folding range");
 
   const links = byId(responses, 4).result;
-  assert(links.length === 1, `expected one document link, got ${links.length}`);
-  assert(links[0].target === "file:///tmp/tintin-project/scripts/common.tt", `unexpected document link target ${links[0].target}`);
+  assert(links.length === 3, `expected three document links, got ${links.length}`);
+  assert(
+    links.some((link) => link.target === "file:///tmp/tintin-project/scripts/common.tt"),
+    "expected braced document link target"
+  );
+  assert(
+    links.some((link) => link.target === "file:///tmp/tintin-project/scripts/quoted.tt"),
+    "expected quoted document link target"
+  );
+  assert(
+    links.some((link) => link.target === "file:///tmp/tintin-project/maps/@zone$1.tt"),
+    "expected special-character document link target"
+  );
 
   const version = spawnSync(server, ["--version"], { cwd: packageRoot, encoding: "utf8" });
   assert(version.status === 0, "--version should exit successfully");

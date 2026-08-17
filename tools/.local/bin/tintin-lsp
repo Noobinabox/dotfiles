@@ -7,7 +7,6 @@ let shutdownRequested = false;
 
 const CompletionItemKind = {
   Text: 1,
-  Function: 3,
   Variable: 6,
   Keyword: 14,
 };
@@ -158,6 +157,8 @@ function makeCompletionItem(entry, kind) {
   return {
     label: entry.label,
     kind,
+    insertText: entry.label,
+    insertTextFormat: 1,
     detail: entry.detail,
     documentation: {
       kind: "markdown",
@@ -167,7 +168,7 @@ function makeCompletionItem(entry, kind) {
 }
 
 const completionItems = [
-  ...commandDocs.map((entry) => makeCompletionItem(entry, CompletionItemKind.Function)),
+  ...commandDocs.map((entry) => makeCompletionItem(entry, CompletionItemKind.Keyword)),
   ...substitutionDocs.map((entry) => makeCompletionItem(entry, CompletionItemKind.Keyword)),
   ...variableItems.map((entry) => makeCompletionItem(entry, CompletionItemKind.Variable)),
 ];
@@ -225,7 +226,6 @@ const commandBlockArgIndexes = new Map([
   ["all", [0]],
   ["button", [1]],
   ["case", [1]],
-  ["daemon", [1]],
   ["default", [0]],
   ["delay", [2]],
   ["else", [0]],
@@ -937,7 +937,7 @@ function symbolAtPosition(ast, position) {
 }
 
 function validRenameName(name) {
-  return /^[A-Za-z_][A-Za-z0-9_]*$/.test(name);
+  return typeof name === "string" && /^[A-Za-z_][A-Za-z0-9_]*$/.test(name);
 }
 
 function prepareRename(params) {

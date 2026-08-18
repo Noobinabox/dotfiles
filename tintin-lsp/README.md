@@ -6,10 +6,12 @@ Neovim config for the `tintin` filetype.
 
 ## Features
 
-- TinTin++ command, substitution, variable, and function completions.
+- TinTin++ command and substitution completions.
+- Document-derived variable and function completions such as `$hp` and `@heal`.
 - Hover documentation for known commands and substitutions.
 - Heuristic parser-backed diagnostics for command names, argument counts,
   braces, strings, block comments, and nested command blocks.
+- Quick-fix code actions for misspelled or ambiguous TinTin++ commands.
 - Whole-document formatting that splits top-level commands while preserving
   multiline braced argument payloads.
 - Rename support for TinTin variable/function-style symbols.
@@ -67,7 +69,7 @@ npm run pack:check
 
 The protocol suite launches the server over stdio and verifies LSP framing,
 completion item shape, diagnostics, formatting, rename, symbols, folding ranges,
-document links, CLI flags, and invalid-request handling.
+document links, code actions, CLI flags, and invalid-request handling.
 
 ## Current Limits
 

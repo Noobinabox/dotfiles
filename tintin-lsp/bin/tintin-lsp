@@ -43,8 +43,12 @@ const ErrorCodes = {
 
 const CompletionItemKind = {
   Text: 1,
+  Function: 3,
   Variable: 6,
   Keyword: 14,
+};
+const CodeActionKind = {
+  QuickFix: "quickfix",
 };
 
 const commandDocs = [
@@ -396,6 +400,43 @@ function completionPrefix(line, character) {
   return prefix ? prefix[0].toLowerCase() : "";
 }
 
+function dynamicCompletionItems(prefix) {
+  const sigil = prefix[0];
+  if (!"$&*@".includes(sigil)) {
+    return [];
+  }
+
+  const wantedKind = sigil === "@" ? "function" : "variable";
+  const seen = new Set();
+  const items = [];
+
+  for (const document of parseOpenDocuments()) {
+    for (const symbol of document.ast.symbols) {
+      if (symbol.kind !== wantedKind || !validRenameName(symbol.name) || seen.has(symbol.name)) {
+        continue;
+      }
+
+      seen.add(symbol.name);
+      items.push({
+        label: `${sigil}${symbol.name}`,
+        kind: sigil === "@" ? CompletionItemKind.Function : CompletionItemKind.Variable,
+        insertText: `${sigil}${symbol.name}`,
+        insertTextFormat: 1,
+        detail: sigil === "@" ? "TinTin++ function" : "TinTin++ variable",
+        documentation: {
+          kind: "markdown",
+          value:
+            sigil === "@"
+              ? `Function defined or referenced in an open TinTin++ document: \`${symbol.name}\`.`
+              : `Variable defined or referenced in an open TinTin++ document: \`${symbol.name}\`.`,
+        },
+      });
+    }
+  }
+
+  return items;
+}
+
 function completion(params) {
   const checkedParams = requestParams(params);
   const uri = requireTextDocumentUri(checkedParams);
@@ -403,12 +444,13 @@ function completion(params) {
   const text = documents.get(uri) || "";
   const line = lineAt(text, position.line);
   const prefix = completionPrefix(line, position.character);
+  const items = [...dynamicCompletionItems(prefix), ...completionItems];
 
   if (!prefix) {
-    return completionItems;
+    return items;
   }
 
-  return completionItems.filter((item) => item.label.toLowerCase().startsWith(prefix));
+  return items.filter((item) => item.label.toLowerCase().startsWith(prefix));
 }
 
 function hover(params) {
@@ -1215,6 +1257,97 @@ function documentLinks(params) {
   return links;
 }
 
+function editRangeIntersects(requestRange, editRange) {
+  const startsBeforeEnd =
+    requestRange.start.line < editRange.end.line ||
+    (requestRange.start.line === editRange.end.line && requestRange.start.character <= editRange.end.character);
+  const endsAfterStart =
+    requestRange.end.line > editRange.start.line ||
+    (requestRange.end.line === editRange.start.line && requestRange.end.character >= editRange.start.character);
+  return startsBeforeEnd && endsAfterStart;
+}
+
+function levenshteinDistance(left, right) {
+  const previous = Array.from({ length: right.length + 1 }, (_, index) => index);
+  const current = Array.from({ length: right.length + 1 }, () => 0);
+
+  for (let leftIndex = 1; leftIndex <= left.length; leftIndex += 1) {
+    current[0] = leftIndex;
+    for (let rightIndex = 1; rightIndex <= right.length; rightIndex += 1) {
+      const cost = left[leftIndex - 1] === right[rightIndex - 1] ? 0 : 1;
+      current[rightIndex] = Math.min(
+        current[rightIndex - 1] + 1,
+        previous[rightIndex] + 1,
+        previous[rightIndex - 1] + cost
+      );
+    }
+    for (let index = 0; index < previous.length; index += 1) {
+      previous[index] = current[index];
+    }
+  }
+
+  return previous[right.length];
+}
+
+function commandSuggestions(commandName) {
+  const lowerName = commandName.toLowerCase();
+  const prefixMatches = commandNames.filter((name) => name.startsWith(lowerName)).slice(0, 5);
+  if (prefixMatches.length > 0) {
+    return prefixMatches;
+  }
+
+  return commandNames
+    .map((name) => ({ name, distance: levenshteinDistance(lowerName, name) }))
+    .filter((candidate) => candidate.distance <= Math.max(2, Math.floor(lowerName.length / 3)))
+    .sort((left, right) => left.distance - right.distance || left.name.localeCompare(right.name))
+    .slice(0, 5)
+    .map((candidate) => candidate.name);
+}
+
+function codeActions(params) {
+  const checkedParams = requestParams(params);
+  const uri = requireTextDocumentUri(checkedParams);
+  const range = requireObject(checkedParams.range, "range");
+  const start = requirePosition({ position: range.start });
+  const end = requirePosition({ position: range.end });
+  const text = documents.get(uri) || "";
+  const ast = parseTintin(text);
+  const actions = [];
+
+  for (const diagnosticItem of ast.diagnostics) {
+    if (!diagnosticItem.message.startsWith("Unknown or ambiguous TinTin++ command: #")) {
+      continue;
+    }
+    if (!editRangeIntersects({ start, end }, diagnosticItem.range)) {
+      continue;
+    }
+
+    const commandName = diagnosticItem.message
+      .slice("Unknown or ambiguous TinTin++ command: #".length)
+      .replace(/\.$/, "");
+
+    for (const suggestion of commandSuggestions(commandName)) {
+      actions.push({
+        title: `Replace with #${suggestion}`,
+        kind: CodeActionKind.QuickFix,
+        diagnostics: [diagnosticItem],
+        edit: {
+          changes: {
+            [uri]: [
+              {
+                range: diagnosticItem.range,
+                newText: `#${suggestion}`,
+              },
+            ],
+          },
+        },
+      });
+    }
+  }
+
+  return actions;
+}
+
 function references(params) {
   const checkedParams = requestParams(params);
   const uri = requireTextDocumentUri(checkedParams);
@@ -1338,6 +1471,9 @@ function handleMessage(message) {
         documentLinkProvider: {
           resolveProvider: false,
         },
+        codeActionProvider: {
+          codeActionKinds: [CodeActionKind.QuickFix],
+        },
         referencesProvider: true,
         definitionProvider: true,
         renameProvider: {
@@ -1449,6 +1585,14 @@ function handleMessage(message) {
       return;
     }
     respond(message.id, documentLinks(message.params));
+    return;
+  }
+
+  if (message.method === "textDocument/codeAction") {
+    if (!hasRequestId(message)) {
+      return;
+    }
+    respond(message.id, codeActions(message.params));
     return;
   }
 

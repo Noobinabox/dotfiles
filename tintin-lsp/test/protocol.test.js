@@ -90,14 +90,28 @@ function diagnostics(responses) {
 
 function testCompletionItemsArePlainText() {
   const uri = "file:///tmp/tintin-completion.tt++";
+  const otherUri = "file:///tmp/tintin-completion-other.tt++";
   const responses = runLsp([
     initialize(),
-    open(uri, "#al"),
+    open(uri, "#al\n$h\n@h\n"),
+    open(otherUri, "#variable {hp} {10}\n#function {heal} {#return ok}\n"),
     {
       jsonrpc: "2.0",
       id: 2,
       method: "textDocument/completion",
       params: { textDocument: { uri }, position: { line: 0, character: 3 } },
+    },
+    {
+      jsonrpc: "2.0",
+      id: 3,
+      method: "textDocument/completion",
+      params: { textDocument: { uri }, position: { line: 1, character: 2 } },
+    },
+    {
+      jsonrpc: "2.0",
+      id: 4,
+      method: "textDocument/completion",
+      params: { textDocument: { uri }, position: { line: 2, character: 2 } },
     },
   ]);
 
@@ -107,6 +121,14 @@ function testCompletionItemsArePlainText() {
   assert(completion.insertText === "#alias", `expected plain #alias insertText, got ${completion.insertText}`);
   assert(completion.insertTextFormat === 1, `expected plain-text insert format, got ${completion.insertTextFormat}`);
   assert(!completion.snippetText, "completion should not include snippetText");
+
+  const variableCompletion = byId(responses, 3).result.find((item) => item.label === "$hp");
+  assert(variableCompletion, "expected document-derived $hp completion");
+  assert(variableCompletion.insertText === "$hp", "expected $hp completion insertText");
+
+  const functionCompletion = byId(responses, 4).result.find((item) => item.label === "@heal");
+  assert(functionCompletion, "expected document-derived @heal completion");
+  assert(functionCompletion.insertText === "@heal", "expected @heal completion insertText");
 }
 
 function testParserDiagnosticsAndRename() {
@@ -304,6 +326,36 @@ function testWorkspaceSymbolsFoldingRangesDocumentLinksAndCli() {
   assert(help.stdout.includes("Usage:"), "--help should print usage");
 }
 
+function testCodeActionsForUnknownCommands() {
+  const uri = "file:///tmp/tintin-actions.tt++";
+  const text = "#varible {hp} {10}\n";
+  const responses = runLsp([
+    initialize(),
+    open(uri, text),
+    {
+      jsonrpc: "2.0",
+      id: 2,
+      method: "textDocument/codeAction",
+      params: {
+        textDocument: { uri },
+        range: {
+          start: { line: 0, character: 0 },
+          end: { line: 0, character: 8 },
+        },
+        context: {
+          diagnostics: diagnostics(runLsp([initialize(), open(uri, text)])),
+        },
+      },
+    },
+  ]);
+
+  const actions = byId(responses, 2).result;
+  const action = actions.find((item) => item.title === "Replace with #variable");
+  assert(action, "expected #variable quick fix");
+  assert(action.kind === "quickfix", "expected quickfix code action");
+  assert(action.edit.changes[uri][0].newText === "#variable", "expected quickfix edit replacement");
+}
+
 function testInvalidParamsKeepRequestId() {
   const responses = runLsp([
     initialize(),
@@ -325,9 +377,10 @@ function testInvalidParamsKeepRequestId() {
     { jsonrpc: "2.0", id: 7, method: "workspace/symbol", params: { query: 42 } },
     { jsonrpc: "2.0", id: 8, method: "textDocument/foldingRange", params: {} },
     { jsonrpc: "2.0", id: 9, method: "textDocument/documentLink", params: {} },
+    { jsonrpc: "2.0", id: 10, method: "textDocument/codeAction", params: { textDocument: { uri: "file:///tmp/a.tt++" } } },
   ]);
 
-  for (const id of [2, 3, 4, 5, 6, 7, 8, 9]) {
+  for (const id of [2, 3, 4, 5, 6, 7, 8, 9, 10]) {
     const response = byId(responses, id);
     assert(response, `expected error response for request ${id}`);
     assert(response.error && response.error.code === -32602, `expected Invalid params for request ${id}`);
@@ -447,6 +500,15 @@ function testRequestMethodNotificationsDoNotRespond() {
       method: "textDocument/documentLink",
       params: { textDocument: { uri } },
     },
+    {
+      jsonrpc: "2.0",
+      method: "textDocument/codeAction",
+      params: {
+        textDocument: { uri },
+        range: { start: { line: 0, character: 0 }, end: { line: 0, character: 1 } },
+        context: { diagnostics: [] },
+      },
+    },
   ]);
 
   assert(
@@ -477,6 +539,7 @@ function testServerInfoVersionMatchesPackage() {
   assert(capabilities.workspaceSymbolProvider === true, "expected workspace symbol provider capability");
   assert(capabilities.foldingRangeProvider === true, "expected folding range provider capability");
   assert(capabilities.documentLinkProvider.resolveProvider === false, "expected document link provider capability");
+  assert(capabilities.codeActionProvider.codeActionKinds.includes("quickfix"), "expected quickfix code action capability");
   assert(
     byId(responses, 1).result.serverInfo.version === packageJson.version,
     "serverInfo.version should match package.json version"
@@ -489,6 +552,7 @@ const tests = [
   testSymbolsDefinitionsReferencesAndCrossDocumentRename,
   testFormatterPreservesMultilineValues,
   testWorkspaceSymbolsFoldingRangesDocumentLinksAndCli,
+  testCodeActionsForUnknownCommands,
   testInvalidParamsKeepRequestId,
   testRenameNameValidation,
   testKnownCommandsAndEmptyFormatting,

@@ -347,6 +347,52 @@ function testCodeActionsForUnknownCommands() {
         },
       },
     },
+    {
+      jsonrpc: "2.0",
+      id: 3,
+      method: "textDocument/codeAction",
+      params: {
+        textDocument: { uri },
+        range: {
+          start: { line: 0, character: 8 },
+          end: { line: 0, character: 13 },
+        },
+        context: {
+          diagnostics: diagnostics(runLsp([initialize(), open(uri, text)])),
+        },
+      },
+    },
+    {
+      jsonrpc: "2.0",
+      id: 4,
+      method: "textDocument/codeAction",
+      params: {
+        textDocument: { uri },
+        range: {
+          start: { line: 0, character: 0 },
+          end: { line: 0, character: 8 },
+        },
+        context: {
+          diagnostics: diagnostics(runLsp([initialize(), open(uri, text)])),
+          only: ["source"],
+        },
+      },
+    },
+    {
+      jsonrpc: "2.0",
+      id: 5,
+      method: "textDocument/codeAction",
+      params: {
+        textDocument: { uri },
+        range: {
+          start: { line: 0, character: 0 },
+          end: { line: 0, character: 0 },
+        },
+        context: {
+          diagnostics: diagnostics(runLsp([initialize(), open(uri, text)])),
+        },
+      },
+    },
   ]);
 
   const actions = byId(responses, 2).result;
@@ -354,6 +400,12 @@ function testCodeActionsForUnknownCommands() {
   assert(action, "expected #variable quick fix");
   assert(action.kind === "quickfix", "expected quickfix code action");
   assert(action.edit.changes[uri][0].newText === "#variable", "expected quickfix edit replacement");
+  assert(byId(responses, 3).result.length === 0, "expected no quick fix for adjacent non-overlapping range");
+  assert(byId(responses, 4).result.length === 0, "expected no quick fix when context.only excludes quickfix");
+  assert(
+    byId(responses, 5).result.some((item) => item.title === "Replace with #variable"),
+    "expected quick fix for zero-length cursor range at diagnostic start"
+  );
 }
 
 function testInvalidParamsKeepRequestId() {

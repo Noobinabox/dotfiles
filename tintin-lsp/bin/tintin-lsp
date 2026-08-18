@@ -1258,13 +1258,35 @@ function documentLinks(params) {
 }
 
 function editRangeIntersects(requestRange, editRange) {
+  if (
+    requestRange.start.line === requestRange.end.line &&
+    requestRange.start.character === requestRange.end.character
+  ) {
+    const position = requestRange.start;
+    const startsAtOrAfterStart =
+      position.line > editRange.start.line ||
+      (position.line === editRange.start.line && position.character >= editRange.start.character);
+    const startsBeforeEnd =
+      position.line < editRange.end.line ||
+      (position.line === editRange.end.line && position.character < editRange.end.character);
+    return startsAtOrAfterStart && startsBeforeEnd;
+  }
+
   const startsBeforeEnd =
     requestRange.start.line < editRange.end.line ||
-    (requestRange.start.line === editRange.end.line && requestRange.start.character <= editRange.end.character);
+    (requestRange.start.line === editRange.end.line && requestRange.start.character < editRange.end.character);
   const endsAfterStart =
     requestRange.end.line > editRange.start.line ||
-    (requestRange.end.line === editRange.start.line && requestRange.end.character >= editRange.start.character);
+    (requestRange.end.line === editRange.start.line && requestRange.end.character > editRange.start.character);
   return startsBeforeEnd && endsAfterStart;
+}
+
+function contextAllowsQuickFix(context) {
+  if (!context || typeof context !== "object" || Array.isArray(context) || !Array.isArray(context.only)) {
+    return true;
+  }
+
+  return context.only.some((kind) => kind === CodeActionKind.QuickFix || CodeActionKind.QuickFix.startsWith(`${kind}.`));
 }
 
 function levenshteinDistance(left, right) {
@@ -1310,6 +1332,9 @@ function codeActions(params) {
   const range = requireObject(checkedParams.range, "range");
   const start = requirePosition({ position: range.start });
   const end = requirePosition({ position: range.end });
+  if (!contextAllowsQuickFix(checkedParams.context)) {
+    return [];
+  }
   const text = documents.get(uri) || "";
   const ast = parseTintin(text);
   const actions = [];

@@ -66,7 +66,7 @@ Leader is `<Space>`.
 
 - Insert mode uses a thicker blinking vertical cursor.
 - Folding is available broadly through `nvim-ufo`; buffers open expanded by default with a compact unpadded line-number and fold-marker column.
-- The colorscheme loads the generated dotfiles theme from `~/.config/theme-pack/nvim/current.lua`, or from the repo-local `tools/.config/theme-pack/nvim/current.lua` during local checks. If no generated theme is available, it falls back to `folke/tokyonight.nvim` with the Tokyo Night night style, then `habamax` as the emergency built-in fallback.
+- The default colorscheme is `tokyonight-night` from `folke/tokyonight.nvim`, with `habamax` as the emergency built-in fallback.
 
 | Key                | Mode                 | Action                                  |
 | ------------------ | -------------------- | --------------------------------------- |

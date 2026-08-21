@@ -10,6 +10,7 @@ local parsers = {
   "lua",
   "markdown",
   "markdown_inline",
+  "python",
   "query",
   "toml",
   "tsx",

@@ -11,6 +11,8 @@ Lua-based Neovim configuration using `lazy.nvim`. The entrypoint is `init.lua`, 
 - `lua/config/markdown.lua`: Markdown frontmatter timestamp automation.
 - `lua/config/spelling.lua`: spellfile and Codebook dictionary integration.
 - `lua/plugins/*.lua`: plugin specs grouped by feature area.
+- `lua/notebook/`: local edit-only `.ipynb` rendering and save support.
+- `scripts/test-notebook.lua`: notebook round-trip regression test.
 - `.clang-format`: C/C++ formatting standard.
 - `.prettierrc.json`: Prettier formatting standard.
 - `.eslintrc.json`: JavaScript/TypeScript fix rules used before Prettier.
@@ -22,8 +24,9 @@ Lua-based Neovim configuration using `lazy.nvim`. The entrypoint is `init.lua`, 
 Run from this directory:
 
 ```sh
-luac -p init.lua lua/config/*.lua lua/plugins/*.lua
+luac -p init.lua lua/config/*.lua lua/plugins/*.lua lua/notebook/*.lua scripts/test-notebook.lua
 nvim --headless "+lua print('startup-ok')" +qa
+nvim --headless -S scripts/test-notebook.lua +qa
 nvim --headless "+lua print(vim.g.colors_name or 'no-colorscheme')" +qa
 nvim --headless "+checkhealth nvim-treesitter mason obsidian" +qa
 ```
@@ -236,6 +239,38 @@ render-markdown custom checkbox states:
 | `[~]` | Deferred or not relevant | Muted icon and strikethrough |
 | `[?]` | Question or uncertainty  | Question icon and orange text |
 
+## Python Notebooks
+
+Opening an `.ipynb` file shows an editable Python percent-cell buffer instead
+of raw notebook JSON. Code, Markdown, and raw cells are shown with visual
+borders; the underlying `# %%`, `# %% [markdown]`, and `# %% [raw]` markers are
+kept in the buffer so saves can round-trip back to valid notebook JSON. Saving
+the buffer writes valid notebook JSON back to the same file while preserving
+existing notebook metadata, cell metadata, code outputs, and execution counts.
+Missing or empty notebook files are initialized with a valid Python notebook
+structure. Malformed notebooks open as raw JSON so they can be repaired without
+silently overwriting their contents.
+
+This is an edit-only workflow. It does not run cells, connect to a Jupyter
+kernel, render outputs, or require Jupytext.
+
+| Key          | Mode   | Action                    |
+| ------------ | ------ | ------------------------- |
+| `<leader>jc` | normal | Insert notebook code cell |
+| `<leader>jm` | normal | Insert notebook Markdown cell |
+| `<leader>jJ` | normal | Open raw notebook JSON scratch view |
+
+Notebook commands:
+
+| Command                 | Action                         |
+| ----------------------- | ------------------------------ |
+| `:NotebookCodeCell`     | Insert notebook code cell      |
+| `:NotebookMarkdownCell` | Insert notebook Markdown cell  |
+| `:NotebookRawJson`      | Open raw notebook JSON scratch |
+
+The visible notebook buffer uses `filetype=python`, so Python highlighting,
+completion, Pyright, and folding apply to code-oriented editing.
+
 ## Navigation
 
 Tmux navigation uses `vim-tmux-navigator`:
@@ -266,6 +301,7 @@ Tmux navigation uses `vim-tmux-navigator`:
 - `kevinhwang91/nvim-ufo`: broad folding support.
 - `kevinhwang91/promise-async`: async dependency for `nvim-ufo`.
 - `stevearc/conform.nvim`: formatting.
+- Local notebook plugin: clean edit-only `.ipynb` buffers backed by notebook JSON.
 - `folke/trouble.nvim`: diagnostics, symbols, quickfix/location list UI.
 - `folke/todo-comments.nvim`: highlights and lists tagged comments.
 - `j-hui/fidget.nvim`: LSP progress and notifications.

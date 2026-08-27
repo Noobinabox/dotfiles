@@ -9,6 +9,7 @@ local private = nil
 local symlink_target = nil
 local symlink_link = nil
 local malformed = nil
+local insertion = nil
 
 local function fail(message)
   if temp then
@@ -51,6 +52,10 @@ local function fail(message)
     vim.fn.delete(malformed)
   end
 
+  if insertion then
+    vim.fn.delete(insertion)
+  end
+
   error(message, 0)
 end
 
@@ -58,6 +63,29 @@ local function assert_equal(actual, expected, message)
   if actual ~= expected then
     fail(("%s: expected %s, got %s"):format(message, vim.inspect(expected), vim.inspect(actual)))
   end
+end
+
+local function assert_match(actual, pattern, message)
+  if not tostring(actual):match(pattern) then
+    fail(("%s: expected %s to match %s"):format(message, vim.inspect(actual), vim.inspect(pattern)))
+  end
+end
+
+local function extmark_text(mark)
+  local details = mark[4] or {}
+  local text = {}
+
+  for _, chunk in ipairs(details.virt_text or {}) do
+    table.insert(text, chunk[1])
+  end
+
+  for _, line in ipairs(details.virt_lines or {}) do
+    for _, chunk in ipairs(line) do
+      table.insert(text, chunk[1])
+    end
+  end
+
+  return table.concat(text, "")
 end
 
 temp = vim.fn.tempname() .. ".ipynb"
@@ -99,6 +127,56 @@ assert_equal(vim.bo[buf].filetype, "python", "notebook buffer filetype")
 if rendered[1] ~= "# %%" or rendered[2] ~= "print('old')" or rendered[4] ~= "# %% [markdown]" then
   fail("notebook did not render as percent-cell Python")
 end
+assert_equal(rendered[5], "# # Heading", "markdown heading is stored as a Python comment")
+assert_equal(rendered[7], "# Details", "markdown cell stores body as Python comment")
+
+local display_marks = vim.api.nvim_buf_get_extmarks(buf, notebook._test.display_namespace, 0, -1, { details = true })
+local display_text = {}
+for _, mark in ipairs(display_marks) do
+  table.insert(display_text, extmark_text(mark))
+end
+local display_summary = table.concat(display_text, "\n")
+assert_match(display_summary, "╭─ Code", "code cell has a rendered top border")
+assert_match(display_summary, "│  ", "code cell content receives cell padding")
+assert_match(display_summary, "╭─ Markdown", "markdown cell has a rendered top border")
+assert_match(display_summary, "╰─", "cells have rendered bottom borders")
+
+local expected_cell_width = notebook._test.notebook_window_width(buf)
+local right_border_column = expected_cell_width - 1
+local has_right_border = false
+local has_aligned_top_border = false
+local has_aligned_bottom_border = false
+for _, mark in ipairs(display_marks) do
+  local details = mark[4] or {}
+  local text = extmark_text(mark)
+  if details.virt_text_win_col == right_border_column and text == "│" then
+    has_right_border = true
+  elseif text:match("^╭") and text:match("Code") and vim.fn.strdisplaywidth(text) == expected_cell_width then
+    has_aligned_top_border = true
+  elseif text:match("^╰") and vim.fn.strdisplaywidth(text) == expected_cell_width then
+    has_aligned_bottom_border = true
+  end
+end
+assert_equal(has_right_border, true, "cell right border is aligned to the cell edge")
+assert_equal(has_aligned_top_border, true, "cell top border spans the right border column")
+assert_equal(has_aligned_bottom_border, true, "cell bottom border spans the right border column")
+
+vim.wo.number = true
+vim.wo.relativenumber = true
+vim.wo.signcolumn = "yes"
+notebook._test.refresh_cell_borders(buf)
+display_marks = vim.api.nvim_buf_get_extmarks(buf, notebook._test.display_namespace, 0, -1, { details = true })
+expected_cell_width = notebook._test.notebook_window_width(buf)
+right_border_column = expected_cell_width - 1
+has_right_border = false
+for _, mark in ipairs(display_marks) do
+  local details = mark[4] or {}
+  if details.virt_text_win_col == right_border_column and extmark_text(mark) == "│" then
+    has_right_border = true
+    break
+  end
+end
+assert_equal(has_right_border, true, "cell right border stays inside text area with number and sign columns")
 
 vim.api.nvim_buf_set_lines(buf, 1, 2, false, { "print('new')" })
 vim.api.nvim_buf_set_lines(buf, 4, -1, false, {
@@ -160,6 +238,77 @@ assert_equal(table.concat(saveas_saved.cells[1].source), "fresh = 'saveas'", "sa
 local parsed = notebook._test.parse_cells({ "print('implicit')" })
 assert_equal(parsed[1].cell_type, "code", "implicit first cell")
 assert_equal(parsed[1].lines[1], "print('implicit')", "implicit first cell source")
+
+local markdown_marker_text = notebook._test.parse_cells({ "# %% [markdown]", "# # %% Results" })
+assert_equal(#markdown_marker_text, 1, "markdown text resembling a cell marker does not split cells")
+assert_equal(markdown_marker_text[1].lines[1], "# %% Results", "markdown marker-looking text is preserved")
+
+insertion = vim.fn.tempname() .. ".ipynb"
+vim.fn.writefile({ vim.json.encode(original) }, insertion)
+vim.cmd.enew()
+vim.cmd.edit(vim.fn.fnameescape(insertion))
+
+vim.api.nvim_win_set_cursor(0, { 2, 0 })
+notebook.insert_markdown_cell()
+vim.api.nvim_buf_set_lines(0, 4, 5, false, { "# Inserted below" })
+vim.cmd.write()
+
+local insertion_saved = vim.json.decode(table.concat(vim.fn.readfile(insertion), "\n"))
+assert_equal(#insertion_saved.cells, 3, "below insertion adds one cell")
+assert_equal(insertion_saved.cells[1].cell_type, "code", "below insertion keeps current code cell first")
+assert_equal(table.concat(insertion_saved.cells[1].source), "print('old')", "below insertion preserves current cell source")
+assert_equal(insertion_saved.cells[2].cell_type, "markdown", "below insertion adds requested markdown cell")
+assert_equal(table.concat(insertion_saved.cells[2].source), "Inserted below", "below insertion saves markdown source")
+assert_equal(insertion_saved.cells[3].id, "markdown-1", "below insertion keeps following cell identity")
+
+vim.api.nvim_win_set_cursor(0, { 7, 0 })
+notebook.insert_code_cell_above()
+vim.api.nvim_buf_set_lines(0, 6, 7, false, { "inserted_above = True" })
+vim.cmd.write()
+
+insertion_saved = vim.json.decode(table.concat(vim.fn.readfile(insertion), "\n"))
+assert_equal(#insertion_saved.cells, 4, "above insertion adds one cell")
+assert_equal(insertion_saved.cells[3].cell_type, "code", "above insertion adds requested code cell")
+assert_equal(table.concat(insertion_saved.cells[3].source), "inserted_above = True", "above insertion saves code source")
+assert_equal(insertion_saved.cells[4].id, "markdown-1", "above insertion keeps target cell identity after inserted cell")
+
+vim.api.nvim_win_set_cursor(0, { 2, 0 })
+notebook.insert_raw_cell()
+vim.api.nvim_buf_set_lines(0, 4, 5, false, { "# | raw payload" })
+vim.cmd.write()
+
+insertion_saved = vim.json.decode(table.concat(vim.fn.readfile(insertion), "\n"))
+assert_equal(#insertion_saved.cells, 5, "raw insertion adds one cell")
+assert_equal(insertion_saved.cells[2].cell_type, "raw", "raw insertion adds requested raw cell")
+assert_equal(table.concat(insertion_saved.cells[2].source), "raw payload", "raw insertion saves raw source")
+assert_equal(insertion_saved.cells[3].cell_type, "markdown", "raw insertion keeps following markdown insertion")
+
+vim.api.nvim_win_set_cursor(0, { 1, 0 })
+notebook.insert_markdown_cell_above()
+vim.api.nvim_buf_set_lines(0, 1, 2, false, { "# First cell" })
+vim.cmd.write()
+
+insertion_saved = vim.json.decode(table.concat(vim.fn.readfile(insertion), "\n"))
+assert_equal(#insertion_saved.cells, 6, "above-first insertion adds one cell")
+assert_equal(insertion_saved.cells[1].cell_type, "markdown", "above-first insertion adds requested markdown cell")
+assert_equal(table.concat(insertion_saved.cells[1].source), "First cell", "above-first insertion saves markdown source")
+
+vim.api.nvim_win_set_cursor(0, { vim.api.nvim_buf_line_count(0), 0 })
+notebook.insert_code_cell()
+vim.api.nvim_buf_set_lines(0, vim.api.nvim_buf_line_count(0) - 1, vim.api.nvim_buf_line_count(0), false, { "last_cell = True" })
+vim.cmd.write()
+
+insertion_saved = vim.json.decode(table.concat(vim.fn.readfile(insertion), "\n"))
+assert_equal(#insertion_saved.cells, 7, "below-last insertion adds one cell")
+assert_equal(insertion_saved.cells[7].cell_type, "code", "below-last insertion adds requested code cell")
+assert_equal(table.concat(insertion_saved.cells[7].source), "last_cell = True", "below-last insertion saves code source")
+
+vim.cmd.enew()
+vim.api.nvim_buf_set_lines(0, 0, -1, false, { "plain text" })
+vim.api.nvim_win_set_cursor(0, { 1, 0 })
+notebook.insert_code_cell()
+assert_equal(vim.api.nvim_buf_get_lines(0, 0, -1, false)[1], "plain text", "insert command skips non-notebook buffers")
+vim.cmd.bwipeout({ bang = true })
 
 missing = vim.fn.tempname() .. ".ipynb"
 vim.cmd.enew()
@@ -227,4 +376,5 @@ vim.fn.delete(private)
 vim.fn.delete(symlink_link)
 vim.fn.delete(symlink_target)
 vim.fn.delete(malformed)
+vim.fn.delete(insertion)
 print("notebook-roundtrip-ok")

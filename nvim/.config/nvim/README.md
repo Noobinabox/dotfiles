@@ -242,31 +242,45 @@ render-markdown custom checkbox states:
 ## Python Notebooks
 
 Opening an `.ipynb` file shows an editable Python percent-cell buffer instead
-of raw notebook JSON. Code, Markdown, and raw cells are shown with visual
-borders; the underlying `# %%`, `# %% [markdown]`, and `# %% [raw]` markers are
-kept in the buffer so saves can round-trip back to valid notebook JSON. Saving
-the buffer writes valid notebook JSON back to the same file while preserving
-existing notebook metadata, cell metadata, code outputs, and execution counts.
-Missing or empty notebook files are initialized with a valid Python notebook
-structure. Malformed notebooks open as raw JSON so they can be repaired without
-silently overwriting their contents.
+of raw notebook JSON. Code, Markdown, and raw cells are shown as blocked-off
+notebook cells with top and bottom borders, cell-edge row borders, cell
+labels, and padded content so the editable text does not collide with the border
+chrome. Markdown cells stay stored as Python comments so Python tooling does
+not treat prose as code, with notebook-local conceal/highlighting for headings,
+inline code, bold, emphasis, links, fenced code blocks, and horizontal rules.
+The underlying `# %% [markdown]` marker remains available for round-tripping
+back to valid notebook JSON.
+
+Saving the buffer writes valid notebook JSON back to the same file while
+preserving existing notebook metadata, cell metadata, code outputs, and
+execution counts. Missing or empty notebook files are initialized with a valid
+Python notebook structure. Malformed notebooks open as raw JSON so they can be
+repaired without silently overwriting their contents.
 
 This is an edit-only workflow. It does not run cells, connect to a Jupyter
 kernel, render outputs, or require Jupytext.
 
-| Key          | Mode   | Action                    |
-| ------------ | ------ | ------------------------- |
-| `<leader>jc` | normal | Insert notebook code cell |
-| `<leader>jm` | normal | Insert notebook Markdown cell |
+| Key          | Mode   | Action                              |
+| ------------ | ------ | ----------------------------------- |
+| `<leader>jc` | normal | Insert notebook code cell below     |
+| `<leader>jC` | normal | Insert notebook code cell above     |
+| `<leader>jm` | normal | Insert notebook Markdown cell below |
+| `<leader>jM` | normal | Insert notebook Markdown cell above |
+| `<leader>jr` | normal | Insert notebook raw cell below      |
+| `<leader>jR` | normal | Insert notebook raw cell above      |
 | `<leader>jJ` | normal | Open raw notebook JSON scratch view |
 
 Notebook commands:
 
-| Command                 | Action                         |
-| ----------------------- | ------------------------------ |
-| `:NotebookCodeCell`     | Insert notebook code cell      |
-| `:NotebookMarkdownCell` | Insert notebook Markdown cell  |
-| `:NotebookRawJson`      | Open raw notebook JSON scratch |
+| Command                      | Action                         |
+| ---------------------------- | ------------------------------ |
+| `:NotebookCodeCell`          | Insert notebook code cell below |
+| `:NotebookCodeCellAbove`     | Insert notebook code cell above |
+| `:NotebookMarkdownCell`      | Insert notebook Markdown cell below |
+| `:NotebookMarkdownCellAbove` | Insert notebook Markdown cell above |
+| `:NotebookRawCell`           | Insert notebook raw cell below |
+| `:NotebookRawCellAbove`      | Insert notebook raw cell above |
+| `:NotebookRawJson`           | Open raw notebook JSON scratch |
 
 The visible notebook buffer uses `filetype=python`, so Python highlighting,
 completion, Pyright, and folding apply to code-oriented editing.

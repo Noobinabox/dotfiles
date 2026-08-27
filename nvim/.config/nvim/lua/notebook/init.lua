@@ -4,6 +4,7 @@ local state_by_buf = {}
 local raw_fallback_by_buf = {}
 local identity_namespace = vim.api.nvim_create_namespace("user-notebook-identity")
 local display_namespace = vim.api.nvim_create_namespace("user-notebook-display")
+local content_prefix = "│  "
 
 local function notify(message, level)
   vim.notify(message, level or vim.log.levels.INFO, { title = "Notebook" })
@@ -293,18 +294,237 @@ end
 
 local function cell_label(cell_type)
   if cell_type == "markdown" then
-    return " Markdown cell "
+    return " Markdown "
   end
 
   if cell_type == "raw" then
-    return " Raw cell "
+    return " Raw "
   end
 
-  return " Code cell "
+  return " Code "
 end
 
-local function border_text(left, label)
-  return left .. label .. string.rep("─", 48)
+local function notebook_window_geometry(buf)
+  local fallback_width = math.max(32, vim.o.columns - 8)
+  local fallback_right_column = math.max(0, fallback_width - 1)
+
+  local function geometry_for_win(win)
+    local info = vim.fn.getwininfo(win)[1] or {}
+    local textoff = info.textoff or 0
+    local width = math.max(32, vim.api.nvim_win_get_width(win) - textoff - 2)
+
+    return {
+      width = width,
+      right_column = width - 1,
+    }
+  end
+
+  local current_win = vim.api.nvim_get_current_win()
+  if vim.api.nvim_win_is_valid(current_win) and vim.api.nvim_win_get_buf(current_win) == buf then
+    return geometry_for_win(current_win)
+  end
+
+  for _, win in ipairs(vim.api.nvim_list_wins()) do
+    if vim.api.nvim_win_get_buf(win) == buf then
+      return geometry_for_win(win)
+    end
+  end
+
+  return {
+    width = fallback_width,
+    right_column = fallback_right_column,
+  }
+end
+
+local function notebook_window_width(buf)
+  return notebook_window_geometry(buf).width
+end
+
+local function border_text(left, label, width)
+  local right = "╮"
+  local text = left .. label
+
+  while vim.fn.strdisplaywidth(text .. right) < width do
+    text = text .. "─"
+  end
+
+  return text .. right
+end
+
+local function bottom_border_text(width)
+  local right = "╯"
+  local text = "╰"
+
+  while vim.fn.strdisplaywidth(text .. right) < width do
+    text = text .. "─"
+  end
+
+  return text .. right
+end
+
+local function trim(value)
+  return (value:gsub("^%s+", ""):gsub("%s+$", ""))
+end
+
+local function next_inline_match(text, start)
+  local patterns = {
+    { kind = "image", pattern = "!%[([^%]]+)%]%([^%)]+%)" },
+    { kind = "link", pattern = "%[([^%]]+)%]%([^%)]+%)" },
+    { kind = "code", pattern = "`([^`]+)`" },
+    { kind = "bold", pattern = "%*%*([^*]+)%*%*" },
+    { kind = "bold", pattern = "__([^_]+)__" },
+    { kind = "italic", pattern = "%*([^*]+)%*" },
+    { kind = "italic", pattern = "_([^_]+)_" },
+  }
+  local best = nil
+
+  for _, candidate in ipairs(patterns) do
+    local match_start, match_end, capture = text:find(candidate.pattern, start)
+    if match_start and (not best or match_start < best.match_start) then
+      best = {
+        kind = candidate.kind,
+        match_start = match_start,
+        match_end = match_end,
+        capture = capture,
+      }
+    end
+  end
+
+  return best
+end
+
+local function apply_conceal(buf, line_number, start_col, end_col)
+  if start_col < end_col then
+    vim.api.nvim_buf_set_extmark(buf, display_namespace, line_number, start_col, {
+      end_col = end_col,
+      conceal = "",
+      hl_mode = "combine",
+    })
+  end
+end
+
+local function apply_inline_markdown_conceal(buf, line_number, line, offset)
+  local position = 1
+  local column_offset = offset or 0
+
+  while position <= #line do
+    local match = next_inline_match(line, position)
+    if not match then
+      break
+    end
+
+    if match.kind == "code" then
+      apply_conceal(buf, line_number, column_offset + match.match_start - 1, column_offset + match.match_start)
+      apply_conceal(buf, line_number, column_offset + match.match_end - 1, column_offset + match.match_end)
+      vim.api.nvim_buf_set_extmark(buf, display_namespace, line_number, column_offset + match.match_start, {
+        end_col = column_offset + match.match_end - 1,
+        hl_group = "NotebookMarkdownCode",
+      })
+    elseif match.kind == "bold" then
+      apply_conceal(buf, line_number, column_offset + match.match_start - 1, column_offset + match.match_start + 1)
+      apply_conceal(buf, line_number, column_offset + match.match_end - 2, column_offset + match.match_end)
+      vim.api.nvim_buf_set_extmark(buf, display_namespace, line_number, column_offset + match.match_start + 1, {
+        end_col = column_offset + match.match_end - 2,
+        hl_group = "NotebookMarkdownStrong",
+      })
+    elseif match.kind == "italic" then
+      apply_conceal(buf, line_number, column_offset + match.match_start - 1, column_offset + match.match_start)
+      apply_conceal(buf, line_number, column_offset + match.match_end - 1, column_offset + match.match_end)
+      vim.api.nvim_buf_set_extmark(buf, display_namespace, line_number, column_offset + match.match_start, {
+        end_col = column_offset + match.match_end - 1,
+        hl_group = "NotebookMarkdownEmphasis",
+      })
+    elseif match.kind == "link" or match.kind == "image" then
+      vim.api.nvim_buf_set_extmark(buf, display_namespace, line_number, column_offset + match.match_start - 1, {
+        end_col = column_offset + match.match_end,
+        hl_group = "NotebookMarkdownLink",
+      })
+    end
+
+    position = match.match_end + 1
+  end
+end
+
+local function markdown_display_source(line)
+  if line == "#" then
+    return "", 1
+  end
+
+  if vim.startswith(line, "# ") then
+    return line:sub(3), 2
+  end
+
+  if vim.startswith(line, "#") then
+    return line:sub(2), 1
+  end
+
+  return line, 0
+end
+
+local function apply_markdown_highlights(buf, line_number, line, in_fenced_code)
+  local source, source_offset = markdown_display_source(line)
+  apply_conceal(buf, line_number, 0, source_offset)
+
+  if source == "" then
+    return
+  end
+
+  if source:match("^%s*```") or in_fenced_code then
+    vim.api.nvim_buf_set_extmark(buf, display_namespace, line_number, source_offset, {
+      end_col = #line,
+      hl_group = "NotebookMarkdownCode",
+    })
+    return
+  end
+
+  local hashes, heading_text = source:match("^(#+)(%s+.+)$")
+  if hashes and #hashes <= 6 then
+    apply_conceal(buf, line_number, source_offset, source_offset + #hashes + 1)
+    vim.api.nvim_buf_set_extmark(buf, display_namespace, line_number, source_offset + #hashes + 1, {
+      end_col = source_offset + #hashes + #heading_text,
+      hl_group = #hashes == 1 and "NotebookMarkdownH1" or "NotebookMarkdownHeading",
+    })
+    apply_inline_markdown_conceal(buf, line_number, source, source_offset)
+    return
+  end
+
+  if source:match("^%s*[-*_][%-*_][%-*_]+%s*$") then
+    vim.api.nvim_buf_set_extmark(buf, display_namespace, line_number, source_offset, {
+      end_col = #line,
+      conceal = string.rep("─", 36),
+      hl_group = "NotebookMarkdownRule",
+    })
+    return
+  end
+
+  apply_inline_markdown_conceal(buf, line_number, source, source_offset)
+end
+
+local function apply_right_border(buf, line_number, column)
+  vim.api.nvim_buf_set_extmark(buf, display_namespace, line_number, 0, {
+    virt_text = { { "│", "NotebookCellBorder" } },
+    virt_text_win_col = math.max(0, column),
+    hl_mode = "combine",
+  })
+end
+
+local function apply_markdown_render(buf, line_number, line, right_column, in_fenced_code)
+  vim.api.nvim_buf_set_extmark(buf, display_namespace, line_number, 0, {
+    virt_text = { { content_prefix, "NotebookCellBorder" } },
+    virt_text_pos = "inline",
+    hl_mode = "combine",
+  })
+  apply_markdown_highlights(buf, line_number, line, in_fenced_code)
+  apply_right_border(buf, line_number, right_column)
+end
+
+local function apply_cell_content_prefix(buf, line_number, right_column)
+  vim.api.nvim_buf_set_extmark(buf, display_namespace, line_number, 0, {
+    virt_text = { { content_prefix, "NotebookCellBorder" } },
+    virt_text_pos = "inline",
+    hl_mode = "combine",
+  })
+  apply_right_border(buf, line_number, right_column)
 end
 
 local function refresh_cell_borders(buf)
@@ -314,27 +534,43 @@ local function refresh_cell_borders(buf)
 
   vim.api.nvim_buf_clear_namespace(buf, display_namespace, 0, -1)
 
-  local marker_lines = {}
+  local cells = {}
+  local current_cell = nil
+  local geometry = notebook_window_geometry(buf)
+  local cell_width = geometry.width
+  local right_column = geometry.right_column
+  local in_fenced_code = false
   local lines = vim.api.nvim_buf_get_lines(buf, 0, -1, false)
   for line_index, line in ipairs(lines) do
     local cell_type = parse_marker(line)
     if cell_type then
-      table.insert(marker_lines, { line = line_index - 1, cell_type = cell_type })
+      current_cell = { line = line_index - 1, cell_type = cell_type }
+      in_fenced_code = false
+      table.insert(cells, current_cell)
       vim.api.nvim_buf_set_extmark(buf, display_namespace, line_index - 1, 0, {
         end_col = #line,
         conceal = "",
-        virt_text = { { border_text("╭─", cell_label(cell_type)), "NotebookCellBorder" } },
+        virt_text = { { border_text("╭─", cell_label(cell_type), cell_width), "NotebookCellBorder" } },
         virt_text_pos = "overlay",
         hl_mode = "combine",
       })
+    elseif current_cell then
+      if current_cell.cell_type == "markdown" then
+        apply_markdown_render(buf, line_index - 1, line, right_column, in_fenced_code)
+        if parse_markdown_line(line):match("^%s*```") then
+          in_fenced_code = not in_fenced_code
+        end
+      else
+        apply_cell_content_prefix(buf, line_index - 1, right_column)
+      end
     end
   end
 
-  for index, marker in ipairs(marker_lines) do
-    local next_marker = marker_lines[index + 1]
+  for index, marker in ipairs(cells) do
+    local next_marker = cells[index + 1]
     local bottom_line = next_marker and math.max(marker.line, next_marker.line - 1) or math.max(marker.line, #lines - 1)
     vim.api.nvim_buf_set_extmark(buf, display_namespace, bottom_line, 0, {
-      virt_lines = { { { "╰" .. string.rep("─", 60), "NotebookCellBorder" } } },
+      virt_lines = { { { bottom_border_text(cell_width), "NotebookCellBorder" } } },
       virt_lines_above = false,
     })
   end
@@ -577,18 +813,76 @@ function M.write(buf, target_path)
   end
 end
 
-local function insert_cell(marker)
-  local row = vim.api.nvim_win_get_cursor(0)[1]
-  vim.api.nvim_buf_set_lines(0, row, row, false, { "", marker, "" })
-  vim.api.nvim_win_set_cursor(0, { row + 2, 0 })
+local function find_cell_bounds(lines, cursor_line)
+  local start_line = nil
+  local next_start_line = nil
+
+  for index, line in ipairs(lines) do
+    local line_number = index - 1
+    if parse_marker(line) then
+      if line_number <= cursor_line then
+        start_line = line_number
+      elseif not next_start_line then
+        next_start_line = line_number
+        break
+      end
+    end
+  end
+
+  return start_line or 0, next_start_line
+end
+
+local function insert_cell(marker, placement)
+  local buf = vim.api.nvim_get_current_buf()
+  if not state_by_buf[buf] then
+    notify("No notebook state is attached to this buffer", vim.log.levels.ERROR)
+    return
+  end
+
+  local cursor_line = vim.api.nvim_win_get_cursor(0)[1] - 1
+  local lines = vim.api.nvim_buf_get_lines(buf, 0, -1, false)
+  local cell_start, next_cell_start = find_cell_bounds(lines, cursor_line)
+  local insert_line = nil
+  local new_cursor_line = nil
+
+  if placement == "above" then
+    insert_line = cell_start
+    vim.api.nvim_buf_set_lines(buf, insert_line, insert_line, false, { marker, "" })
+    new_cursor_line = insert_line + 1
+  else
+    insert_line = next_cell_start or #lines
+    local has_separator = insert_line > 0 and lines[insert_line] == ""
+    local inserted_lines = has_separator and { marker, "" } or { "", marker, "" }
+    vim.api.nvim_buf_set_lines(buf, insert_line, insert_line, false, inserted_lines)
+    new_cursor_line = insert_line + (has_separator and 1 or 2)
+  end
+
+  vim.api.nvim_win_set_cursor(0, { new_cursor_line + 1, 0 })
+  refresh_cell_borders(buf)
 end
 
 function M.insert_code_cell()
-  insert_cell("# %%")
+  insert_cell("# %%", "below")
+end
+
+function M.insert_code_cell_above()
+  insert_cell("# %%", "above")
 end
 
 function M.insert_markdown_cell()
-  insert_cell("# %% [markdown]")
+  insert_cell("# %% [markdown]", "below")
+end
+
+function M.insert_markdown_cell_above()
+  insert_cell("# %% [markdown]", "above")
+end
+
+function M.insert_raw_cell()
+  insert_cell("# %% [raw]", "below")
+end
+
+function M.insert_raw_cell_above()
+  insert_cell("# %% [raw]", "above")
 end
 
 function M.open_raw()
@@ -625,9 +919,33 @@ local function set_notebook_keymaps(buf)
   )
   vim.keymap.set(
     "n",
+    "<leader>jC",
+    M.insert_code_cell_above,
+    vim.tbl_extend("force", opts, { desc = "Notebook code cell above" })
+  )
+  vim.keymap.set(
+    "n",
     "<leader>jm",
     M.insert_markdown_cell,
     vim.tbl_extend("force", opts, { desc = "Notebook markdown cell" })
+  )
+  vim.keymap.set(
+    "n",
+    "<leader>jM",
+    M.insert_markdown_cell_above,
+    vim.tbl_extend("force", opts, { desc = "Notebook markdown cell above" })
+  )
+  vim.keymap.set(
+    "n",
+    "<leader>jr",
+    M.insert_raw_cell,
+    vim.tbl_extend("force", opts, { desc = "Notebook raw cell" })
+  )
+  vim.keymap.set(
+    "n",
+    "<leader>jR",
+    M.insert_raw_cell_above,
+    vim.tbl_extend("force", opts, { desc = "Notebook raw cell above" })
   )
   vim.keymap.set(
     "n",
@@ -641,6 +959,16 @@ function M.setup()
   local group = vim.api.nvim_create_augroup("user-notebook", { clear = true })
 
   vim.api.nvim_set_hl(0, "NotebookCellBorder", { link = "FloatBorder", default = true })
+  vim.api.nvim_set_hl(0, "NotebookMarkdown", { link = "Normal", default = true })
+  vim.api.nvim_set_hl(0, "NotebookMarkdownH1", { link = "Title", default = true })
+  vim.api.nvim_set_hl(0, "NotebookMarkdownHeading", { link = "Function", default = true })
+  vim.api.nvim_set_hl(0, "NotebookMarkdownListMarker", { link = "Special", default = true })
+  vim.api.nvim_set_hl(0, "NotebookMarkdownQuote", { link = "Comment", default = true })
+  vim.api.nvim_set_hl(0, "NotebookMarkdownCode", { link = "String", default = true })
+  vim.api.nvim_set_hl(0, "NotebookMarkdownRule", { link = "FloatBorder", default = true })
+  vim.api.nvim_set_hl(0, "NotebookMarkdownStrong", { bold = true, default = true })
+  vim.api.nvim_set_hl(0, "NotebookMarkdownEmphasis", { italic = true, default = true })
+  vim.api.nvim_set_hl(0, "NotebookMarkdownLink", { link = "Underlined", default = true })
 
   vim.api.nvim_create_autocmd("BufReadCmd", {
     group = group,
@@ -677,13 +1005,22 @@ function M.setup()
     end,
   })
 
-  vim.api.nvim_create_autocmd({ "BufWinEnter", "TextChanged", "TextChangedI" }, {
+  vim.api.nvim_create_autocmd({ "BufWinEnter", "TextChanged", "TextChangedI", "WinEnter" }, {
     group = group,
     pattern = "*.ipynb",
     callback = function(args)
       if state_by_buf[args.buf] then
         set_notebook_window_options(args.buf)
         refresh_cell_borders(args.buf)
+      end
+    end,
+  })
+
+  vim.api.nvim_create_autocmd({ "VimResized", "WinResized" }, {
+    group = group,
+    callback = function()
+      for buf in pairs(state_by_buf) do
+        refresh_cell_borders(buf)
       end
     end,
   })
@@ -698,15 +1035,35 @@ function M.setup()
 
   vim.api.nvim_create_user_command("NotebookCodeCell", M.insert_code_cell, { desc = "Insert notebook code cell" })
   vim.api.nvim_create_user_command(
+    "NotebookCodeCellAbove",
+    M.insert_code_cell_above,
+    { desc = "Insert notebook code cell above" }
+  )
+  vim.api.nvim_create_user_command(
     "NotebookMarkdownCell",
     M.insert_markdown_cell,
     { desc = "Insert notebook Markdown cell" }
+  )
+  vim.api.nvim_create_user_command(
+    "NotebookMarkdownCellAbove",
+    M.insert_markdown_cell_above,
+    { desc = "Insert notebook Markdown cell above" }
+  )
+  vim.api.nvim_create_user_command("NotebookRawCell", M.insert_raw_cell, { desc = "Insert notebook raw cell" })
+  vim.api.nvim_create_user_command(
+    "NotebookRawCellAbove",
+    M.insert_raw_cell_above,
+    { desc = "Insert notebook raw cell above" }
   )
   vim.api.nvim_create_user_command("NotebookRawJson", M.open_raw, { desc = "Open raw notebook JSON scratch" })
 end
 
 M._test = {
+  display_namespace = display_namespace,
+  find_cell_bounds = find_cell_bounds,
+  notebook_window_width = notebook_window_width,
   parse_cells = parse_cells,
+  refresh_cell_borders = refresh_cell_borders,
   render_notebook = render_notebook,
 }
 

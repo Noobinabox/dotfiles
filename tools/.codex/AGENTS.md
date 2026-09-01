@@ -361,4 +361,4 @@ After every substantive Codex task, evaluate whether the work produced durable k
 - Never store secrets, raw tokens, private emotional journal content, or unnecessary transcript dumps in vault notes.
 - Preserve `[>]` as the in-progress task marker.
 - For user-story notes, keep board-owned `Acceptance Criteria` unchanged unless explicitly asked to rewrite them. Put Codex-derived work under `Implementation Tasks`, `Developer Notes`, `References`, and `Related Notes`.
-- Before finishing, report only the vault files modified, or state that no durable vault update was needed.
+- Before finishing, include a quiet note-capture line that lists only the vault files modified, or states that no durable vault update was needed.

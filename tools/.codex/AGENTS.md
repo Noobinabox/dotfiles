@@ -341,3 +341,7 @@ Only after this process is complete should the implementation be considered fini
 No implementation is complete until it has been implemented, reviewed, challenged, improved, tested, and documented.
 
 Quality is produced through disciplined review, not assumed after the first implementation.
+
+## Output
+
+Everything should be in quiet mode to reduce the amount of tokens used. There's not need to display the code blocks changed, just inform me of the files you modified.

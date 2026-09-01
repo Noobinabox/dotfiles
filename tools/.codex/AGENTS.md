@@ -345,3 +345,20 @@ Quality is produced through disciplined review, not assumed after the first impl
 ## Output
 
 Everything should be in quiet mode to reduce the amount of tokens used. There's not need to display the code blocks changed, just inform me of the files you modified.
+
+## Obsidian Vault Note Capture
+
+After every substantive Codex task, evaluate whether the work produced durable knowledge that belongs in `/home/seth/vault`.
+
+- If the task was tiny, routine, or produced no reusable knowledge, say briefly that no durable vault update was needed.
+- If the task created useful work history, add one short bullet to `/home/seth/vault/Dailies/YYYY-MM-DD.md`.
+- If the task changed or clarified a user story, project, repository, troubleshooting pattern, decision, or reusable concept, update the most relevant existing vault note.
+- Search the vault with `rg` before creating new notes. Update existing notes before adding new root-level notes.
+- Prefer small atomic Zettelkasten-style notes with useful `[[wikilinks]]`, meaningful tags, empty `aliases: []`, and relationship language that explains why links connect.
+- Longer notes are acceptable for user stories, investigations, and complex topics when the detail remains valuable.
+- Use the daily note's `## Inbox / To Process` section only when the note target is unclear. Do not create a separate inbox folder by default.
+- Keep daily notes light. Put raw logs, stack traces, diagnosis, cause, fix, and validation into a focused troubleshooting, story, or project note when the details are durable.
+- Never store secrets, raw tokens, private emotional journal content, or unnecessary transcript dumps in vault notes.
+- Preserve `[>]` as the in-progress task marker.
+- For user-story notes, keep board-owned `Acceptance Criteria` unchanged unless explicitly asked to rewrite them. Put Codex-derived work under `Implementation Tasks`, `Developer Notes`, `References`, and `Related Notes`.
+- Before finishing, report only the vault files modified, or state that no durable vault update was needed.

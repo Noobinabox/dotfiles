@@ -19,6 +19,35 @@ the target path under `$HOME`.
 
 - `scripts/check.sh`: simulate stow for every package and scan tracked files
   for plaintext secrets.
+- `scripts/convert-vault-to-org.py`: convert `/home/seth/vault` Markdown notes
+  into an Org-roam-style output tree at `/home/seth/org-converted`. Use
+  `--force` only to replace that generated output tree. The converter stages
+  output only; it does not change live Org files. It writes all converted files
+  and the ID ledger first, then performs a second pass that resolves Obsidian
+  wikilinks into Org links from the ledger mapping. Converted Org filenames are
+  prefixed with their generated Org IDs. Frontmatter aliases become
+  `#+ROAM_ALIASES:`, tags become
+  `#+filetags:`, and `created` / `updated` become Org file properties.
+  Converted checkbox states rely on the global Neovim Org TODO keyword setup;
+  the converter should not emit per-file `#+TODO:` keyword declarations.
+  Heading `:CUSTOM_ID:` drawers are only added for headings targeted by
+  Obsidian heading links.
+  Markdown inline code, bold, italic, HTML underline, and strike-through are
+  converted to Org inline markup. Markdown `[text](url)`, `[text][ref]`,
+  `[ref][]`, and shortcut `[ref]` links with `[ref]: url` definitions, plus
+  `<scheme:...>` and `<user@example.com>` autolinks, are converted to Org
+  links. Markdown `-`, `*`, and `+` unordered list markers normalize to Org `+`
+  bullets. Markdown thematic breaks are dropped. Markdown
+  tables are width-aligned and separators become Org hlines with column
+  separators. Unresolved or
+  ambiguous Obsidian wikilinks and unresolved explicit or collapsed Markdown
+  reference links are reported in `conversion-ledger.md`; unresolved shortcut
+  `[ref]` links are not reported to avoid false positives for ordinary
+  bracketed text. Wikilink alias labels are preserved as written so display
+  text stays stable during migration. Markdown image links and Obsidian embeds
+  remain unchanged.
+- `scripts/test-convert-vault-to-org.sh`: focused regression test for the vault
+  conversion contract.
 - `scripts/install.sh`: back up unmanaged files, then stow all packages into `$HOME`.
 - `scripts/install.sh shell`: stow one package during focused changes.
 - `./setup.sh --check`: report missing external tools without installing them.

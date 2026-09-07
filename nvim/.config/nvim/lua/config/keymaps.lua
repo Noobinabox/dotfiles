@@ -33,8 +33,8 @@ local function current_root_dir()
 end
 
 keymap.set("n", "<leader><leader>", function()
-  Snacks.picker.files({ cwd = current_root_dir() })
-end, { desc = "Find files" })
+  Snacks.picker.files({ cwd = current_working_dir() })
+end, { desc = "Find files (cwd)" })
 keymap.set("n", "<leader>/", function()
   Snacks.picker.grep({ cwd = current_root_dir() })
 end, { desc = "Live grep" })
@@ -93,6 +93,17 @@ wk.add({
   { "<leader>n", group = "Notes" },
   { "<leader>nr", group = "Obsidian" },
   { "<leader>nrd", group = "Date" },
+  { "<leader>o", group = "Org" },
+  { "<leader>ob", group = "Babel" },
+  { "<leader>oi", group = "Insert/Date" },
+  { "<leader>ol", group = "Links" },
+  { "<leader>on", group = "Notes" },
+  { "<leader>ox", group = "Clock" },
+  { "<leader>oX", group = "Checkboxes" },
+  { "<leader>oz", group = "Org Roam" },
+  { "<leader>oza", group = "Aliases" },
+  { "<leader>ozd", group = "Dailies" },
+  { "<leader>ozo", group = "Origin" },
   { "<leader>a", group = "AI" },
   { "<leader>ac", group = "Copilot" },
   { "<leader>f", group = "File/Find" },

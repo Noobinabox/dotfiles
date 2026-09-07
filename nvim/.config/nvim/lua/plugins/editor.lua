@@ -104,4 +104,12 @@ return {
       { "<C-\\>", "<cmd><C-U>TmuxNavigatePrevious<CR>", desc = "Navigate previous" },
     },
   },
+  {
+    "szw/vim-maximizer",
+    cmd = "MaximizerToggle",
+    keys = {
+      { "<leader>wz", "<cmd>MaximizerToggle<CR>", desc = "Toggle window zoom" },
+      { "<C-w>z", "<cmd>MaximizerToggle<CR>", desc = "Toggle window zoom" },
+    },
+  },
 }

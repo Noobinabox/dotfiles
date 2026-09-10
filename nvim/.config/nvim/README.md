@@ -12,9 +12,7 @@ Lua-based Neovim configuration using `lazy.nvim`. The entrypoint is `init.lua`, 
 - `lua/config/spelling.lua`: spellfile and Codebook dictionary integration.
 - `lua/plugins/*.lua`: plugin specs grouped by feature area.
 - `lua/notebook/`: local edit-only `.ipynb` rendering and save support.
-- `lua/org_tasks/`: local Org TODO, checkbox, and statistics-cookie helpers.
 - `scripts/test-notebook.lua`: notebook round-trip regression test.
-- `scripts/test-org-tasks.lua`: Org TODO and checkbox regression test.
 - `.clang-format`: C/C++ formatting standard.
 - `.prettierrc.json`: Prettier formatting standard.
 - `.eslintrc.json`: JavaScript/TypeScript fix rules used before Prettier.
@@ -26,13 +24,11 @@ Lua-based Neovim configuration using `lazy.nvim`. The entrypoint is `init.lua`, 
 Run from this directory:
 
 ```sh
-luac -p init.lua lua/config/*.lua lua/plugins/*.lua lua/notebook/*.lua lua/org_tasks/*.lua scripts/test-notebook.lua scripts/test-org-tasks.lua
+luac -p init.lua lua/config/*.lua lua/plugins/*.lua lua/notebook/*.lua scripts/test-notebook.lua
 nvim --headless "+lua print('startup-ok')" +qa
 nvim --headless -S scripts/test-notebook.lua +qa
-nvim --headless -S scripts/test-org-tasks.lua +qa
 nvim --headless "+lua print(vim.g.colors_name or 'no-colorscheme')" +qa
-nvim --headless "+checkhealth nvim-treesitter mason obsidian orgmode" +qa
-tmp_org="$(mktemp -d)" && mkdir -p "$tmp_org/roam/daily" && printf '#+TITLE: Smoke\n' > "$tmp_org/roam/daily/smoke.org" && ORG_DIRECTORY="$tmp_org" ORG_ROAM_DIRECTORY="$tmp_org/roam" nvim --headless "$tmp_org/roam/daily/smoke.org" "+RoamUpdate sync" "+lua for _, lhs in ipairs({ '<leader>oa', '<leader>oc', '<leader>ou', '<leader>oU', '<leader>oXt', '<C-Space>', '<leader>oXa', '<leader>oXi', '<leader>oXr', '<leader>oXo', '<leader>ozc', '<leader>ozf', '<leader>oz.', '<leader>ozn', '<leader>ozp', '<leader>ozi', '<leader>ozm', '<leader>ozl', '<leader>ozb', '<leader>ozq', '<leader>ozd.', '<leader>ozdn', '<leader>ozdy', '<leader>ozdt', '<leader>ozdd', '<leader>ozdf', '<leader>ozdb', '<leader>ozdN', '<leader>ozdY', '<leader>ozdT', '<leader>ozdD' }) do local m = vim.fn.maparg(lhs, 'n', false, true); assert(m and m.desc and m.desc ~= '', lhs) end; for _, lhs in ipairs({ '<leader>oXa', '<leader>oXi' }) do local m = vim.fn.maparg(lhs, 'x', false, true); assert(m and m.desc and m.desc ~= '', lhs) end" +qa
+nvim --headless "+checkhealth nvim-treesitter mason obsidian" +qa
 ```
 
 Plugin install/update:
@@ -245,95 +241,6 @@ render-markdown custom checkbox states:
 | `[~]` | Deferred or not relevant | Muted icon and strikethrough |
 | `[?]` | Question or uncertainty  | Question icon and orange text |
 
-## Org And Org Roam
-
-Org files are supported with `nvim-orgmode/orgmode`, and roam-style notes are
-supported with `chipsenkbeil/org-roam.nvim`. The Neovim configuration mirrors
-the Doom Emacs Org layout:
-
-- Org directory: `~/org`
-- Roam directory: `~/org/roam`
-- Roam dailies directory: `~/org/roam/daily`
-- Agenda files: `inbox.org`, `projects.org`, `someday.org`, `tickler.org`,
-  and roam dailies under `~/org/roam/daily/*.org`
-
-Set `ORG_DIRECTORY` or `ORG_ROAM_DIRECTORY` before launching Neovim to override
-those paths for a one-off session.
-
-| Key            | Mode          | Action                         |
-| -------------- | ------------- | ------------------------------ |
-| `<leader>oa`   | normal        | Org agenda prompt              |
-| `<leader>oc`   | normal        | Org capture prompt             |
-| `<leader>ou`   | normal (org)  | Update statistics cookie near cursor |
-| `<leader>oU`   | normal (org)  | Update all statistics cookies in file |
-| `<leader>oXt`  | normal (org)  | Toggle checkbox at cursor      |
-| `<C-Space>`    | normal (org)  | Toggle checkbox at cursor      |
-| `<leader>oXa`  | normal/visual (org) | Add or remove checkbox markers |
-| `<leader>oXi`  | normal/visual (org) | Force checkbox to intermediate state |
-| `<leader>oXr`  | normal (org)  | Toggle radio behavior for a checkbox list |
-| `<leader>oXo`  | normal (org)  | Toggle `:ORDERED: t` for checkbox order |
-| `<C-c><C-c>`   | normal (org)  | Context action for checkbox/cookie/link |
-| `<C-c>#`       | normal (org)  | Update statistics cookie near cursor |
-| `<leader>ozc`  | normal/visual | Org-roam capture               |
-| `<leader>ozf`  | normal/visual | Org-roam find node with Snacks |
-| `<leader>oz.`  | normal (org)  | Complete text to roam link     |
-| `<leader>ozi`  | normal/visual (org) | Org-roam insert node     |
-| `<leader>ozm`  | normal/visual (org) | Org-roam insert node immediate |
-| `<leader>ozn`  | normal (org)  | Go to next origin-linked node  |
-| `<leader>ozp`  | normal (org)  | Go to previous origin-linked node |
-| `<leader>ozl`  | normal (org)  | Toggle Org-roam buffer         |
-| `<leader>ozb`  | normal (org)  | Toggle fixed Org-roam buffer   |
-| `<leader>ozq`  | normal (org)  | Org-roam backlinks quickfix    |
-| `<leader>ozd.` | normal        | Open roam dailies directory    |
-| `<leader>ozdn` | normal        | Go to today's roam daily       |
-| `<leader>ozdy` | normal        | Go to yesterday's roam daily   |
-| `<leader>ozdt` | normal        | Go to tomorrow's roam daily    |
-| `<leader>ozdd` | normal        | Go to roam daily by date       |
-| `<leader>ozdf` | normal        | Go to next available roam daily |
-| `<leader>ozdb` | normal        | Go to previous available roam daily |
-| `<leader>ozdN` | normal        | Capture today's roam daily     |
-| `<leader>ozdY` | normal        | Capture yesterday's roam daily |
-| `<leader>ozdT` | normal        | Capture tomorrow's roam daily  |
-| `<leader>ozdD` | normal        | Capture roam daily by date     |
-
-In the `<leader>ozf` Snacks picker, chained tag searches such as
-`:docs:genie:` match nodes that have both tags. The picker row stays focused on
-the node title, aliases, and tags; file paths are searchable but not shown.
-For normal text searches that do not exactly match an existing title or alias,
-the picker shows a `Create node:` row; press `<CR>` on that row to create it, or
-press `<C-y>` to create from the current search text.
-
-Statistics cookies support checkbox counts such as `[1/3]`, checkbox
-percentages such as `[33%]`, TODO child-heading counts, `:COOKIE_DATA:
-checkbox`, `:COOKIE_DATA: todo`, and recursive TODO variants through
-`:COOKIE_DATA: todo recursive`. Checkbox cookies follow Emacs Org behavior and
-count the direct checklist owned by the heading, including when
-`:COOKIE_DATA: checkbox recursive` is present. Radio checkbox lists use
-`#+ATTR_ORG: :radio t` immediately before the list. Ordered checkbox lists use
-`:ORDERED: t` in the nearest heading property drawer.
-
-Use `:RoamUpdate` to refresh the roam database manually if needed. Root-level
-Org files included in the roam graph may require a manual update after edits.
-Org-roam capture creates the Org ID in file content first; after the first save,
-this config renames new non-daily roam files to the `ID-title.org` filename
-convention. Daily files keep date-based names because the dailies extension uses
-those names for date navigation.
-Converted Obsidian callouts use custom Org blocks such as
-`#+begin_callout note Title` and `#+end_callout`; Neovim conceals the Org block
-markers behind a render-markdown-style quote bar and callout label.
-Org buffers start with headings expanded and property drawers folded. They use
-`linebreak` and `breakindent` with a small visual offset so soft-wrapped text
-follows the current heading or list indentation without an extra continuation
-prefix. Org `+` list bullets are displayed with Doom's org-superstar `➤` glyph
-and rotate colors by nesting depth while the file text remains normal Org syntax.
-Bold, italic, code, and verbatim delimiters are concealed in Org buffers the
-same way Org links hide their raw link target syntax.
-Saving an Org file updates the file-level `:UPDATED:` property in the top
-property drawer, preserving the existing timestamp format when one is present.
-Converted checkbox states use global Org TODO keywords, including `IMPORTANT`,
-`NEEDS_ATTENTION`, `CURRENTLY_WORKING`, and `ABANDONED`, in the Neovim Org
-config, so converted notes do not need per-file `#+TODO:` keyword declarations.
-
 To stage an Obsidian vault conversion without touching live Org files, run
 `scripts/convert-vault-to-org.py` from the dotfiles repo. It writes to
 `/home/seth/org-converted` and prefixes Org filenames with generated Org IDs.
@@ -355,20 +262,6 @@ and unresolved explicit or collapsed Markdown reference links in
 avoid false positives for ordinary bracketed text. Wikilink alias labels are
 preserved as written so display text stays stable during migration. Markdown
 image links and Obsidian embeds remain unchanged.
-
-Built-in Org buffer mappings and Org-roam subgroups also appear under
-`<leader>o`:
-
-| Prefix       | Actions                         |
-| ------------ | ------------------------------- |
-| `<leader>ob` | Babel actions such as tangle    |
-| `<leader>oi` | Insert heading, dates, schedule |
-| `<leader>ol` | Store and insert Org links      |
-| `<leader>on` | Add Org notes                   |
-| `<leader>ox` | Clock and effort actions        |
-| `<leader>oX` | Checkbox and statistics actions |
-| `<leader>oza` | Org-roam alias actions         |
-| `<leader>ozo` | Org-roam origin actions        |
 
 ## Python Notebooks
 
@@ -453,8 +346,6 @@ Tmux navigation uses `vim-tmux-navigator`:
 - `j-hui/fidget.nvim`: LSP progress and notifications.
 - `dukjjang/codex-cli.nvim`: tmux-aware Codex CLI prompting with terminal fallback.
 - `nvim-lualine/lualine.nvim`: statusline.
-- `nvim-orgmode/orgmode`: Org editing, agenda, capture, TODOs, links, and folds.
-- `chipsenkbeil/org-roam.nvim`: Org-roam node navigation, capture, backlinks, and dailies.
 - `github/copilot.vim`: GitHub Copilot inline suggestions.
 
 ## Language Servers

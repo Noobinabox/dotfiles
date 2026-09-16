@@ -105,6 +105,23 @@ Motion/editing tweaks:
 | `n` / `N`         | normal | Next/previous search result and recenter   |
 | `<C-c>`           | insert | Exit insert mode                           |
 
+## Marks
+
+`chentoast/marks.nvim` shows marks in the sign column and provides these
+default keymaps:
+
+| Key    | Mode   | Action                              |
+| ------ | ------ | ------------------------------------ |
+| `m` + `{a-zA-Z0-9}` | normal | Set mark                    |
+| `dm` + `{a-zA-Z0-9}` | normal | Delete mark                 |
+| `m,`   | normal | Set next available lowercase mark    |
+| `m;`   | normal | Toggle mark on current line          |
+| `dm-`  | normal | Delete all marks on current line     |
+| `dm<space>` | normal | Delete all marks in buffer      |
+| `m]` / `m[` | normal | Next/previous mark               |
+| `m:`   | normal | Preview mark                         |
+| `m}` / `m{` | normal | Next/previous bookmark            |
+
 ## File, Buffer, And Project Keymaps
 
 | Key                         | Action                               |
@@ -119,6 +136,7 @@ Motion/editing tweaks:
 | `<leader>fR`                | Recent files filtered to cwd         |
 | `<leader>fp`                | Projects                             |
 | `<leader>ph`                | Help tags                            |
+| `<leader>M`                 | Pick marks                           |
 | `H` / `L`                   | Previous/next buffer                 |
 | `<leader>bd`                | Delete buffer                        |
 | `<leader>bk`                | Delete buffer                        |

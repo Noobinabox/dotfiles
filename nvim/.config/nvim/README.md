@@ -328,6 +328,7 @@ Tmux navigation uses `vim-tmux-navigator`:
 - `folke/snacks.nvim`: explorer, picker, recent files, projects, grep, select UI.
 - `folke/which-key.nvim`: keymap discovery.
 - `szw/vim-maximizer`: split zoom toggle.
+- `chentoast/marks.nvim`: shows marks in the sign column and adds mark navigation keymaps.
 - `nvim-mini/mini.icons`: icons and devicons compatibility.
 - `nvim-mini/mini.pairs`: autopairs.
 - `nvim-mini/mini.ai`: text objects.

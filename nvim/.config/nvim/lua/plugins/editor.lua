@@ -105,6 +105,11 @@ return {
     },
   },
   {
+    "chentoast/marks.nvim",
+    event = "VeryLazy",
+    opts = {},
+  },
+  {
     "szw/vim-maximizer",
     cmd = "MaximizerToggle",
     keys = {

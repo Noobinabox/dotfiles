@@ -1,6 +1,6 @@
-model = "gpt-5.5"
+model = "gpt-5.6-luna"
 model_reasoning_effort = "medium"
-approvals_reviewer = "user"
+approvals_reviewer = "auto_review"
 [projects."/home/seth/repos/sg2/fusion/fusion-supervisor-databricks"]
 trust_level = "trusted"
 
@@ -90,6 +90,7 @@ session_picker_view = "comfortable"
 
 [tui.model_availability_nux]
 "gpt-5.5" = 4
+gpt-6-astra = 1
 
 [features]
 memories = true

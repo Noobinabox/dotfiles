@@ -90,7 +90,7 @@ session_picker_view = "comfortable"
 
 [tui.model_availability_nux]
 "gpt-5.5" = 4
-gpt-6-astra = 3
+gpt-6-astra = 4
 
 [features]
 memories = true

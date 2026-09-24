@@ -178,6 +178,14 @@ install_oh_my_zsh() {
 	else
 		git clone --depth=1 https://github.com/romkatv/powerlevel10k.git "$HOME/.oh-my-zsh/custom/themes/powerlevel10k"
 	fi
+
+	if [[ -d "$HOME/.oh-my-zsh/custom/plugins/zsh-vi-mode" ]]; then
+		info "present: zsh-vi-mode"
+	elif [[ "$check_only" == true ]]; then
+		record_missing "zsh-vi-mode"
+	else
+		git clone --depth=1 https://github.com/jeffreytse/zsh-vi-mode.git "$HOME/.oh-my-zsh/custom/plugins/zsh-vi-mode"
+	fi
 }
 
 install_nvm_node() {

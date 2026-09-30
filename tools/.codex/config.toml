@@ -94,3 +94,4 @@ gpt-6-astra = 4
 
 [features]
 memories = true
+worktrees = true

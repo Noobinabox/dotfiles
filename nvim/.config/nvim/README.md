@@ -169,7 +169,7 @@ LSP capabilities include folding ranges so `nvim-ufo` can use server-provided fo
 
 ## Folding
 
-Most file buffers use `nvim-ufo` with Tree-sitter or LSP folds and indentation fallback. Fold markers appear beside line numbers. Piped git diffs, including `git diff | nvim -`, use diff-aware folds for file sections and hunks.
+Most file buffers use `nvim-ufo` with Tree-sitter or LSP folds and indentation fallback. Fold markers appear beside line numbers. Piped Git output, including `git diff | nvim -` and `git show <commit> | nvim -`, uses custom folds for file sections and hunks in both `diff` and `git` filetypes. Folds start expanded; use `za` to toggle a fold. Commit metadata remains outside the file folds.
 
 | Key | Action          |
 | --- | --------------- |

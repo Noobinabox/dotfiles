@@ -23,6 +23,10 @@ local tree_filetypes = {
 local function diff_foldexpr()
   local line = vim.fn.getline(vim.v.lnum)
 
+  if line:match("^commit %x+") then
+    return "0"
+  end
+
   if line:match("^diff %-%-git ") then
     return ">1"
   end
@@ -62,7 +66,7 @@ local function is_marker_fold_start(lnum)
 end
 
 local function is_diff_fold_start(lnum)
-  if vim.bo.filetype ~= "diff" then
+  if vim.bo.filetype ~= "diff" and vim.bo.filetype ~= "git" then
     return false
   end
 
@@ -176,7 +180,7 @@ return {
 
       ufo.setup({
         provider_selector = function(_, filetype, buftype)
-          if buftype ~= "" or filetype == "diff" then
+          if buftype ~= "" or filetype == "diff" or filetype == "git" then
             return ""
           end
 
@@ -192,11 +196,11 @@ return {
       vim.keymap.set("n", "zM", ufo.closeAllFolds, { desc = "Close all folds" })
 
       vim.api.nvim_create_autocmd("FileType", {
-        pattern = "diff",
+        pattern = { "diff", "git" },
         callback = setup_diff_folds,
       })
 
-      if vim.bo.filetype == "diff" then
+      if vim.bo.filetype == "diff" or vim.bo.filetype == "git" then
         setup_diff_folds()
       end
     end,

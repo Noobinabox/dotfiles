@@ -409,6 +409,8 @@ set -g pane-border-style "fg={theme['brightBlack']}"
 set -g pane-active-border-style "fg={theme['blue']}"
 set -g window-status-style "fg={theme['white']},bg={theme['background']}"
 set -g window-status-current-style "fg={theme['background']},bg={theme['blue']},bold"
+set -g window-status-format "#[fg={theme['white']},bg={theme['background']}] #I:#W "
+set -g window-status-current-format "#[fg={theme['background']},bg={theme['blue']},bold] #I:#W "
 set -g mode-style "fg={theme['background']},bg={theme['yellow']}"
 """
 

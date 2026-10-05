@@ -1,5 +1,5 @@
 #:schema https://yazi-rs.github.io/schemas/theme.json
 
 [flavor]
-dark = "pywal-rose-pine-moon"
-light = "pywal-rose-pine-moon"
+dark = "catppuccin-latte"
+light = "catppuccin-latte"

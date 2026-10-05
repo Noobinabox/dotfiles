@@ -289,6 +289,7 @@ dotfiles_heading "applying repo theme: $theme"
 
 if tmux info >/dev/null 2>&1 && [[ -r "$HOME/.config/theme-pack/tmux/current.conf" ]]; then
 	tmux source-file "$HOME/.config/theme-pack/tmux/current.conf"
+	tmux refresh-client -S 2>/dev/null || true
 	dotfiles_info "reloaded tmux theme"
 fi
 

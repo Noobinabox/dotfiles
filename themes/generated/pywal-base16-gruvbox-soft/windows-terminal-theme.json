@@ -1,0 +1,20 @@
+{
+  "name": "Pywal Base16 Gruvbox Soft",
+  "tab": {
+    "background": "#32302fFF",
+    "iconStyle": "default",
+    "showCloseButton": "always",
+    "unfocusedBackground": null
+  },
+  "tabRow": {
+    "background": "#32302fFF",
+    "unfocusedBackground": "#32302fFF"
+  },
+  "window": {
+    "applicationTheme": "dark",
+    "experimental.rainbowFrame": false,
+    "frame": null,
+    "unfocusedFrame": null,
+    "useMica": false
+  }
+}

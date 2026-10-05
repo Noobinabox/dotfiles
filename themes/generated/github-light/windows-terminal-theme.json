@@ -1,0 +1,20 @@
+{
+  "name": "GitHub Light",
+  "tab": {
+    "background": "#ffffffFF",
+    "iconStyle": "default",
+    "showCloseButton": "always",
+    "unfocusedBackground": null
+  },
+  "tabRow": {
+    "background": "#eaeef2FF",
+    "unfocusedBackground": "#ffffffFF"
+  },
+  "window": {
+    "applicationTheme": "light",
+    "experimental.rainbowFrame": false,
+    "frame": null,
+    "unfocusedFrame": null,
+    "useMica": false
+  }
+}

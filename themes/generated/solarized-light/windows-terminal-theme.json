@@ -1,0 +1,20 @@
+{
+  "name": "Solarized Light",
+  "tab": {
+    "background": "#fdf6e3FF",
+    "iconStyle": "default",
+    "showCloseButton": "always",
+    "unfocusedBackground": null
+  },
+  "tabRow": {
+    "background": "#eee8d5FF",
+    "unfocusedBackground": "#fdf6e3FF"
+  },
+  "window": {
+    "applicationTheme": "light",
+    "experimental.rainbowFrame": false,
+    "frame": null,
+    "unfocusedFrame": null,
+    "useMica": false
+  }
+}

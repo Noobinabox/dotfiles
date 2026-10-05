@@ -1,0 +1,20 @@
+{
+  "name": "Gruvbox Light",
+  "tab": {
+    "background": "#fbf1c7FF",
+    "iconStyle": "default",
+    "showCloseButton": "always",
+    "unfocusedBackground": null
+  },
+  "tabRow": {
+    "background": "#ebdbb2FF",
+    "unfocusedBackground": "#fbf1c7FF"
+  },
+  "window": {
+    "applicationTheme": "light",
+    "experimental.rainbowFrame": false,
+    "frame": null,
+    "unfocusedFrame": null,
+    "useMica": false
+  }
+}

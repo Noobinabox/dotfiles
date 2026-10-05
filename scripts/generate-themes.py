@@ -52,6 +52,16 @@ def color(theme: dict[str, str], key: str, fallback: str | None = None) -> str:
     return value
 
 
+def windows_application_theme(theme: dict[str, str]) -> str:
+    """Return the Windows Terminal UI mode appropriate for the background."""
+    red, green, blue = (
+        int(theme["background"][index : index + 2], 16) / 255
+        for index in (1, 3, 5)
+    )
+    luminance = 0.2126 * red + 0.7152 * green + 0.0722 * blue
+    return "light" if luminance > 0.55 else "dark"
+
+
 def json_text(value: Any) -> str:
     return json.dumps(value, indent=2, ensure_ascii=True) + "\n"
 
@@ -96,7 +106,7 @@ def windows_terminal_theme(theme: dict[str, str]) -> dict[str, Any]:
             "unfocusedBackground": f"{theme['background']}FF",
         },
         "window": {
-            "applicationTheme": "dark",
+            "applicationTheme": windows_application_theme(theme),
             "experimental.rainbowFrame": False,
             "frame": None,
             "unfocusedFrame": None,

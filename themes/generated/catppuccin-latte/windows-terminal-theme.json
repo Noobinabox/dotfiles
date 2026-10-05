@@ -1,0 +1,20 @@
+{
+  "name": "Catppuccin Latte",
+  "tab": {
+    "background": "#eff1f5FF",
+    "iconStyle": "default",
+    "showCloseButton": "always",
+    "unfocusedBackground": null
+  },
+  "tabRow": {
+    "background": "#dce0e8FF",
+    "unfocusedBackground": "#eff1f5FF"
+  },
+  "window": {
+    "applicationTheme": "light",
+    "experimental.rainbowFrame": false,
+    "frame": null,
+    "unfocusedFrame": null,
+    "useMica": false
+  }
+}

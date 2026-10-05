@@ -1,0 +1,23 @@
+{
+  "name": "Pywal Base16 Nord",
+  "black": "#2e3440",
+  "red": "#88c0d0",
+  "green": "#bf616a",
+  "yellow": "#5e81ac",
+  "blue": "#ebcb8b",
+  "purple": "#a3be8c",
+  "cyan": "#d08770",
+  "white": "#e5e9f0",
+  "brightBlack": "#4c566a",
+  "brightRed": "#88c0d0",
+  "brightGreen": "#bf616a",
+  "brightYellow": "#5e81ac",
+  "brightBlue": "#ebcb8b",
+  "brightPurple": "#a3be8c",
+  "brightCyan": "#d08770",
+  "brightWhite": "#8fbcbb",
+  "background": "#2e3440",
+  "foreground": "#e5e9f0",
+  "selectionBackground": "#4c566a",
+  "cursorColor": "#e5e9f0"
+}

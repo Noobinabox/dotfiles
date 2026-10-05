@@ -69,7 +69,7 @@ Leader is `<Space>`.
 
 - Insert mode uses a thicker blinking vertical cursor.
 - Folding is available broadly through `nvim-ufo`; buffers open expanded by default with a compact unpadded line-number and fold-marker column.
-- The default colorscheme is `tokyonight-night` from `folke/tokyonight.nvim`, with `habamax` as the emergency built-in fallback.
+- The active theme is read from `~/.config/theme-pack/current-theme`, which is managed by `scripts/apply-theme.sh`. Named themes with native Neovim plugins enable and install their matching plugin (for example, `tokyo-night` selects `folke/tokyonight.nvim` and `tokyonight-night`); generated palettes remain the fallback for pywal themes. `habamax` is the emergency built-in fallback.
 
 | Key                | Mode                 | Action                                  |
 | ------------------ | -------------------- | --------------------------------------- |
@@ -342,7 +342,7 @@ Tmux navigation uses `vim-tmux-navigator`:
 ## Main Plugins
 
 - `folke/lazy.nvim`: plugin manager.
-- `folke/tokyonight.nvim`: colorscheme.
+- Native colorscheme plugins are selected from the active theme: `folke/tokyonight.nvim`, `catppuccin/nvim`, `rose-pine/neovim`, `ellisonleao/gruvbox.nvim`, `projekt0n/github-nvim-theme`, or `lifepillar/vim-solarized8`.
 - `folke/snacks.nvim`: explorer, picker, recent files, projects, grep, select UI.
 - `folke/which-key.nvim`: keymap discovery.
 - `szw/vim-maximizer`: split zoom toggle.

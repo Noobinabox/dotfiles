@@ -1,0 +1,20 @@
+{
+  "name": "Pywal Base16 Eighties",
+  "tab": {
+    "background": "#2d2d2dFF",
+    "iconStyle": "default",
+    "showCloseButton": "always",
+    "unfocusedBackground": null
+  },
+  "tabRow": {
+    "background": "#2d2d2dFF",
+    "unfocusedBackground": "#2d2d2dFF"
+  },
+  "window": {
+    "applicationTheme": "dark",
+    "experimental.rainbowFrame": false,
+    "frame": null,
+    "unfocusedFrame": null,
+    "useMica": false
+  }
+}

@@ -305,6 +305,14 @@ first character. The cell marker is concealed in Normal mode and revealed for
 Insert/Visual editing. Notebook conceal settings are restored when leaving the
 buffer.
 
+Use `<leader>jt` or `:NotebookCellTitle` from anywhere in a cell to add or rename
+its title. The prompt is prefilled with the existing title; Enter confirms,
+Escape cancels, and an empty title removes it. Changes update the border
+immediately and are saved with `:w`. Databricks cells retain their title metadata
+format and edited titles become visible; other cells use `metadata.title`.
+Title changes are metadata edits, not text-undo entries; use the same prompt
+to revert a title rather than `u`.
+
 Saving the buffer writes valid notebook JSON back to the same file while
 preserving existing notebook metadata, cell metadata, code outputs, and
 execution counts. Missing or empty notebook files are initialized with a valid
@@ -322,6 +330,7 @@ kernel, render outputs, or require Jupytext.
 | `<leader>jM` | normal | Insert notebook Markdown cell above |
 | `<leader>jr` | normal | Insert notebook raw cell below      |
 | `<leader>jR` | normal | Insert notebook raw cell above      |
+| `<leader>jt` | normal | Add or rename current cell title    |
 | `<leader>jJ` | normal | Open raw notebook JSON scratch view |
 
 Notebook commands:
@@ -334,6 +343,7 @@ Notebook commands:
 | `:NotebookMarkdownCellAbove` | Insert notebook Markdown cell above |
 | `:NotebookRawCell`           | Insert notebook raw cell below |
 | `:NotebookRawCellAbove`      | Insert notebook raw cell above |
+| `:NotebookCellTitle`        | Add or rename current cell title |
 | `:NotebookRawJson`           | Open raw notebook JSON scratch |
 
 The visible notebook buffer uses `filetype=python`, so Python highlighting,

@@ -601,7 +601,9 @@ local function refresh_cell_borders(buf)
       vim.api.nvim_buf_set_extmark(buf, display_namespace, line_index - 1, 0, {
         end_col = #line,
         conceal = "",
-        virt_lines = { { { border_text("╭─", cell_label(cell_type, original), cell_width), "NotebookCellBorder" } } },
+        virt_lines = {
+          { { border_text("╭─", cell_label(cell_type, original), cell_width), "NotebookCellBorder" } },
+        },
         virt_lines_above = true,
       })
       apply_cell_content_prefix(buf, line_index - 1, right_column)
@@ -947,6 +949,88 @@ function M.insert_raw_cell_above()
   insert_cell("# %% [raw]", "above")
 end
 
+function M.edit_cell_title()
+  local buf = vim.api.nvim_get_current_buf()
+  local state = state_by_buf[buf]
+  if not state then
+    notify("No notebook state is attached to this buffer", vim.log.levels.ERROR)
+    return
+  end
+  if not vim.bo[buf].modifiable then
+    notify("Notebook buffer is not modifiable", vim.log.levels.ERROR)
+    return
+  end
+
+  local lines = vim.api.nvim_buf_get_lines(buf, 0, -1, false)
+  local cell_start = find_cell_bounds(lines, vim.api.nvim_win_get_cursor(0)[1] - 1)
+  local cell_type = parse_marker(lines[cell_start + 1])
+  if not cell_type then
+    notify("Add a # %% cell marker before setting a title", vim.log.levels.ERROR)
+    return
+  end
+
+  local marker_id = marker_extmark_id(buf, cell_start)
+  local cell = marker_id and state.cells[marker_id] or nil
+  local metadata = cell and type(cell.metadata) == "table" and cell.metadata or {}
+  local databricks = metadata["application/vnd.databricks.v1+cell"]
+  local current_title = type(databricks) == "table" and display_title(databricks.title) or nil
+  current_title = current_title or display_title(metadata.title) or ""
+  local changedtick = vim.api.nvim_buf_get_changedtick(buf)
+
+  vim.ui.input({ prompt = "Cell title (empty to remove): ", default = current_title }, function(input)
+    if input == nil then
+      return
+    end
+    -- UI prompts can be asynchronous; never apply a stale prompt to another cell.
+    if
+      not vim.api.nvim_buf_is_valid(buf)
+      or not vim.api.nvim_buf_is_loaded(buf)
+      or state_by_buf[buf] ~= state
+      or vim.api.nvim_buf_get_changedtick(buf) ~= changedtick
+      or marker_extmark_id(buf, cell_start) ~= marker_id
+      or not vim.bo[buf].modifiable
+    then
+      notify("Notebook changed while editing the title; try again", vim.log.levels.WARN)
+      return
+    end
+
+    local title = display_title(input)
+    if not cell then
+      if not title then
+        return
+      end
+      marker_id = #state.cells + 1
+      cell = { cell_type = cell_type, metadata = vim.empty_dict(), id = new_cell_id(marker_id) }
+      state.cells[marker_id] = cell
+      vim.api.nvim_buf_set_extmark(buf, identity_namespace, cell_start, 0, {
+        id = marker_id,
+        right_gravity = true,
+      })
+    end
+
+    if type(cell.metadata) ~= "table" then
+      cell.metadata = vim.empty_dict()
+    end
+    local cell_metadata = cell.metadata
+    local databricks_metadata = cell_metadata["application/vnd.databricks.v1+cell"]
+    if type(databricks_metadata) == "table" then
+      databricks_metadata.title = title
+      if title then
+        databricks_metadata.showTitle = true
+      else
+        cell_metadata.title = nil
+      end
+    else
+      cell_metadata.title = title
+    end
+    if next(cell_metadata) == nil then
+      cell.metadata = vim.empty_dict()
+    end
+    vim.bo[buf].modified = true
+    refresh_cell_borders(buf)
+  end)
+end
+
 function M.open_raw()
   local buf = vim.api.nvim_get_current_buf()
   local state = state_by_buf[buf]
@@ -973,6 +1057,12 @@ end
 
 local function set_notebook_keymaps(buf)
   local opts = { buffer = buf, silent = true }
+  vim.keymap.set(
+    "n",
+    "<leader>jt",
+    M.edit_cell_title,
+    vim.tbl_extend("force", opts, { desc = "Notebook add/rename cell title" })
+  )
   vim.keymap.set(
     "n",
     "<leader>jc",
@@ -1125,6 +1215,7 @@ function M.setup()
     { desc = "Insert notebook raw cell above" }
   )
   vim.api.nvim_create_user_command("NotebookRawJson", M.open_raw, { desc = "Open raw notebook JSON scratch" })
+  vim.api.nvim_create_user_command("NotebookCellTitle", M.edit_cell_title, { desc = "Add or rename notebook cell title" })
 end
 
 M._test = {

@@ -11,6 +11,7 @@ local symlink_link = nil
 local malformed = nil
 local insertion = nil
 local titled = nil
+local title_edit = nil
 
 local function fail(message)
   if temp then
@@ -59,6 +60,9 @@ local function fail(message)
 
   if titled then
     vim.fn.delete(titled)
+  end
+  if title_edit then
+    vim.fn.delete(title_edit)
   end
 
   error(message, 0)
@@ -126,11 +130,14 @@ local original = {
 }
 
 vim.fn.writefile({ vim.json.encode(original) }, temp)
+vim.wo.conceallevel = 1
+vim.wo.concealcursor = "v"
 vim.cmd.edit(vim.fn.fnameescape(temp))
 
 local buf = vim.api.nvim_get_current_buf()
 local rendered = vim.api.nvim_buf_get_lines(buf, 0, -1, false)
 assert_equal(vim.bo[buf].filetype, "python", "notebook buffer filetype")
+assert_equal(vim.wo.concealcursor, "nc", "notebook conceals current marker in Normal mode")
 
 if rendered[1] ~= "# %%" or rendered[2] ~= "print('old')" or rendered[4] ~= "# %% [markdown]" then
   fail("notebook did not render as percent-cell Python")
@@ -161,6 +168,8 @@ for _, mark in ipairs(display_marks) do
   if details.virt_text_win_col == right_border_column and text == "│" then
     has_right_border = true
   elseif text:match("^╭") and text:match("Code") and vim.fn.strdisplaywidth(text) == expected_cell_width then
+    assert_equal(details.virt_lines_above, true, "cell title has its own virtual row")
+    assert_equal(details.virt_text, nil, "cell title does not overlay the cursor line")
     has_aligned_top_border = true
   elseif text:match("^╰") and vim.fn.strdisplaywidth(text) == expected_cell_width then
     has_aligned_bottom_border = true
@@ -169,6 +178,41 @@ end
 assert_equal(has_right_border, true, "cell right border is aligned to the cell edge")
 assert_equal(has_aligned_top_border, true, "cell top border spans the right border column")
 assert_equal(has_aligned_bottom_border, true, "cell bottom border spans the right border column")
+
+local ui_channel = vim.fn.jobstart({ vim.v.progpath, "--embed", "--clean", "-n", "-i", "NONE" }, { rpc = true })
+if ui_channel <= 0 then
+  fail("unable to start isolated notebook UI")
+end
+local ui_ok, ui_result = pcall(function()
+  vim.rpcrequest(ui_channel, "nvim_ui_attach", 80, 12, { rgb = true })
+  local config_root = vim.fn.fnamemodify(debug.getinfo(1, "S").source:sub(2), ":h:h")
+  return vim.rpcrequest(ui_channel, "nvim_exec_lua", [[
+    local config_root, path = ...
+    vim.opt.rtp:append(config_root)
+    require("notebook").setup()
+    vim.cmd.edit(vim.fn.fnameescape(path))
+    vim.api.nvim_win_set_cursor(0, { 1, 0 })
+    vim.api.nvim__redraw({ flush = true, valid = false })
+    local cursor = vim.fn.screenpos(0, 1, 1)
+    local function screen_row(row)
+      local text = ""
+      for col = 1, 80 do
+        text = text .. vim.fn.screenstring(row, col)
+      end
+      return text
+    end
+    return { row = cursor.row, header = screen_row(cursor.row - 1), marker = screen_row(cursor.row) }
+  ]], { config_root, temp })
+end)
+vim.fn.jobstop(ui_channel)
+vim.fn.jobwait({ ui_channel }, 1000)
+if not ui_ok then
+  fail("notebook UI probe failed: " .. tostring(ui_result))
+end
+assert_equal(ui_result.row > 1, true, "cursor occupies a row below the title")
+assert_match(ui_result.header, "Code — Read input", "first cell title remains visible above cursor")
+assert_equal(ui_result.marker:find("Read input", 1, true), nil, "cursor row contains no title text")
+assert_equal(ui_result.marker:find("# %%", 1, true), nil, "cursor row hides the raw cell marker")
 
 vim.wo.number = true
 vim.wo.relativenumber = true
@@ -374,10 +418,145 @@ assert_equal(insertion_saved.cells[7].cell_type, "code", "below-last insertion a
 assert_equal(table.concat(insertion_saved.cells[7].source), "last_cell = True", "below-last insertion saves code source")
 
 vim.cmd.enew()
+assert_equal(vim.wo.conceallevel, 1, "leaving notebook restores prior conceal level")
+assert_equal(vim.wo.concealcursor, "v", "leaving notebook restores prior cursor conceal modes")
+
+local function prompt_title(value, action)
+  local saved_input = vim.ui.input
+  local options = nil
+  vim.ui.input = function(opts, callback)
+    options = opts
+    callback(value)
+  end
+  local ok, err = pcall(action or notebook.edit_cell_title)
+  vim.ui.input = saved_input
+  if not ok then
+    fail(err)
+  end
+  return options
+end
+
+title_edit = vim.fn.tempname() .. ".ipynb"
+vim.fn.writefile({ vim.json.encode(original) }, title_edit)
+vim.cmd.edit(vim.fn.fnameescape(title_edit))
+local title_buf = vim.api.nvim_get_current_buf()
+vim.api.nvim_win_set_cursor(0, { 2, 0 })
+local title_keymap = vim.fn.maparg("<leader>jt", "n", false, true)
+assert_equal(title_keymap.buffer, 1, "title keybinding is buffer-local")
+assert_equal(prompt_title(nil, title_keymap.callback).default, "Read input", "rename prompt prefills current title")
+assert_equal(vim.bo.modified, false, "cancelled title prompt leaves buffer unmodified")
+
+prompt_title("  Load\n input  ", function() vim.cmd.NotebookCellTitle() end)
+assert_equal(vim.bo.modified, true, "title-only edit marks buffer modified")
+assert_equal(vim.json.decode(table.concat(vim.fn.readfile(title_edit), "\n")).cells[1].metadata["application/vnd.databricks.v1+cell"].title,
+  "Read input", "title edits do not write before saving")
+local edited_marks = vim.api.nvim_buf_get_extmarks(title_buf, notebook._test.display_namespace, 0, -1, { details = true })
+local edited_border_text = {}
+for _, mark in ipairs(edited_marks) do
+  table.insert(edited_border_text, extmark_text(mark))
+end
+assert_match(table.concat(edited_border_text), "Code — Load input", "renamed title refreshes border immediately")
+vim.cmd.write()
+local title_saved = vim.json.decode(table.concat(vim.fn.readfile(title_edit), "\n"))
+assert_equal(title_saved.cells[1].metadata["application/vnd.databricks.v1+cell"].title, "Load input", "rename preserves Databricks title format")
+assert_equal(title_saved.cells[1].metadata.tags[1], "keep", "title edit preserves unrelated metadata")
+assert_equal(title_saved.cells[1].outputs[1].text[1], "old output\n", "title edit preserves outputs")
+assert_equal(title_saved.cells[1].execution_count, 7, "title edit preserves execution count")
+assert_equal(title_saved.cells[1].id, "code-1", "title edit preserves original cell identity")
+assert_equal(table.concat(title_saved.cells[1].source), "print('old')", "title edit preserves editable source content")
+prompt_title("   ")
+vim.cmd.write()
+title_saved = vim.json.decode(table.concat(vim.fn.readfile(title_edit), "\n"))
+assert_equal(title_saved.cells[1].metadata["application/vnd.databricks.v1+cell"].title, nil, "empty title removes Databricks title")
+
+vim.api.nvim_win_set_cursor(0, { 5, 0 })
+assert_equal(prompt_title("Overview").default, "", "untitled Markdown cell prompt starts empty")
+vim.cmd.write()
+title_saved = vim.json.decode(table.concat(vim.fn.readfile(title_edit), "\n"))
+assert_equal(title_saved.cells[2].metadata.title, "Overview", "Markdown title is stored as generic metadata")
+assert_equal(prompt_title("Introduction").default, "Overview", "generic title is prefilled for renaming")
+vim.cmd.write()
+prompt_title("")
+vim.cmd.write()
+title_saved = vim.json.decode(table.concat(vim.fn.readfile(title_edit), "\n"))
+assert_equal(title_saved.cells[2].metadata.title, nil, "empty title removes generic title")
+assert_equal(vim.islist(title_saved.cells[2].metadata), false, "cleared metadata remains a JSON object")
+
+notebook.insert_raw_cell()
+prompt_title("New unsaved raw cell")
+notebook.insert_code_cell_above()
+prompt_title("New unsaved code cell")
+vim.cmd.write()
+title_saved = vim.json.decode(table.concat(vim.fn.readfile(title_edit), "\n"))
+assert_equal(title_saved.cells[3].metadata.title, "New unsaved code cell", "new code cell can be titled before first save")
+assert_equal(title_saved.cells[4].metadata.title, "New unsaved raw cell", "new raw title follows its cell through insertion")
+assert_equal(type(title_saved.cells[3].id), "string", "new titled cell retains valid notebook id")
+assert_equal(type(title_saved.cells[4].id), "string", "new titled raw cell has valid notebook id")
+
+local saved_input = vim.ui.input
+local pending_title = nil
+vim.ui.input = function(_, callback) pending_title = callback end
+notebook.edit_cell_title()
+vim.ui.input = saved_input
+vim.api.nvim_win_set_cursor(0, { 2, 0 })
+pending_title("Captured cell")
+vim.cmd.write()
+title_saved = vim.json.decode(table.concat(vim.fn.readfile(title_edit), "\n"))
+assert_equal(title_saved.cells[3].metadata.title, "Captured cell", "prompt targets original cell after cursor moves")
+assert_equal(title_saved.cells[1].metadata["application/vnd.databricks.v1+cell"].title, nil, "cursor movement does not retitle another cell")
+
+vim.ui.input = function(_, callback) pending_title = callback end
+notebook.edit_cell_title()
+vim.ui.input = saved_input
+vim.api.nvim_buf_set_lines(0, 1, 2, false, { "print('changed while prompting')" })
+pending_title("Stale title")
+vim.cmd.write()
+title_saved = vim.json.decode(table.concat(vim.fn.readfile(title_edit), "\n"))
+assert_equal(title_saved.cells[1].metadata["application/vnd.databricks.v1+cell"].title, nil, "stale prompt cannot change edited notebook")
+
+title_saved.cells[1].metadata["application/vnd.databricks.v1+cell"].title = "Hidden title"
+title_saved.cells[1].metadata["application/vnd.databricks.v1+cell"].showTitle = false
+title_saved.cells[1].metadata.title = "Fallback title"
+vim.fn.writefile({ vim.json.encode(title_saved) }, title_edit)
+vim.cmd.edit({ bang = true })
+vim.api.nvim_win_set_cursor(0, { 2, 0 })
+assert_equal(prompt_title("Visible title").default, "Hidden title", "hidden Databricks title is available for renaming")
+vim.cmd.write()
+title_saved = vim.json.decode(table.concat(vim.fn.readfile(title_edit), "\n"))
+assert_equal(title_saved.cells[1].metadata["application/vnd.databricks.v1+cell"].showTitle, true, "edited Databricks title is shown")
+prompt_title("")
+vim.cmd.write()
+title_saved = vim.json.decode(table.concat(vim.fn.readfile(title_edit), "\n"))
+assert_equal(title_saved.cells[1].metadata.title, nil, "removing Databricks title also removes fallback title")
+
+vim.ui.input = function(_, callback) pending_title = callback end
+notebook.edit_cell_title()
+vim.ui.input = saved_input
+vim.cmd.write()
+pending_title("Prompt before save")
+assert_equal(vim.bo.modified, false, "saving invalidates a pending title prompt")
+
+vim.bo.modifiable = false
+assert_equal(prompt_title("Locked"), nil, "unmodifiable notebook does not open title prompt")
+vim.bo.modifiable = true
+vim.ui.input = function(_, callback) pending_title = callback end
+notebook.edit_cell_title()
+vim.ui.input = saved_input
+vim.cmd.bwipeout()
+pending_title("Closed notebook")
+vim.cmd.edit(vim.fn.fnameescape(title_edit))
+assert_equal(vim.bo.modified, false, "prompt from wiped buffer cannot change reopened notebook")
+
+vim.api.nvim_buf_set_lines(0, 0, -1, false, { "print('no marker')" })
+assert_equal(prompt_title("No marker"), nil, "title command rejects a missing cell marker")
+vim.cmd.edit({ bang = true })
+
+vim.cmd.enew()
 vim.api.nvim_buf_set_lines(0, 0, -1, false, { "plain text" })
 vim.api.nvim_win_set_cursor(0, { 1, 0 })
 notebook.insert_code_cell()
 assert_equal(vim.api.nvim_buf_get_lines(0, 0, -1, false)[1], "plain text", "insert command skips non-notebook buffers")
+assert_equal(prompt_title("Invalid buffer"), nil, "title command skips non-notebook buffers")
 vim.cmd.bwipeout({ bang = true })
 
 missing = vim.fn.tempname() .. ".ipynb"
@@ -385,10 +564,12 @@ vim.cmd.enew()
 vim.cmd.edit(vim.fn.fnameescape(missing))
 assert_equal(vim.bo.filetype, "python", "missing notebook opens as Python")
 assert_equal(vim.api.nvim_buf_get_lines(0, 0, -1, false)[1], "# %%", "missing notebook opens as a new cell")
+prompt_title("First cell")
 vim.cmd.write()
 local missing_saved = vim.json.decode(table.concat(vim.fn.readfile(missing), "\n"))
 assert_equal(missing_saved.nbformat, 4, "missing notebook writes valid nbformat")
 assert_equal(vim.islist(missing_saved.cells[1].metadata), false, "missing notebook writes cell metadata as object")
+assert_equal(missing_saved.cells[1].metadata.title, "First cell", "first cell in new notebook can be titled before saving")
 
 empty = vim.fn.tempname() .. ".ipynb"
 vim.fn.writefile({}, empty)
@@ -448,4 +629,5 @@ vim.fn.delete(symlink_target)
 vim.fn.delete(malformed)
 vim.fn.delete(insertion)
 vim.fn.delete(titled)
+vim.fn.delete(title_edit)
 print("notebook-roundtrip-ok")

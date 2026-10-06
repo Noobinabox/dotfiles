@@ -3,6 +3,7 @@ local M = {}
 local state_by_buf = {}
 local raw_fallback_by_buf = {}
 local window_options_by_win = {}
+local edge_refresh_pending_by_win = {}
 local identity_namespace = vim.api.nvim_create_namespace("user-notebook-identity")
 local display_namespace = vim.api.nvim_create_namespace("user-notebook-display")
 local content_prefix = "│  "
@@ -877,6 +878,74 @@ function M.write(buf, target_path)
   end
 end
 
+local function reveal_notebook_edge_borders(win)
+  if not vim.api.nvim_win_is_valid(win) then
+    return
+  end
+  local buf = vim.api.nvim_win_get_buf(win)
+  if not state_by_buf[buf] then
+    return
+  end
+  local cursor_line = vim.api.nvim_win_get_cursor(win)[1]
+  local last_line = vim.api.nvim_buf_line_count(buf)
+  if cursor_line ~= 1 and cursor_line ~= last_line then
+    return
+  end
+
+  vim.api.nvim_win_call(win, function()
+    local view = vim.fn.winsaveview()
+    local first_line = vim.api.nvim_buf_get_lines(buf, 0, 1, false)[1]
+    if cursor_line == 1 and parse_marker(first_line or "") and view.topline == 1 and view.topfill == 0 then
+      -- gg can scroll the virtual header above line 1 out of the viewport.
+      view.topfill = 1
+      vim.fn.winrestview(view)
+    end
+
+    local height = vim.api.nvim_win_get_height(win)
+    if cursor_line ~= last_line or height < (last_line == 1 and 3 or 2) then
+      return
+    end
+    local marks = vim.api.nvim_buf_get_extmarks(buf, display_namespace, { last_line - 1, 0 }, { last_line - 1, -1 }, {
+      details = true,
+    })
+    local has_footer = false
+    for _, mark in ipairs(marks) do
+      local details = mark[4]
+      if details.virt_lines and not details.virt_lines_above then
+        has_footer = true
+        break
+      end
+    end
+    if not has_footer then
+      return
+    end
+
+    local text = vim.api.nvim_buf_get_lines(buf, last_line - 1, last_line, false)[1]
+    local final_text_row = vim.fn.screenpos(win, last_line, math.max(1, #text)).row
+    local bottom_row = vim.api.nvim_win_get_position(win)[1] + height
+    if final_text_row == bottom_row then
+      -- G/zb can put the last content row where its virtual footer belongs.
+      local scroll = vim.api.nvim_replace_termcodes("<C-e>", true, false, true)
+      vim.cmd.normal({ args = { scroll }, bang = true })
+    end
+  end)
+end
+
+local function queue_notebook_edge_refresh(win)
+  if not vim.api.nvim_win_is_valid(win) or not state_by_buf[vim.api.nvim_win_get_buf(win)] then
+    return
+  end
+  if edge_refresh_pending_by_win[win] then
+    return
+  end
+  edge_refresh_pending_by_win[win] = true
+  -- Screen positions must be read after navigation has updated the layout.
+  vim.schedule(function()
+    edge_refresh_pending_by_win[win] = nil
+    reveal_notebook_edge_borders(win)
+  end)
+end
+
 local function find_cell_bounds(lines, cursor_line)
   local start_line = nil
   local next_start_line = nil
@@ -1173,6 +1242,26 @@ function M.setup()
     callback = function()
       for buf in pairs(state_by_buf) do
         refresh_cell_borders(buf)
+      end
+    end,
+  })
+
+  vim.api.nvim_create_autocmd("CursorMoved", {
+    group = group,
+    pattern = "*.ipynb",
+    callback = function()
+      queue_notebook_edge_refresh(vim.api.nvim_get_current_win())
+    end,
+  })
+
+  vim.api.nvim_create_autocmd("WinScrolled", {
+    group = group,
+    callback = function()
+      for window_id in pairs(vim.v.event) do
+        local win = tonumber(window_id)
+        if win then
+          queue_notebook_edge_refresh(win)
+        end
       end
     end,
   })

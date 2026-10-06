@@ -1,0 +1,20 @@
+{
+  "name": "Pywal Tokyonight Storm",
+  "tab": {
+    "background": "#24283bFF",
+    "iconStyle": "default",
+    "showCloseButton": "always",
+    "unfocusedBackground": null
+  },
+  "tabRow": {
+    "background": "#24283bFF",
+    "unfocusedBackground": "#24283bFF"
+  },
+  "window": {
+    "applicationTheme": "dark",
+    "experimental.rainbowFrame": false,
+    "frame": null,
+    "unfocusedFrame": null,
+    "useMica": false
+  }
+}

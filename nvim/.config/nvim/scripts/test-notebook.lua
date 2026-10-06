@@ -186,7 +186,7 @@ end
 local ui_ok, ui_result = pcall(function()
   vim.rpcrequest(ui_channel, "nvim_ui_attach", 80, 12, { rgb = true })
   local config_root = vim.fn.fnamemodify(debug.getinfo(1, "S").source:sub(2), ":h:h")
-  return vim.rpcrequest(ui_channel, "nvim_exec_lua", [[
+  local initial = vim.rpcrequest(ui_channel, "nvim_exec_lua", [[
     local config_root, path = ...
     vim.opt.rtp:append(config_root)
     require("notebook").setup()
@@ -203,16 +203,123 @@ local ui_ok, ui_result = pcall(function()
     end
     return { row = cursor.row, header = screen_row(cursor.row - 1), marker = screen_row(cursor.row) }
   ]], { config_root, temp })
+  vim.rpcrequest(ui_channel, "nvim_exec_lua", [[
+    local lines = {}
+    for i = 1, 50 do
+      lines[i] = "# More notebook content " .. i
+    end
+    vim.api.nvim_buf_set_lines(0, -1, -1, false, lines)
+  ]], {})
+  local capture_bottom = [[
+    vim.api.nvim__redraw({ flush = true, valid = false })
+    local last_line = vim.api.nvim_buf_line_count(0)
+    local info = vim.fn.getwininfo(vim.api.nvim_get_current_win())[1]
+    local bottom_row = info.winrow + info.height - 1
+    local text = ""
+    for col = 1, 80 do
+      text = text .. vim.fn.screenstring(bottom_row, col)
+    end
+    return {
+      bottom_row = text, cursor_line = vim.fn.line("."), last_line = last_line,
+      cursor_row = vim.fn.screenpos(0, last_line, vim.fn.col(".")).row,
+      window_bottom = bottom_row,
+      mode = vim.fn.mode(),
+    }
+  ]]
+  vim.rpcrequest(ui_channel, "nvim_input", "G")
+  local after_end = vim.rpcrequest(ui_channel, "nvim_exec_lua", capture_bottom, {})
+  vim.rpcrequest(ui_channel, "nvim_input", "zb")
+  local after_bottom_scroll = vim.rpcrequest(ui_channel, "nvim_exec_lua", capture_bottom, {})
+  vim.rpcrequest(ui_channel, "nvim_exec_lua", [[
+    vim.api.nvim_buf_set_lines(0, 3, 4, false, { "# %%" })
+    vim.api.nvim_buf_set_lines(0, -2, -1, false, { string.rep("wrapped code ", 15) })
+  ]], {})
+  vim.rpcrequest(ui_channel, "nvim_input", "gg")
+  vim.rpcrequest(ui_channel, "nvim_eval", "line('.')")
+  vim.rpcrequest(ui_channel, "nvim_input", "G")
+  local wrapped_end = vim.rpcrequest(ui_channel, "nvim_exec_lua", capture_bottom, {})
+  vim.rpcrequest(ui_channel, "nvim_exec_lua", [[
+    vim.api.nvim_buf_set_lines(0, -2, -1, false, { "" })
+  ]], {})
+  vim.rpcrequest(ui_channel, "nvim_input", "gg")
+  vim.rpcrequest(ui_channel, "nvim_eval", "line('.')")
+  vim.rpcrequest(ui_channel, "nvim_input", "G")
+  local blank_end = vim.rpcrequest(ui_channel, "nvim_exec_lua", capture_bottom, {})
+  vim.rpcrequest(ui_channel, "nvim_input", "gg")
+  vim.rpcrequest(ui_channel, "nvim_eval", "line('.')")
+  vim.rpcrequest(ui_channel, "nvim_input", "vG")
+  local visual_end = vim.rpcrequest(ui_channel, "nvim_exec_lua", capture_bottom, {})
+  vim.rpcrequest(ui_channel, "nvim_input", vim.api.nvim_replace_termcodes("<Esc>", true, false, true))
+  vim.rpcrequest(ui_channel, "nvim_input", "gg")
+  local capture_top = [[
+    vim.api.nvim__redraw({ flush = true, valid = false })
+    local cursor = vim.fn.screenpos(0, 1, 1)
+    local text = ""
+    for col = 1, 80 do
+      text = text .. vim.fn.screenstring(1, col)
+    end
+    return { row = cursor.row, top_row = text, view = vim.fn.winsaveview() }
+  ]]
+  local after_navigation = vim.rpcrequest(ui_channel, "nvim_exec_lua", capture_top, {})
+  vim.rpcrequest(ui_channel, "nvim_input", "zt")
+  local after_scroll = vim.rpcrequest(ui_channel, "nvim_exec_lua", capture_top, {})
+  vim.rpcrequest(ui_channel, "nvim_exec_lua", [[
+    vim.api.nvim_buf_set_lines(0, 0, 1, false, { "# %% [markdown]" })
+  ]], {})
+  vim.rpcrequest(ui_channel, "nvim_input", "G")
+  vim.rpcrequest(ui_channel, "nvim_eval", "line('.')")
+  vim.rpcrequest(ui_channel, "nvim_input", "gg")
+  local markdown_navigation = vim.rpcrequest(ui_channel, "nvim_exec_lua", capture_top, {})
+  vim.rpcrequest(ui_channel, "nvim_exec_lua", [[
+    vim.cmd.enew({ bang = true })
+    local lines = {}
+    for i = 1, 50 do lines[i] = "Ordinary text " .. i end
+    vim.api.nvim_buf_set_lines(0, 0, -1, false, lines)
+    vim.api.nvim_buf_set_extmark(0, vim.api.nvim_create_namespace("test-ordinary-header"), 0, 0, {
+      virt_lines = { { { "Ordinary virtual header", "Normal" } } }, virt_lines_above = true,
+    })
+  ]], {})
+  vim.rpcrequest(ui_channel, "nvim_input", "G")
+  vim.rpcrequest(ui_channel, "nvim_eval", "line('.')")
+  vim.rpcrequest(ui_channel, "nvim_input", "gg")
+  local ordinary_navigation = vim.rpcrequest(ui_channel, "nvim_exec_lua", capture_top, {})
+  return {
+    initial = initial,
+    after_end = after_end,
+    after_bottom_scroll = after_bottom_scroll,
+    wrapped_end = wrapped_end,
+    blank_end = blank_end,
+    visual_end = visual_end,
+    after_navigation = after_navigation,
+    after_scroll = after_scroll,
+    markdown_navigation = markdown_navigation,
+    ordinary_navigation = ordinary_navigation,
+  }
 end)
 vim.fn.jobstop(ui_channel)
 vim.fn.jobwait({ ui_channel }, 1000)
 if not ui_ok then
   fail("notebook UI probe failed: " .. tostring(ui_result))
 end
-assert_equal(ui_result.row > 1, true, "cursor occupies a row below the title")
-assert_match(ui_result.header, "Code — Read input", "first cell title remains visible above cursor")
-assert_equal(ui_result.marker:find("Read input", 1, true), nil, "cursor row contains no title text")
-assert_equal(ui_result.marker:find("# %%", 1, true), nil, "cursor row hides the raw cell marker")
+assert_equal(ui_result.initial.row > 1, true, "cursor occupies a row below the title")
+assert_match(ui_result.initial.header, "Code — Read input", "first cell title remains visible above cursor")
+assert_equal(ui_result.initial.marker:find("Read input", 1, true), nil, "cursor row contains no title text")
+assert_equal(ui_result.initial.marker:find("# %%", 1, true), nil, "cursor row hides the raw cell marker")
+assert_match(ui_result.after_end.bottom_row, "^╰─", "G keeps final cell closing border visible")
+assert_equal(ui_result.after_end.cursor_line, ui_result.after_end.last_line, "G still targets the final buffer line")
+assert_equal(ui_result.after_end.cursor_row < ui_result.after_end.window_bottom, true, "G leaves cursor above final border")
+assert_match(ui_result.after_bottom_scroll.bottom_row, "^╰─", "zb keeps final border visible without cursor movement")
+assert_match(ui_result.wrapped_end.bottom_row, "^╰─", "wrapped final code line keeps closing border visible")
+assert_equal(ui_result.wrapped_end.cursor_line, ui_result.wrapped_end.last_line, "wrapped code footer correction preserves cursor line")
+assert_match(ui_result.blank_end.bottom_row, "^╰─", "blank final code line keeps closing border visible")
+assert_equal(ui_result.visual_end.mode, "v", "footer scrolling preserves Visual selection mode")
+assert_equal(ui_result.visual_end.cursor_line, ui_result.visual_end.last_line, "Visual G keeps selection endpoint on final line")
+assert_equal(ui_result.after_navigation.row > 1, true, "G then gg leaves room for the first header")
+assert_match(ui_result.after_navigation.top_row, "Code — Read input", "G then gg keeps the first header visible")
+assert_match(ui_result.after_scroll.top_row, "Code — Read input", "zt keeps header visible without cursor movement")
+assert_match(ui_result.markdown_navigation.top_row, "^╭─ Markdown ", "G then gg keeps first Markdown header visible")
+assert_equal(ui_result.markdown_navigation.row > 1, true, "first Markdown header stays separate from cursor")
+assert_equal(ui_result.ordinary_navigation.view.topfill, 0, "ordinary buffers keep their own scroll behavior")
 
 vim.wo.number = true
 vim.wo.relativenumber = true

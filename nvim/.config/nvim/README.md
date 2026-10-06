@@ -304,6 +304,10 @@ Titles occupy a separate virtual row, so the block cursor cannot cover the
 first character. The cell marker is concealed in Normal mode and revealed for
 Insert/Visual editing. Notebook conceal settings are restored when leaving the
 buffer.
+Returning to the first cell with `gg` (including after `G`) keeps its virtual
+header visible above the cursor; scrolling it to the top with `zt` does too.
+At the other end, `G` and `zb` leave room for the final cell's closing border
+without moving the cursor off the last buffer line.
 
 Use `<leader>jt` or `:NotebookCellTitle` from anywhere in a cell to add or rename
 its title. The prompt is prefilled with the existing title; Enter confirms,

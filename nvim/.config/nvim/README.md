@@ -300,6 +300,10 @@ after the cell type, for example `Code — Setup Paths`. Databricks titles marke
 Long titles are clipped to the border width with an ellipsis; whitespace is
 normalized for display. The title remains attached to its original cell when
 cells are inserted, and displaying it does not modify source or metadata.
+Titles occupy a separate virtual row, so the block cursor cannot cover the
+first character. The cell marker is concealed in Normal mode and revealed for
+Insert/Visual editing. Notebook conceal settings are restored when leaving the
+buffer.
 
 Saving the buffer writes valid notebook JSON back to the same file while
 preserving existing notebook metadata, cell metadata, code outputs, and

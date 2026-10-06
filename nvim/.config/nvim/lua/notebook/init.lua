@@ -2,6 +2,7 @@ local M = {}
 
 local state_by_buf = {}
 local raw_fallback_by_buf = {}
+local window_options_by_win = {}
 local identity_namespace = vim.api.nvim_create_namespace("user-notebook-identity")
 local display_namespace = vim.api.nvim_create_namespace("user-notebook-display")
 local content_prefix = "│  "
@@ -46,7 +47,24 @@ end
 local function set_notebook_window_options(buf)
   for _, win in ipairs(vim.api.nvim_list_wins()) do
     if vim.api.nvim_win_get_buf(win) == buf then
+      if not window_options_by_win[win] then
+        window_options_by_win[win] = {
+          conceallevel = vim.api.nvim_get_option_value("conceallevel", { win = win }),
+          concealcursor = vim.api.nvim_get_option_value("concealcursor", { win = win }),
+        }
+      end
       vim.api.nvim_set_option_value("conceallevel", 2, { win = win })
+      vim.api.nvim_set_option_value("concealcursor", "nc", { win = win })
+    end
+  end
+end
+
+local function restore_notebook_window_options(win)
+  local options = window_options_by_win[win]
+  window_options_by_win[win] = nil
+  if options and vim.api.nvim_win_is_valid(win) then
+    for name, value in pairs(options) do
+      vim.api.nvim_set_option_value(name, value, { win = win })
     end
   end
 end
@@ -583,10 +601,10 @@ local function refresh_cell_borders(buf)
       vim.api.nvim_buf_set_extmark(buf, display_namespace, line_index - 1, 0, {
         end_col = #line,
         conceal = "",
-        virt_text = { { border_text("╭─", cell_label(cell_type, original), cell_width), "NotebookCellBorder" } },
-        virt_text_pos = "overlay",
-        hl_mode = "combine",
+        virt_lines = { { { border_text("╭─", cell_label(cell_type, original), cell_width), "NotebookCellBorder" } } },
+        virt_lines_above = true,
       })
+      apply_cell_content_prefix(buf, line_index - 1, right_column)
     elseif current_cell then
       if current_cell.cell_type == "markdown" then
         apply_markdown_render(buf, line_index - 1, line, right_column, in_fenced_code)
@@ -606,6 +624,17 @@ local function refresh_cell_borders(buf)
       virt_lines = { { { bottom_border_text(cell_width), "NotebookCellBorder" } } },
       virt_lines_above = false,
     })
+  end
+
+  for _, win in ipairs(vim.api.nvim_list_wins()) do
+    if vim.api.nvim_win_get_buf(win) == buf then
+      vim.api.nvim_win_call(win, function()
+        local view = vim.fn.winsaveview()
+        if parse_marker(lines[view.topline] or "") and view.topfill == 0 then
+          vim.fn.winrestview({ topfill = 1 })
+        end
+      end)
+    end
   end
 end
 
@@ -1062,7 +1091,14 @@ function M.setup()
     group = group,
     pattern = "*.ipynb",
     callback = function()
-      vim.api.nvim_set_option_value("conceallevel", vim.o.conceallevel, { win = 0 })
+      restore_notebook_window_options(vim.api.nvim_get_current_win())
+    end,
+  })
+
+  vim.api.nvim_create_autocmd("WinClosed", {
+    group = group,
+    callback = function(args)
+      window_options_by_win[tonumber(args.match)] = nil
     end,
   })
 

@@ -79,6 +79,7 @@ Leader is `<Space>`.
 | `<leader>e`        | normal               | Toggle Snacks explorer                  |
 | `<leader>E`        | normal               | Open explorer at current file directory |
 | `<leader>?`        | normal               | Show buffer-local keymaps               |
+| `<leader>:`        | normal               | Command palette (Snacks commands picker) |
 | `<C-s>`            | normal/insert/visual | Save buffer                             |
 | `<leader>nh`       | normal               | Clear search highlights                 |
 | `<leader>nd`       | normal               | Dismiss Noice notification if available |

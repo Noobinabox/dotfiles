@@ -2,6 +2,7 @@
 """Regression checks for Codex palette generation and safe config updates."""
 import importlib.util
 import plistlib
+import sys
 import tempfile
 import tomllib
 import unittest
@@ -9,6 +10,7 @@ from pathlib import Path
 from unittest.mock import patch
 
 
+sys.dont_write_bytecode = True
 spec = importlib.util.spec_from_file_location(
     "generate_themes", Path(__file__).with_name("generate-themes.py")
 )
@@ -73,6 +75,10 @@ class CodexThemeTests(unittest.TestCase):
                     parsed = plistlib.loads(generated.read_bytes())
                     self.assertEqual(parsed["settings"][0]["settings"]["foreground"],
                                      theme["foreground"])
+                    self.assertEqual(parsed["settings"][0]["settings"]["background"],
+                                     theme["background"])
+                    self.assertEqual(tomllib.loads(config.read_text())["tui"]["theme"],
+                                     generator.CODEX_THEME_NAME)
                     self.assertEqual(tomllib.loads(config.read_text())["features"],
                                      {"memories": True})
                     self.assertEqual((root / "tools/.config/theme-pack/current-theme")

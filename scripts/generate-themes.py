@@ -19,6 +19,7 @@ CODEX_THEME_NAME = "dotfiles-current"
 BAT_THEME_NAME = "dotfiles-current"
 HTOP_LIGHT_TERMINAL = 3
 HTOP_DEFAULT = 0
+DIFF_ACCENT_WEIGHT = 0.06
 
 
 def load_theme(path: Path) -> dict[str, str]:
@@ -413,10 +414,10 @@ set -g status-style "fg={theme['foreground']},bg={theme['background']}"
 set -g message-style "fg={theme['foreground']},bg={surface}"
 set -g pane-border-style "fg={theme['brightBlack']}"
 set -g pane-active-border-style "fg={theme['blue']}"
-set -g window-status-style "fg={theme['foreground']},bg={theme['background']}"
-set -g window-status-current-style "fg={theme['background']},bg={theme['blue']},bold"
-set -g window-status-format "#[fg={theme['foreground']},bg={theme['background']}] #I:#W "
-set -g window-status-current-format "#[fg={theme['background']},bg={theme['blue']},bold] #I:#W "
+set-window-option -g window-status-style "fg={theme['foreground']},bg={theme['background']}"
+set-window-option -g window-status-current-style "fg={theme['background']},bg={theme['blue']},bold"
+set-window-option -g window-status-format "#[fg={theme['foreground']},bg={theme['background']}] #I:#W "
+set-window-option -g window-status-current-format "#[fg={theme['background']},bg={theme['blue']},bold] #I:#W "
 set -g mode-style "fg={theme['background']},bg={theme['yellow']}"
 """
 
@@ -424,7 +425,10 @@ set -g mode-style "fg={theme['background']},bg={theme['yellow']}"
 def textmate_theme(theme: dict[str, str], name: str | None = None) -> str:
     """Build the shared syntax palette consumed by Codex and bat."""
     scopes = {
-        "comment": color(theme, "comment", "brightBlack"),
+        "comment": (
+            theme["dimForeground"] if windows_application_theme(theme) == "light"
+            else color(theme, "comment", "brightBlack")
+        ),
         "string": theme["green"],
         "constant.numeric, constant.language": theme["blue"],
         "keyword, storage": theme["red"],
@@ -432,8 +436,7 @@ def textmate_theme(theme: dict[str, str], name: str | None = None) -> str:
         "entity.name.type, support.type, support.class": theme["yellow"],
         "variable": theme["blue"],
         "punctuation": theme["foreground"],
-        "markup.inserted, diff.inserted": theme["green"],
-        "markup.deleted, diff.deleted, invalid": theme["red"],
+        "invalid": theme["red"],
     }
     settings = [{"settings": {
         "foreground": theme["foreground"],
@@ -445,6 +448,20 @@ def textmate_theme(theme: dict[str, str], name: str | None = None) -> str:
         {"scope": scope, "settings": {"foreground": foreground}}
         for scope, foreground in scopes.items()
     )
+    # Codex reads these scope backgrounds for diff rows. Without them it may
+    # fall back to dark fills even when the selected syntax palette is light.
+    for scope, accent in [("markup.inserted, diff.inserted", "green"),
+                          ("markup.deleted, diff.deleted", "red")]:
+        channels = []
+        for index in (1, 3, 5):
+            base_channel = int(theme["background"][index:index + 2], 16)
+            accent_channel = int(theme[accent][index:index + 2], 16)
+            channels.append(round(base_channel * (1 - DIFF_ACCENT_WEIGHT)
+                                  + accent_channel * DIFF_ACCENT_WEIGHT))
+        background = "#" + "".join(f"{channel:02x}" for channel in channels)
+        settings.append({"scope": scope, "settings": {
+            "foreground": theme[accent], "background": background,
+        }})
     return plistlib.dumps({
         "name": name or f"Dotfiles {display_name(theme)}",
         "settings": settings,

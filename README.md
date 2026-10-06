@@ -250,6 +250,9 @@ The theme selector also generates a Codex syntax theme and sets `tui.theme` to
 commands use the selected palette. Stow the `tools` package once after adding
 this integration to link `~/.codex/themes`. Restart Codex after switching themes,
 or use `/theme` to select `dotfiles-current` in the running session.
+Added and removed diff lines use subtle palette-derived background tints so
+light syntax colors do not fall back to dark red/green blocks. Light themes
+use the dim foreground for comments to keep them readable over diff tints.
 
 Spotify Player, bpytop, bat (including `vf` previews), and Powerlevel10k also
 use generated palettes. The selector rebuilds bat's theme cache when installed

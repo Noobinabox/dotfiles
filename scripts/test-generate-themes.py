@@ -21,6 +21,16 @@ generator = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(generator)
 
 
+def contrast_ratio(foreground, background):
+    def luminance(hex_color):
+        components = [int(hex_color[i:i + 2], 16) / 255 for i in (1, 3, 5)]
+        linear = [c / 12.92 if c <= 0.04045 else ((c + 0.055) / 1.055) ** 2.4 for c in components]
+        return sum(c * weight for c, weight in zip(linear, (0.2126, 0.7152, 0.0722)))
+
+    light, dark = sorted((luminance(foreground), luminance(background)), reverse=True)
+    return (light + 0.05) / (dark + 0.05)
+
+
 class CodexThemeTests(unittest.TestCase):
     def test_all_palettes_produce_parseable_matching_themes(self):
         for theme in generator.load_themes():
@@ -134,14 +144,50 @@ class CodexThemeTests(unittest.TestCase):
         pairs.append((yazi["help"]["footer"]["fg"], yazi["help"]["footer"]["bg"]))
         pairs.append((generator.glow_style(theme)["block_quote"]["color"], theme["background"]))
 
-        def luminance(hex_color):
-            components = [int(hex_color[i:i + 2], 16) / 255 for i in (1, 3, 5)]
-            linear = [c / 12.92 if c <= 0.04045 else ((c + 0.055) / 1.055) ** 2.4 for c in components]
-            return sum(c * weight for c, weight in zip(linear, (0.2126, 0.7152, 0.0722)))
-
         for foreground, background in pairs:
-            light, dark = sorted((luminance(foreground), luminance(background)), reverse=True)
-            self.assertGreaterEqual((light + 0.05) / (dark + 0.05), 4.5)
+            self.assertGreaterEqual(contrast_ratio(foreground, background), 4.5)
+
+    def test_diff_backgrounds_follow_palette_brightness(self):
+        for theme in generator.load_themes():
+            with self.subTest(theme=theme["name"]):
+                parsed = plistlib.loads(generator.textmate_theme(theme).encode())
+                scopes = {
+                    scope.strip(): item["settings"]
+                    for item in parsed["settings"] if "scope" in item
+                    for scope in item["scope"].split(",")
+                }
+                backgrounds = [scopes[scope]["background"]
+                               for scope in ["markup.inserted", "markup.deleted"]]
+                self.assertNotEqual(*backgrounds)
+                for background in backgrounds:
+                    self.assertLess(contrast_ratio(background, theme["background"]), 1.3)
+                self.assertNotIn("background", scopes["invalid"])
+
+    def test_github_light_syntax_is_readable_on_code_and_diff_backgrounds(self):
+        theme = generator.find_theme("github-light", generator.load_themes())
+        parsed = plistlib.loads(generator.textmate_theme(theme).encode())
+        settings = parsed["settings"]
+        backgrounds = [theme["background"]] + [
+            item["settings"]["background"] for item in settings[1:]
+            if "background" in item["settings"]
+        ]
+        for item in settings:
+            for background in backgrounds:
+                with self.subTest(scope=item.get("scope", "default"), background=background):
+                    self.assertGreaterEqual(
+                        contrast_ratio(item["settings"]["foreground"], background), 4.5
+                    )
+
+    def test_tmux_window_colors_use_window_options(self):
+        theme = generator.find_theme("github-light", generator.load_themes())
+        tmux = generator.tmux_conf(theme)
+        for option in [
+            "window-status-style",
+            "window-status-current-style",
+            "window-status-format",
+            "window-status-current-format",
+        ]:
+            self.assertIn(f"set-window-option -g {option}", tmux)
 
     def test_app_themes_parse_for_every_palette(self):
         for theme in generator.load_themes():

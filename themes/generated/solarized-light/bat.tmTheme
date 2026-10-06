@@ -25,7 +25,7 @@
 			<key>settings</key>
 			<dict>
 				<key>foreground</key>
-				<string>#93a1a1</string>
+				<string>#839496</string>
 			</dict>
 		</dict>
 		<dict>
@@ -93,20 +93,33 @@
 		</dict>
 		<dict>
 			<key>scope</key>
+			<string>invalid</string>
+			<key>settings</key>
+			<dict>
+				<key>foreground</key>
+				<string>#dc322f</string>
+			</dict>
+		</dict>
+		<dict>
+			<key>scope</key>
 			<string>markup.inserted, diff.inserted</string>
 			<key>settings</key>
 			<dict>
 				<key>foreground</key>
 				<string>#859900</string>
+				<key>background</key>
+				<string>#f6f0d5</string>
 			</dict>
 		</dict>
 		<dict>
 			<key>scope</key>
-			<string>markup.deleted, diff.deleted, invalid</string>
+			<string>markup.deleted, diff.deleted</string>
 			<key>settings</key>
 			<dict>
 				<key>foreground</key>
 				<string>#dc322f</string>
+				<key>background</key>
+				<string>#fbead8</string>
 			</dict>
 		</dict>
 	</array>

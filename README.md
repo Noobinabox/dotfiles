@@ -244,6 +244,10 @@ scripts/apply-theme.sh
 
 Tmux inactive tabs use the theme foreground on its background so labels remain
 readable in light themes. The selected tab uses the theme's blue accent.
+The generated palette also owns the session label, directory display, menus,
+popups, and copy/window-picker selections. Picker selections use the palette's
+selection background rather than its yellow accent. Tokyo Night's tmux theme
+plugin is no longer loaded, so its hard-coded colors cannot override the palette.
 
 The theme selector also generates a Codex syntax theme and sets `tui.theme` to
 `dotfiles-current`, preserving other Codex settings. Code, diffs, and displayed

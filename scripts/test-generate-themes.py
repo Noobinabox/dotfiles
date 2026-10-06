@@ -178,16 +178,50 @@ class CodexThemeTests(unittest.TestCase):
                         contrast_ratio(item["settings"]["foreground"], background), 4.5
                     )
 
-    def test_tmux_window_colors_use_window_options(self):
-        theme = generator.find_theme("github-light", generator.load_themes())
-        tmux = generator.tmux_conf(theme)
-        for option in [
-            "window-status-style",
-            "window-status-current-style",
-            "window-status-format",
-            "window-status-current-format",
-        ]:
-            self.assertIn(f"set-window-option -g {option}", tmux)
+    def test_tmux_reloading_updates_picker_and_status_colors(self):
+        tmux = shutil.which("tmux")
+        if not tmux:
+            self.skipTest("tmux is not installed")
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            command = [tmux, "-S", str(root / "tmux.sock")]
+
+            def run(*arguments):
+                return subprocess.run(command + list(arguments), check=True,
+                                      capture_output=True, text=True, timeout=10).stdout.strip()
+
+            try:
+                run("-f", "/dev/null", "new-session", "-d", "-s", "theme-test", "sleep 60")
+                run("set", "-g", "status-left", "#[fg=red,bg=black]OLD")
+                run("set", "-g", "status-right", "#[fg=white,bg=black]OLD")
+                themes = generator.load_themes()
+                for name in ["github-light", "tokyo-night", "github-light"]:
+                    with self.subTest(theme=name):
+                        theme = generator.find_theme(name, themes)
+                        config = root / "theme.conf"
+                        config.write_text(generator.tmux_conf(theme), encoding="utf-8")
+                        run("source-file", str(config))
+                        expected_selection = (f"fg={theme['foreground']},"
+                                              f"bg={theme['selectionBackground']},bold")
+                        self.assertEqual(run("show", "-gwv", "mode-style"), expected_selection)
+                        self.assertEqual(run("show", "-gv", "menu-selected-style"),
+                                         expected_selection)
+                        self.assertEqual(run("show", "-gv", "status-left-style"),
+                                         f"fg={theme['foreground']},bg={theme['surface']},bold")
+                        self.assertEqual(run("show", "-gv", "status-right-style"),
+                                         f"fg={theme['foreground']},bg={theme['background']}")
+                        self.assertEqual(run("show", "-gwv", "window-status-current-style"),
+                                         f"fg={theme['background']},bg={theme['blue']},bold")
+                        self.assertEqual(run("show", "-gwv", "popup-style"),
+                                         f"fg={theme['foreground']},bg={theme['background']}")
+                        self.assertEqual(run("show", "-gv", "status-left"),
+                                         "#{?client_prefix,> ,}#S")
+                        self.assertEqual(run("show", "-gv", "status-right"),
+                                         "#{pane_current_path}")
+                        self.assertEqual(run("display-message", "-p", "-t", "theme-test",
+                                             "#{E:status-left}"), "theme-test")
+            finally:
+                subprocess.run(command + ["kill-server"], capture_output=True, timeout=10)
 
     def test_app_themes_parse_for_every_palette(self):
         for theme in generator.load_themes():

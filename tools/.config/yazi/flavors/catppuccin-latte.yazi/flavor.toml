@@ -59,9 +59,9 @@ title   = {}
 hovered = { fg = "#8839ef", underline = true }
 
 [which]
-mask            = { bg = "#6c6f85" }
+mask            = { bg = "#ccd0da" }
 cand            = { fg = "#40a02b" }
-rest            = { fg = "#acb0be" }
+rest            = { fg = "#4c4f69" }
 desc            = { fg = "#8839ef" }
 separator       = "  "
 separator_style = { fg = "#8c8fa1" }
@@ -70,7 +70,7 @@ separator_style = { fg = "#8c8fa1" }
 on      = { fg = "#40a02b" }
 run     = { fg = "#8839ef" }
 hovered = { reversed = true, bold = true }
-footer  = { fg = "#eff1f5", bg = "#acb0be" }
+footer  = { fg = "#4c4f69", bg = "#ccd0da" }
 
 [spot]
 border   = { fg = "#1e66f5" }

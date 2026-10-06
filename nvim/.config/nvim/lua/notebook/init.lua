@@ -292,16 +292,41 @@ local function set_cell_extmarks(buf, cell_count)
   end
 end
 
-local function cell_label(cell_type)
-  if cell_type == "markdown" then
-    return " Markdown "
+local function trim(value)
+  return (value:gsub("^%s+", ""):gsub("%s+$", ""))
+end
+
+local function display_title(value)
+  if type(value) ~= "string" then
+    return nil
   end
 
-  if cell_type == "raw" then
-    return " Raw "
+  local title = trim(value:gsub("[%c%s]+", " "))
+  return title ~= "" and title or nil
+end
+
+local function cell_title(cell)
+  local metadata = cell and cell.metadata
+  if type(metadata) ~= "table" then
+    return nil
   end
 
-  return " Code "
+  local databricks = metadata["application/vnd.databricks.v1+cell"]
+  if type(databricks) == "table" and databricks.showTitle ~= false then
+    local title = display_title(databricks.title)
+    if title then
+      return title
+    end
+  end
+
+  return display_title(metadata.title)
+end
+
+local function cell_label(cell_type, cell)
+  local labels = { code = "Code", markdown = "Markdown", raw = "Raw" }
+  local label = labels[cell_type] or "Code"
+  local title = cell_title(cell)
+  return " " .. label .. (title and " — " .. title or "") .. " "
 end
 
 local function notebook_window_geometry(buf)
@@ -342,6 +367,15 @@ end
 
 local function border_text(left, label, width)
   local right = "╮"
+  local available = math.max(0, width - vim.fn.strdisplaywidth(left .. right))
+  if vim.fn.strdisplaywidth(label) > available then
+    local suffix = available > 0 and "…" or ""
+    label = vim.fn.strcharpart(label, 0, math.max(0, available - vim.fn.strdisplaywidth(suffix)))
+    while vim.fn.strdisplaywidth(label .. suffix) > available do
+      label = vim.fn.strcharpart(label, 0, vim.fn.strchars(label) - 1)
+    end
+    label = label .. suffix
+  end
   local text = left .. label
 
   while vim.fn.strdisplaywidth(text .. right) < width do
@@ -360,10 +394,6 @@ local function bottom_border_text(width)
   end
 
   return text .. right
-end
-
-local function trim(value)
-  return (value:gsub("^%s+", ""):gsub("%s+$", ""))
 end
 
 local function next_inline_match(text, start)
@@ -540,17 +570,20 @@ local function refresh_cell_borders(buf)
   local cell_width = geometry.width
   local right_column = geometry.right_column
   local in_fenced_code = false
+  local state = state_by_buf[buf]
   local lines = vim.api.nvim_buf_get_lines(buf, 0, -1, false)
   for line_index, line in ipairs(lines) do
     local cell_type = parse_marker(line)
     if cell_type then
+      local marker_id = marker_extmark_id(buf, line_index - 1)
+      local original = state and marker_id and state.cells[marker_id] or nil
       current_cell = { line = line_index - 1, cell_type = cell_type }
       in_fenced_code = false
       table.insert(cells, current_cell)
       vim.api.nvim_buf_set_extmark(buf, display_namespace, line_index - 1, 0, {
         end_col = #line,
         conceal = "",
-        virt_text = { { border_text("╭─", cell_label(cell_type), cell_width), "NotebookCellBorder" } },
+        virt_text = { { border_text("╭─", cell_label(cell_type, original), cell_width), "NotebookCellBorder" } },
         virt_text_pos = "overlay",
         hl_mode = "combine",
       })
@@ -1059,6 +1092,7 @@ function M.setup()
 end
 
 M._test = {
+  cell_label = cell_label,
   display_namespace = display_namespace,
   find_cell_bounds = find_cell_bounds,
   notebook_window_width = notebook_window_width,

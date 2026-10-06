@@ -10,6 +10,7 @@ local symlink_target = nil
 local symlink_link = nil
 local malformed = nil
 local insertion = nil
+local titled = nil
 
 local function fail(message)
   if temp then
@@ -56,6 +57,10 @@ local function fail(message)
     vim.fn.delete(insertion)
   end
 
+  if titled then
+    vim.fn.delete(titled)
+  end
+
   error(message, 0)
 end
 
@@ -95,7 +100,10 @@ local original = {
       cell_type = "code",
       execution_count = 7,
       id = "code-1",
-      metadata = { tags = { "keep" } },
+      metadata = {
+        tags = { "keep" },
+        ["application/vnd.databricks.v1+cell"] = { title = "Read input", showTitle = true },
+      },
       outputs = {
         {
           name = "stdout",
@@ -137,6 +145,7 @@ for _, mark in ipairs(display_marks) do
 end
 local display_summary = table.concat(display_text, "\n")
 assert_match(display_summary, "╭─ Code", "code cell has a rendered top border")
+assert_match(display_summary, "Code — Read input", "code cell displays its saved Databricks title")
 assert_match(display_summary, "│  ", "code cell content receives cell padding")
 assert_match(display_summary, "╭─ Markdown", "markdown cell has a rendered top border")
 assert_match(display_summary, "╰─", "cells have rendered bottom borders")
@@ -192,6 +201,7 @@ vim.cmd.write()
 
 local saved = vim.json.decode(table.concat(vim.fn.readfile(temp), "\n"))
 assert_equal(saved.metadata.custom, "metadata", "notebook metadata is preserved")
+assert_equal(saved.cells[1].metadata["application/vnd.databricks.v1+cell"].title, "Read input", "cell title is preserved on save")
 assert_equal(#saved.cells, 3, "cell count")
 assert_equal(saved.cells[1].cell_type, "code", "first cell type")
 assert_equal(saved.cells[1].id, "code-1", "first cell id")
@@ -243,6 +253,53 @@ local markdown_marker_text = notebook._test.parse_cells({ "# %% [markdown]", "# 
 assert_equal(#markdown_marker_text, 1, "markdown text resembling a cell marker does not split cells")
 assert_equal(markdown_marker_text[1].lines[1], "# %% Results", "markdown marker-looking text is preserved")
 
+local title_cases = {
+  { metadata = { title = " Generic\n\tTitle " }, expected = " Code — Generic Title " },
+  { metadata = { title = "\t\n " }, expected = " Code " },
+  { metadata = { title = 42 }, expected = " Code " },
+  { metadata = vim.NIL, expected = " Code " },
+  { metadata = { ["application/vnd.databricks.v1+cell"] = false }, expected = " Code " },
+  { metadata = { ["application/vnd.databricks.v1+cell"] = { title = "Hidden", showTitle = false } }, expected = " Code " },
+  {
+    metadata = { title = "Fallback", ["application/vnd.databricks.v1+cell"] = { title = "Databricks" } },
+    expected = " Code — Databricks ",
+  },
+  {
+    metadata = { title = "Fallback", ["application/vnd.databricks.v1+cell"] = { title = vim.NIL } },
+    expected = " Code — Fallback ",
+  },
+}
+for _, case in ipairs(title_cases) do
+  assert_equal(notebook._test.cell_label("code", { metadata = case.metadata }), case.expected, "cell title fallback and sanitization")
+end
+assert_equal(notebook._test.cell_label("markdown", { metadata = { title = "Summary" } }), " Markdown — Summary ", "markdown cell title")
+assert_equal(notebook._test.cell_label("raw", { metadata = { title = "Notes" } }), " Raw — Notes ", "raw cell title")
+
+titled = vim.fn.tempname() .. ".ipynb"
+local long_title_notebook = vim.deepcopy(original)
+local long_title = string.rep("資料 🐍 ", 100)
+long_title_notebook.cells[1].metadata["application/vnd.databricks.v1+cell"].title = long_title
+vim.fn.writefile({ vim.json.encode(long_title_notebook) }, titled)
+vim.cmd.enew()
+vim.cmd.edit(vim.fn.fnameescape(titled))
+local titled_buf = vim.api.nvim_get_current_buf()
+local titled_marks = vim.api.nvim_buf_get_extmarks(titled_buf, notebook._test.display_namespace, 0, -1, { details = true })
+local found_title = false
+for _, mark in ipairs(titled_marks) do
+  local text = extmark_text(mark)
+  if text:match("^╭") and text:match("Code") then
+    assert_match(text, "資料", "Unicode title is displayed")
+    assert_match(text, "…", "long cell title is clipped")
+    assert_equal(vim.fn.strdisplaywidth(text), notebook._test.notebook_window_width(titled_buf), "long title preserves border width")
+    found_title = true
+  end
+end
+assert_equal(found_title, true, "long titled cell has a header")
+vim.cmd.write()
+local titled_saved = vim.json.decode(table.concat(vim.fn.readfile(titled), "\n"))
+assert_equal(titled_saved.cells[1].metadata["application/vnd.databricks.v1+cell"].title, long_title, "display truncation does not change saved title")
+assert_equal(table.concat(titled_saved.cells[1].source), "print('old')", "title is not injected into source")
+
 insertion = vim.fn.tempname() .. ".ipynb"
 vim.fn.writefile({ vim.json.encode(original) }, insertion)
 vim.cmd.enew()
@@ -286,12 +343,25 @@ assert_equal(insertion_saved.cells[3].cell_type, "markdown", "raw insertion keep
 vim.api.nvim_win_set_cursor(0, { 1, 0 })
 notebook.insert_markdown_cell_above()
 vim.api.nvim_buf_set_lines(0, 1, 2, false, { "# First cell" })
+notebook._test.refresh_cell_borders(vim.api.nvim_get_current_buf())
+local moved_marks = vim.api.nvim_buf_get_extmarks(0, notebook._test.display_namespace, 0, -1, { details = true })
+local moved_title = false
+for _, mark in ipairs(moved_marks) do
+  local text = extmark_text(mark)
+  if text:find("Read input", 1, true) then
+    assert_equal(mark[2], 2, "title moves with original cell before save")
+    assert_match(text, "Code — Read input", "new cell does not inherit the original title")
+    moved_title = true
+  end
+end
+assert_equal(moved_title, true, "titled cell remains labeled after insertion")
 vim.cmd.write()
 
 insertion_saved = vim.json.decode(table.concat(vim.fn.readfile(insertion), "\n"))
 assert_equal(#insertion_saved.cells, 6, "above-first insertion adds one cell")
 assert_equal(insertion_saved.cells[1].cell_type, "markdown", "above-first insertion adds requested markdown cell")
 assert_equal(table.concat(insertion_saved.cells[1].source), "First cell", "above-first insertion saves markdown source")
+assert_equal(insertion_saved.cells[2].metadata["application/vnd.databricks.v1+cell"].title, "Read input", "title follows original cell on save")
 
 vim.api.nvim_win_set_cursor(0, { vim.api.nvim_buf_line_count(0), 0 })
 notebook.insert_code_cell()
@@ -377,4 +447,5 @@ vim.fn.delete(symlink_link)
 vim.fn.delete(symlink_target)
 vim.fn.delete(malformed)
 vim.fn.delete(insertion)
+vim.fn.delete(titled)
 print("notebook-roundtrip-ok")

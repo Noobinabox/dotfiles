@@ -294,6 +294,13 @@ inline code, bold, emphasis, links, fenced code blocks, and horizontal rules.
 The underlying `# %% [markdown]` marker remains available for round-tripping
 back to valid notebook JSON.
 
+Cell borders display saved Databricks cell titles or a generic `metadata.title`
+after the cell type, for example `Code — Setup Paths`. Databricks titles marked
+`showTitle=false` stay hidden. Cells without a title keep the plain type label.
+Long titles are clipped to the border width with an ellipsis; whitespace is
+normalized for display. The title remains attached to its original cell when
+cells are inserted, and displaying it does not modify source or metadata.
+
 Saving the buffer writes valid notebook JSON back to the same file while
 preserving existing notebook metadata, cell metadata, code outputs, and
 execution counts. Missing or empty notebook files are initialized with a valid

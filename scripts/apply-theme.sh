@@ -288,6 +288,19 @@ dotfiles_heading "applying repo theme: $theme"
 "$repo_root/scripts/generate-themes.py" --apply-repo "$theme"
 dotfiles_info "updated Codex syntax theme; restart Codex or select dotfiles-current with /theme"
 
+if command -v batcat >/dev/null 2>&1; then
+	bat_command=batcat
+elif command -v bat >/dev/null 2>&1; then
+	bat_command=bat
+else
+	bat_command=""
+fi
+if [[ -n "$bat_command" ]]; then
+	BAT_CONFIG_DIR="$repo_root/tools/.config/bat" "$bat_command" cache --build >/dev/null
+	dotfiles_info "rebuilt bat syntax theme cache"
+fi
+dotfiles_info "restart Spotify Player, bpytop, htop, and editors; reload zsh with exec zsh -l"
+
 if tmux info >/dev/null 2>&1 && [[ -r "$HOME/.config/theme-pack/tmux/current.conf" ]]; then
 	tmux source-file "$HOME/.config/theme-pack/tmux/current.conf"
 	tmux refresh-client -S 2>/dev/null || true

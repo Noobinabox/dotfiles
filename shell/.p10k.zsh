@@ -45,6 +45,10 @@
   local magenta='5'
   local cyan='6'
   local white='7'
+  # The selector supplies truecolor prompt colors, including readable light-theme gray.
+  if [[ -r "${XDG_CONFIG_HOME:-$HOME/.config}/theme-pack/shell/current.zsh" ]]; then
+    source "${XDG_CONFIG_HOME:-$HOME/.config}/theme-pack/shell/current.zsh"
+  fi
 
   # Left prompt segments.
   typeset -g POWERLEVEL9K_LEFT_PROMPT_ELEMENTS=(

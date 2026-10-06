@@ -251,6 +251,13 @@ commands use the selected palette. Stow the `tools` package once after adding
 this integration to link `~/.codex/themes`. Restart Codex after switching themes,
 or use `/theme` to select `dotfiles-current` in the running session.
 
+Spotify Player, bpytop, bat (including `vf` previews), and Powerlevel10k also
+use generated palettes. The selector rebuilds bat's theme cache when installed
+and selects htop's light-terminal or default scheme according to the background.
+Other settings in Spotify Player, bpytop, htop, and Codex are preserved.
+Stow `tools` once to link the new bat and app theme files. Restart running apps
+and editors after changing themes; reload the zsh prompt with `exec zsh -l`.
+
 The picker uses `fzf` when available and falls back to a numbered shell prompt.
 It lists repository themes and pywal16 built-in themes. Selecting a pywal16
 theme creates `themes/pywal-<theme>.json` first if that repo theme does not

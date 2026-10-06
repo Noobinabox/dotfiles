@@ -21,16 +21,16 @@ foreground = "#eff1f5"
 background = "#fe640b"
 
 [colors.footer_bar]
-foreground = "#eff1f5"
-background = "#acb0be"
+foreground = "#4c4f69"
+background = "#e6e9ef"
 
 [colors.hints.start]
 foreground = "#eff1f5"
 background = "#df8e1d"
 
 [colors.hints.end]
-foreground = "#eff1f5"
-background = "#acb0be"
+foreground = "#4c4f69"
+background = "#e6e9ef"
 
 [colors.selection]
 text = "#4c4f69"

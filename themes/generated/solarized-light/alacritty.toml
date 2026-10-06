@@ -21,7 +21,7 @@ foreground = "#fdf6e3"
 background = "#cb4b16"
 
 [colors.footer_bar]
-foreground = "#fdf6e3"
+foreground = "#657b83"
 background = "#eee8d5"
 
 [colors.hints.start]
@@ -29,7 +29,7 @@ foreground = "#fdf6e3"
 background = "#b58900"
 
 [colors.hints.end]
-foreground = "#fdf6e3"
+foreground = "#657b83"
 background = "#eee8d5"
 
 [colors.selection]

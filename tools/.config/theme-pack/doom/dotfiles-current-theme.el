@@ -41,7 +41,7 @@
    `(line-number ((t (:foreground "#57606a" :background ,background))))
    `(line-number-current-line ((t (:foreground ,yellow :background ,surface-dark :weight bold))))
    `(mode-line ((t (:foreground ,foreground :background ,surface :box (:line-width -1 :color ,border)))))
-   `(mode-line-inactive ((t (:foreground "#f6f8fa" :background ,surface-dark :box (:line-width -1 :color ,border)))))
+   `(mode-line-inactive ((t (:foreground ,foreground :background ,surface-dark :box (:line-width -1 :color ,border)))))
    `(vertical-border ((t (:foreground ,border))))
    `(show-paren-match ((t (:foreground ,yellow :weight bold))))
    `(isearch ((t (:foreground ,background :background ,orange))))

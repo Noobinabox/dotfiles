@@ -70,7 +70,7 @@ separator_style = { fg = "#333333" }
 on      = { fg = "#9b8d7f" }
 run     = { fg = "#999999" }
 hovered = { reversed = true, bold = true }
-footer  = { fg = "#000000", bg = "#c1c1c1" }
+footer  = { fg = "#c1c1c1", bg = "#333333" }
 
 [spot]
 border   = { fg = "#888888" }

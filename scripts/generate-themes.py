@@ -16,6 +16,9 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 THEMES_DIR = REPO_ROOT / "themes"
 GENERATED_DIR = THEMES_DIR / "generated"
 CODEX_THEME_NAME = "dotfiles-current"
+BAT_THEME_NAME = "dotfiles-current"
+HTOP_LIGHT_TERMINAL = 3
+HTOP_DEFAULT = 0
 
 
 def load_theme(path: Path) -> dict[str, str]:
@@ -144,16 +147,16 @@ foreground = "{theme['background']}"
 background = "{indexed_16}"
 
 [colors.footer_bar]
-foreground = "{theme['background']}"
-background = "{theme['white']}"
+foreground = "{theme['foreground']}"
+background = "{color(theme, 'surface', 'background')}"
 
 [colors.hints.start]
 foreground = "{theme['background']}"
 background = "{theme['yellow']}"
 
 [colors.hints.end]
-foreground = "{theme['background']}"
-background = "{theme['white']}"
+foreground = "{theme['foreground']}"
+background = "{color(theme, 'surface', 'background')}"
 
 [colors.selection]
 text = "{theme['foreground']}"
@@ -213,7 +216,7 @@ def glow_style(theme: dict[str, str]) -> dict[str, Any]:
             "background_color": theme["background"],
             "margin": 2,
         },
-        "block_quote": {"color": theme["white"], "indent": 1, "indent_token": "| "},
+        "block_quote": {"color": theme["foreground"], "indent": 1, "indent_token": "| "},
         "paragraph": {},
         "list": {"level_indent": 2},
         "heading": {"block_suffix": "\n", "color": theme["blue"], "bold": True},
@@ -354,9 +357,9 @@ title   = {{}}
 hovered = {{ fg = "{theme['purple']}", underline = true }}
 
 [which]
-mask            = {{ bg = "{theme['brightBlack']}" }}
+mask            = {{ bg = "{surface}" }}
 cand            = {{ fg = "{theme['green']}" }}
-rest            = {{ fg = "{theme['white']}" }}
+rest            = {{ fg = "{theme['foreground']}" }}
 desc            = {{ fg = "{theme['purple']}" }}
 separator       = "  "
 separator_style = {{ fg = "{comment}" }}
@@ -365,7 +368,7 @@ separator_style = {{ fg = "{comment}" }}
 on      = {{ fg = "{theme['green']}" }}
 run     = {{ fg = "{theme['purple']}" }}
 hovered = {{ reversed = true, bold = true }}
-footer  = {{ fg = "{theme['background']}", bg = "{theme['white']}" }}
+footer  = {{ fg = "{theme['foreground']}", bg = "{surface}" }}
 
 [spot]
 border   = {{ fg = "{theme['blue']}" }}
@@ -418,8 +421,8 @@ set -g mode-style "fg={theme['background']},bg={theme['yellow']}"
 """
 
 
-def codex_theme(theme: dict[str, str]) -> str:
-    """Build a TextMate syntax theme for Codex code, diffs, and shell commands."""
+def textmate_theme(theme: dict[str, str], name: str | None = None) -> str:
+    """Build the shared syntax palette consumed by Codex and bat."""
     scopes = {
         "comment": color(theme, "comment", "brightBlack"),
         "string": theme["green"],
@@ -443,43 +446,112 @@ def codex_theme(theme: dict[str, str]) -> str:
         for scope, foreground in scopes.items()
     )
     return plistlib.dumps({
-        "name": f"Dotfiles {display_name(theme)}",
+        "name": name or f"Dotfiles {display_name(theme)}",
         "settings": settings,
     }, sort_keys=False).decode("utf-8")
 
 
 def codex_config_with_theme(text: str) -> str:
-    """Change only tui.theme, preserving unrelated settings and their formatting."""
+    return toml_string_setting(text, "theme", CODEX_THEME_NAME, "tui")
+
+
+def toml_string_setting(text: str, key: str, value: str, table_name: str | None = None) -> str:
+    """Change one string setting while verifying that other TOML data is preserved."""
     try:
         original = tomllib.loads(text)
     except tomllib.TOMLDecodeError as error:
-        raise ValueError(f"Codex config: invalid TOML: {error}") from error
-    if not isinstance(original.get("tui", {}), dict):
-        raise ValueError("Codex config: tui must be a table")
+        raise ValueError(f"Theme config: invalid TOML: {error}") from error
+    if table_name and not isinstance(original.get(table_name, {}), dict):
+        raise ValueError(f"Theme config: {table_name} must be a table")
     if not text.endswith("\n"):
         text += "\n"
 
-    setting = f'theme = "{CODEX_THEME_NAME}"\n'
-    table = re.search(r"(?m)^[ \t]*\[tui\][ \t]*(?:#.*)?\n", text)
-    if table:
-        following = re.search(r"(?m)^[ \t]*\[", text[table.end():])
-        end = table.end() + following.start() if following else len(text)
-        body = text[table.end():end]
-        key = re.search(r"(?m)^[ \t]*theme[ \t]*=.*(?:\n|$)", body)
-        body = body[:key.start()] + setting + body[key.end():] if key else setting + body
-        updated = text[:table.end()] + body + text[end:]
+    setting = f'{key} = {json.dumps(value)}\n'
+    table = re.search(rf"(?m)^[ \t]*\[{re.escape(table_name)}\][ \t]*(?:#.*)?\n", text) if table_name else None
+    if table_name and not table:
+        updated = text.rstrip() + f"\n\n[{table_name}]\n" + setting
     else:
-        updated = text.rstrip() + "\n\n[tui]\n" + setting
+        start = table.end() if table else 0
+        following = re.search(r"(?m)^[ \t]*\[", text[start:])
+        end = start + following.start() if following else len(text)
+        body = text[start:end]
+        match = re.search(rf"(?m)^[ \t]*{re.escape(key)}[ \t]*=.*(?:\n|$)", body)
+        body = body[:match.start()] + setting + body[match.end():] if match else setting + body
+        updated = text[:start] + body + text[end:]
 
     try:
         parsed = tomllib.loads(updated)
     except tomllib.TOMLDecodeError as error:
-        raise ValueError(f"Codex config: cannot safely update [tui].theme: {error}") from error
+        raise ValueError(f"Theme config: cannot safely update {key}: {error}") from error
     expected = original.copy()
-    expected["tui"] = {**original.get("tui", {}), "theme": CODEX_THEME_NAME}
+    if table_name:
+        expected[table_name] = {**original.get(table_name, {}), key: value}
+    else:
+        expected[key] = value
     if parsed != expected:
-        raise ValueError("Codex config: updating [tui].theme would change unrelated settings")
+        raise ValueError(f"Theme config: updating {key} would change unrelated settings")
     return updated
+
+
+def line_setting(text: str, key: str, value: str) -> str:
+    """Update a single setting in htop/bpytop's line-oriented config format."""
+    pattern = rf"(?m)^{re.escape(key)}=.*$"
+    if len(re.findall(pattern, text)) != 1:
+        raise ValueError(f"Theme config: expected exactly one {key} setting")
+    return re.sub(pattern, lambda _: f"{key}={value}", text)
+
+
+def spotify_theme(theme: dict[str, str]) -> str:
+    palette = {key: theme[key] for key in (
+        "background", "foreground", "black", "red", "green", "yellow", "blue", "cyan", "white"
+    )}
+    palette["magenta"] = theme["purple"]
+    for key in ("Black", "Red", "Green", "Yellow", "Blue", "Cyan", "White"):
+        palette[f"bright_{key.lower()}"] = theme[f"bright{key}"]
+    palette["bright_magenta"] = theme["brightPurple"]
+    lines = ['# Generated by scripts/generate-themes.py', '[[themes]]',
+             'name = "dotfiles-current"', '[themes.palette]']
+    lines.extend(f'{key} = "{value}"' for key, value in palette.items())
+    lines.extend(['[themes.component_style]',
+                  f'border = {{ fg = "{color(theme, "border", "brightBlack")}" }}',
+                  f'selection = {{ fg = "{theme["foreground"]}", bg = "{theme["selectionBackground"]}", modifiers = ["Bold"] }}',
+                  f'playlist_desc = {{ fg = "{color(theme, "dimForeground", "foreground")}" }}',
+                  f'lyrics_played = {{ fg = "{color(theme, "dimForeground", "foreground")}" }}'])
+    return "\n".join(lines) + "\n"
+
+
+def bpytop_theme(theme: dict[str, str]) -> str:
+    colors = {
+        "main_bg": theme["background"], "main_fg": theme["foreground"],
+        "title": theme["foreground"], "hi_fg": theme["blue"],
+        "selected_bg": theme["selectionBackground"], "selected_fg": theme["foreground"],
+        "inactive_fg": color(theme, "dimForeground", "foreground"),
+        "graph_text": theme["foreground"], "meter_bg": color(theme, "surfaceDark", "background"),
+        "proc_misc": theme["purple"], "cpu_box": theme["blue"], "mem_box": theme["green"],
+        "net_box": theme["cyan"], "proc_box": theme["purple"],
+        "div_line": color(theme, "border", "brightBlack"),
+    }
+    for graph, keys in {
+        "temp": ("green", "yellow", "red"), "cpu": ("blue", "cyan", "green"),
+        "free": ("green", "cyan", "blue"), "cached": ("blue", "cyan", "green"),
+        "available": ("green", "yellow", "red"), "used": ("green", "yellow", "red"),
+        "download": ("blue", "cyan", "green"), "upload": ("purple", "yellow", "red"),
+        "process": ("green", "yellow", "red"),
+    }.items():
+        for stop, key in zip(("start", "mid", "end"), keys):
+            colors[f"{graph}_{stop}"] = theme[key]
+    return "# Generated by scripts/generate-themes.py\n" + "".join(
+        f'theme[{key}]="{value}"\n' for key, value in colors.items()
+    )
+
+
+def shell_palette(theme: dict[str, str]) -> str:
+    colors = {"grey": color(theme, "dimForeground", "foreground"),
+              "white": theme["foreground"], "magenta": theme["purple"]}
+    colors.update({key: theme[key] for key in ("red", "yellow", "blue", "cyan")})
+    return "# Generated by scripts/generate-themes.py\n" + "".join(
+        f'local {key}=\'{value}\'\n' for key, value in colors.items()
+    )
 
 
 def nvim_lua(theme: dict[str, str]) -> str:
@@ -525,10 +597,10 @@ def nvim_lua(theme: dict[str, str]) -> str:
         "Pmenu": {"fg": theme["foreground"], "bg": surface},
         "PmenuSel": {"fg": theme["background"], "bg": theme["blue"]},
         "StatusLine": {"fg": theme["foreground"], "bg": surface},
-        "StatusLineNC": {"fg": theme["white"], "bg": surface_dark},
+        "StatusLineNC": {"fg": theme["foreground"], "bg": surface_dark},
         "VertSplit": {"fg": border},
         "WinSeparator": {"fg": border},
-        "TabLine": {"fg": theme["white"], "bg": surface_dark},
+        "TabLine": {"fg": theme["foreground"], "bg": surface_dark},
         "TabLineSel": {"fg": theme["background"], "bg": theme["blue"], "bold": True},
         "MatchParen": {"fg": theme["yellow"], "bold": True},
         "Directory": {"fg": theme["blue"]},
@@ -625,7 +697,7 @@ def doom_elisp(theme: dict[str, str]) -> str:
    `(line-number ((t (:foreground "{theme['brightBlack']}" :background ,background))))
    `(line-number-current-line ((t (:foreground ,yellow :background ,surface-dark :weight bold))))
    `(mode-line ((t (:foreground ,foreground :background ,surface :box (:line-width -1 :color ,border)))))
-   `(mode-line-inactive ((t (:foreground "{theme['white']}" :background ,surface-dark :box (:line-width -1 :color ,border)))))
+   `(mode-line-inactive ((t (:foreground ,foreground :background ,surface-dark :box (:line-width -1 :color ,border)))))
    `(vertical-border ((t (:foreground ,border))))
    `(show-paren-match ((t (:foreground ,yellow :weight bold))))
    `(isearch ((t (:foreground ,background :background ,orange))))
@@ -660,7 +732,11 @@ def generated_files(theme: dict[str, str]) -> dict[Path, str]:
         theme_dir / "glow.json": json_text(glow_style(theme)),
         theme_dir / "yazi-flavor.toml": yazi_flavor(theme),
         theme_dir / "tmux.conf": tmux_conf(theme),
-        theme_dir / "codex.tmTheme": codex_theme(theme),
+        theme_dir / "codex.tmTheme": textmate_theme(theme),
+        theme_dir / "bat.tmTheme": textmate_theme(theme, BAT_THEME_NAME),
+        theme_dir / "spotify-theme.toml": spotify_theme(theme),
+        theme_dir / "bpytop.theme": bpytop_theme(theme),
+        theme_dir / "shell.zsh": shell_palette(theme),
         theme_dir / "nvim.lua": nvim_lua(theme),
         theme_dir / "doom-theme.el": doom_elisp(theme),
     }
@@ -724,6 +800,8 @@ def replace_file(path: Path, content: str) -> None:
 def active_repo_files(theme: dict[str, str]) -> dict[Path, str]:
     name = theme["name"]
     generated = generated_files(theme)
+    config_root = REPO_ROOT / "tools/.config"
+    htop_scheme = HTOP_LIGHT_TERMINAL if windows_application_theme(theme) == "light" else HTOP_DEFAULT
     return {
         REPO_ROOT / "tools/.config/theme-pack/current-theme": f"{name}\n",
         REPO_ROOT / f"tools/.codex/themes/{CODEX_THEME_NAME}.tmTheme": generated[
@@ -733,6 +811,20 @@ def active_repo_files(theme: dict[str, str]) -> dict[Path, str]:
             (REPO_ROOT / "tools/.codex/config.toml").read_text(encoding="utf-8")
         ),
         REPO_ROOT / "tools/.config/glow/theme.json": generated[GENERATED_DIR / name / "glow.json"],
+        config_root / "bat/themes/dotfiles-current.tmTheme": generated[GENERATED_DIR / name / "bat.tmTheme"],
+        config_root / "bat/config": f'# Generated by scripts/generate-themes.py\n--theme="{BAT_THEME_NAME}"\n',
+        config_root / "spotify-player/theme.toml": generated[GENERATED_DIR / name / "spotify-theme.toml"],
+        config_root / "spotify-player/app.toml": toml_string_setting(
+            (config_root / "spotify-player/app.toml").read_text(encoding="utf-8"), "theme", "dotfiles-current"
+        ),
+        config_root / "bpytop/themes/dotfiles-current.theme": generated[GENERATED_DIR / name / "bpytop.theme"],
+        config_root / "bpytop/bpytop.conf": line_setting(
+            (config_root / "bpytop/bpytop.conf").read_text(encoding="utf-8"), "color_theme", '"+dotfiles-current"'
+        ),
+        config_root / "htop/htoprc": line_setting(
+            (config_root / "htop/htoprc").read_text(encoding="utf-8"), "color_scheme", str(htop_scheme)
+        ),
+        config_root / "theme-pack/shell/current.zsh": generated[GENERATED_DIR / name / "shell.zsh"],
         REPO_ROOT / "tools/.config/yazi/theme.toml": (
             "#:schema https://yazi-rs.github.io/schemas/theme.json\n\n"
             f"[flavor]\ndark = \"{name}\"\nlight = \"{name}\"\n"

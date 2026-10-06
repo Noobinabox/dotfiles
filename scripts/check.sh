@@ -41,6 +41,7 @@ done < <(find tools/.codex -maxdepth 1 -type f -name '*.md' -print0 | sort -z)
 
 dotfiles_heading "checking generated themes"
 scripts/generate-themes.py --check
+python3 scripts/test-generate-themes.py
 
 dotfiles_heading "checking vault conversion"
 scripts/test-convert-vault-to-org.sh

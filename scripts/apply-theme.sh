@@ -286,6 +286,7 @@ fi
 
 dotfiles_heading "applying repo theme: $theme"
 "$repo_root/scripts/generate-themes.py" --apply-repo "$theme"
+dotfiles_info "updated Codex syntax theme; restart Codex or select dotfiles-current with /theme"
 
 if tmux info >/dev/null 2>&1 && [[ -r "$HOME/.config/theme-pack/tmux/current.conf" ]]; then
 	tmux source-file "$HOME/.config/theme-pack/tmux/current.conf"

@@ -242,6 +242,15 @@ scripts/generate-themes.py --write
 scripts/apply-theme.sh
 ```
 
+Tmux inactive tabs use the theme foreground on its background so labels remain
+readable in light themes. The selected tab uses the theme's blue accent.
+
+The theme selector also generates a Codex syntax theme and sets `tui.theme` to
+`dotfiles-current`, preserving other Codex settings. Code, diffs, and displayed
+commands use the selected palette. Stow the `tools` package once after adding
+this integration to link `~/.codex/themes`. Restart Codex after switching themes,
+or use `/theme` to select `dotfiles-current` in the running session.
+
 The picker uses `fzf` when available and falls back to a numbered shell prompt.
 It lists repository themes and pywal16 built-in themes. Selecting a pywal16
 theme creates `themes/pywal-<theme>.json` first if that repo theme does not

@@ -3,6 +3,8 @@ from __future__ import annotations
 
 import argparse
 import json
+import plistlib
+import re
 import tomllib
 from pathlib import Path
 from typing import Any
@@ -13,6 +15,7 @@ from theme_schema import validate_theme_object
 REPO_ROOT = Path(__file__).resolve().parents[1]
 THEMES_DIR = REPO_ROOT / "themes"
 GENERATED_DIR = THEMES_DIR / "generated"
+CODEX_THEME_NAME = "dotfiles-current"
 
 
 def load_theme(path: Path) -> dict[str, str]:
@@ -407,12 +410,76 @@ set -g status-style "fg={theme['foreground']},bg={theme['background']}"
 set -g message-style "fg={theme['foreground']},bg={surface}"
 set -g pane-border-style "fg={theme['brightBlack']}"
 set -g pane-active-border-style "fg={theme['blue']}"
-set -g window-status-style "fg={theme['white']},bg={theme['background']}"
+set -g window-status-style "fg={theme['foreground']},bg={theme['background']}"
 set -g window-status-current-style "fg={theme['background']},bg={theme['blue']},bold"
-set -g window-status-format "#[fg={theme['white']},bg={theme['background']}] #I:#W "
+set -g window-status-format "#[fg={theme['foreground']},bg={theme['background']}] #I:#W "
 set -g window-status-current-format "#[fg={theme['background']},bg={theme['blue']},bold] #I:#W "
 set -g mode-style "fg={theme['background']},bg={theme['yellow']}"
 """
+
+
+def codex_theme(theme: dict[str, str]) -> str:
+    """Build a TextMate syntax theme for Codex code, diffs, and shell commands."""
+    scopes = {
+        "comment": color(theme, "comment", "brightBlack"),
+        "string": theme["green"],
+        "constant.numeric, constant.language": theme["blue"],
+        "keyword, storage": theme["red"],
+        "entity.name.function, support.function": theme["purple"],
+        "entity.name.type, support.type, support.class": theme["yellow"],
+        "variable": theme["blue"],
+        "punctuation": theme["foreground"],
+        "markup.inserted, diff.inserted": theme["green"],
+        "markup.deleted, diff.deleted, invalid": theme["red"],
+    }
+    settings = [{"settings": {
+        "foreground": theme["foreground"],
+        "background": theme["background"],
+        "caret": theme["cursorColor"],
+        "selection": theme["selectionBackground"],
+    }}]
+    settings.extend(
+        {"scope": scope, "settings": {"foreground": foreground}}
+        for scope, foreground in scopes.items()
+    )
+    return plistlib.dumps({
+        "name": f"Dotfiles {display_name(theme)}",
+        "settings": settings,
+    }, sort_keys=False).decode("utf-8")
+
+
+def codex_config_with_theme(text: str) -> str:
+    """Change only tui.theme, preserving unrelated settings and their formatting."""
+    try:
+        original = tomllib.loads(text)
+    except tomllib.TOMLDecodeError as error:
+        raise ValueError(f"Codex config: invalid TOML: {error}") from error
+    if not isinstance(original.get("tui", {}), dict):
+        raise ValueError("Codex config: tui must be a table")
+    if not text.endswith("\n"):
+        text += "\n"
+
+    setting = f'theme = "{CODEX_THEME_NAME}"\n'
+    table = re.search(r"(?m)^[ \t]*\[tui\][ \t]*(?:#.*)?\n", text)
+    if table:
+        following = re.search(r"(?m)^[ \t]*\[", text[table.end():])
+        end = table.end() + following.start() if following else len(text)
+        body = text[table.end():end]
+        key = re.search(r"(?m)^[ \t]*theme[ \t]*=.*(?:\n|$)", body)
+        body = body[:key.start()] + setting + body[key.end():] if key else setting + body
+        updated = text[:table.end()] + body + text[end:]
+    else:
+        updated = text.rstrip() + "\n\n[tui]\n" + setting
+
+    try:
+        parsed = tomllib.loads(updated)
+    except tomllib.TOMLDecodeError as error:
+        raise ValueError(f"Codex config: cannot safely update [tui].theme: {error}") from error
+    expected = original.copy()
+    expected["tui"] = {**original.get("tui", {}), "theme": CODEX_THEME_NAME}
+    if parsed != expected:
+        raise ValueError("Codex config: updating [tui].theme would change unrelated settings")
+    return updated
 
 
 def nvim_lua(theme: dict[str, str]) -> str:
@@ -593,6 +660,7 @@ def generated_files(theme: dict[str, str]) -> dict[Path, str]:
         theme_dir / "glow.json": json_text(glow_style(theme)),
         theme_dir / "yazi-flavor.toml": yazi_flavor(theme),
         theme_dir / "tmux.conf": tmux_conf(theme),
+        theme_dir / "codex.tmTheme": codex_theme(theme),
         theme_dir / "nvim.lua": nvim_lua(theme),
         theme_dir / "doom-theme.el": doom_elisp(theme),
     }
@@ -658,6 +726,12 @@ def active_repo_files(theme: dict[str, str]) -> dict[Path, str]:
     generated = generated_files(theme)
     return {
         REPO_ROOT / "tools/.config/theme-pack/current-theme": f"{name}\n",
+        REPO_ROOT / f"tools/.codex/themes/{CODEX_THEME_NAME}.tmTheme": generated[
+            GENERATED_DIR / name / "codex.tmTheme"
+        ],
+        REPO_ROOT / "tools/.codex/config.toml": codex_config_with_theme(
+            (REPO_ROOT / "tools/.codex/config.toml").read_text(encoding="utf-8")
+        ),
         REPO_ROOT / "tools/.config/glow/theme.json": generated[GENERATED_DIR / name / "glow.json"],
         REPO_ROOT / "tools/.config/yazi/theme.toml": (
             "#:schema https://yazi-rs.github.io/schemas/theme.json\n\n"

@@ -1,5 +1,5 @@
 #:schema https://yazi-rs.github.io/schemas/theme.json
 
 [flavor]
-dark = "solarized-light"
-light = "solarized-light"
+dark = "tokyo-night"
+light = "tokyo-night"

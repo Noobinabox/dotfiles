@@ -1,0 +1,23 @@
+{
+  "name": "Evergreen",
+  "black": "#19332d",
+  "red": "#d86666",
+  "green": "#8fbc8f",
+  "yellow": "#d6b46a",
+  "blue": "#78a6c8",
+  "purple": "#b39bc8",
+  "cyan": "#75b5a4",
+  "white": "#d8e4dc",
+  "brightBlack": "#557568",
+  "brightRed": "#f08a8a",
+  "brightGreen": "#b5d6a7",
+  "brightYellow": "#efd28a",
+  "brightBlue": "#9ac8e2",
+  "brightPurple": "#d0b9e6",
+  "brightCyan": "#9bd8c2",
+  "brightWhite": "#f2f7f3",
+  "background": "#10231e",
+  "foreground": "#d8e4dc",
+  "selectionBackground": "#2c5144",
+  "cursorColor": "#b5d6a7"
+}

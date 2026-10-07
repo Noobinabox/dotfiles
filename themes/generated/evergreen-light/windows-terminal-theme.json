@@ -1,0 +1,20 @@
+{
+  "name": "Evergreen Light",
+  "tab": {
+    "background": "#f4f8f1FF",
+    "iconStyle": "default",
+    "showCloseButton": "always",
+    "unfocusedBackground": null
+  },
+  "tabRow": {
+    "background": "#d7e8d7FF",
+    "unfocusedBackground": "#f4f8f1FF"
+  },
+  "window": {
+    "applicationTheme": "light",
+    "experimental.rainbowFrame": false,
+    "frame": null,
+    "unfocusedFrame": null,
+    "useMica": false
+  }
+}

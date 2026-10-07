@@ -1,0 +1,23 @@
+{
+  "name": "Evergreen Light",
+  "black": "#244238",
+  "red": "#b83b3b",
+  "green": "#367a4b",
+  "yellow": "#85651b",
+  "blue": "#28658a",
+  "purple": "#76538f",
+  "cyan": "#267a72",
+  "white": "#f4f8f1",
+  "brightBlack": "#60796c",
+  "brightRed": "#922d2d",
+  "brightGreen": "#2d633e",
+  "brightYellow": "#6b5014",
+  "brightBlue": "#1e5272",
+  "brightPurple": "#62447a",
+  "brightCyan": "#1e625b",
+  "brightWhite": "#ffffff",
+  "background": "#f4f8f1",
+  "foreground": "#244238",
+  "selectionBackground": "#cfe4d2",
+  "cursorColor": "#244238"
+}

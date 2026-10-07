@@ -1,0 +1,20 @@
+{
+  "name": "Evergreen",
+  "tab": {
+    "background": "#10231eFF",
+    "iconStyle": "default",
+    "showCloseButton": "always",
+    "unfocusedBackground": null
+  },
+  "tabRow": {
+    "background": "#152c26FF",
+    "unfocusedBackground": "#10231eFF"
+  },
+  "window": {
+    "applicationTheme": "dark",
+    "experimental.rainbowFrame": false,
+    "frame": null,
+    "unfocusedFrame": null,
+    "useMica": false
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "name": "Pywal Random Light",
+  "tab": {
+    "background": "#f7f3f7FF",
+    "iconStyle": "default",
+    "showCloseButton": "always",
+    "unfocusedBackground": null
+  },
+  "tabRow": {
+    "background": "#f7f3f7FF",
+    "unfocusedBackground": "#f7f3f7FF"
+  },
+  "window": {
+    "applicationTheme": "light",
+    "experimental.rainbowFrame": false,
+    "frame": null,
+    "unfocusedFrame": null,
+    "useMica": false
+  }
+}

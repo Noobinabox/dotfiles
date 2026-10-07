@@ -1,0 +1,20 @@
+{
+  "name": "Pywal Rose Pine Dawn",
+  "tab": {
+    "background": "#faf4edFF",
+    "iconStyle": "default",
+    "showCloseButton": "always",
+    "unfocusedBackground": null
+  },
+  "tabRow": {
+    "background": "#faf4edFF",
+    "unfocusedBackground": "#faf4edFF"
+  },
+  "window": {
+    "applicationTheme": "light",
+    "experimental.rainbowFrame": false,
+    "frame": null,
+    "unfocusedFrame": null,
+    "useMica": false
+  }
+}

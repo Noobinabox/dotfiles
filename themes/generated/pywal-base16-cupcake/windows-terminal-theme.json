@@ -1,0 +1,20 @@
+{
+  "name": "Pywal Base16 Cupcake",
+  "tab": {
+    "background": "#fbf1f2FF",
+    "iconStyle": "default",
+    "showCloseButton": "always",
+    "unfocusedBackground": null
+  },
+  "tabRow": {
+    "background": "#fbf1f2FF",
+    "unfocusedBackground": "#fbf1f2FF"
+  },
+  "window": {
+    "applicationTheme": "light",
+    "experimental.rainbowFrame": false,
+    "frame": null,
+    "unfocusedFrame": null,
+    "useMica": false
+  }
+}

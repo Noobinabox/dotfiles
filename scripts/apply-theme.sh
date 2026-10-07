@@ -67,7 +67,7 @@ list_wal_themes() {
 	wal --theme 2>/dev/null |
 		sed -E 's/\x1b\[[0-9;]*m//g' |
 		sed -n 's/^ - //p' |
-		sed -E 's/[[:space:]]+\(last used\)$//' |
+		sed -E 's/[[:space:]]+\([^)]*\)$//' |
 		sort -u
 }
 

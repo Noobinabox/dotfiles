@@ -121,7 +121,10 @@ else
 	if [[ -n "$image_path" ]]; then
 		wal -n -s -e -q --out-dir "$pywal_cache" -i "$image_path"
 	else
-		wal -n -s -e -q --out-dir "$pywal_cache" --theme "$wal_theme"
+		if ! wal -n -s -e -q --out-dir "$pywal_cache" --theme "$wal_theme"; then
+			dotfiles_info "retrying pywal16 theme as light: $wal_theme"
+			wal -n -s -e -q -l --out-dir "$pywal_cache" --theme "$wal_theme"
+		fi
 	fi
 
 	PYWAL_CACHE_DIR="$pywal_cache" python3 "$repo_root/scripts/theme_from_pywal.py" --name "$theme_name" --from-pywal-cache

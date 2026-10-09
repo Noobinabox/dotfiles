@@ -142,6 +142,7 @@ words = [
   "backend",
   "bashable",
   "breakpoint",
+  "cancellable",
   "cmdlet",
   "couple",
   "databricks",

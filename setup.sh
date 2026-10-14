@@ -139,7 +139,7 @@ install_system_packages() {
 	pkg)
 		packages=(bash zsh git openssh curl ca-certificates unzip tar xz-utils stow
 			ripgrep fd fzf yazi bat tmux shellcheck shfmt less direnv gh glow
-			gum htop gdb emacs lua54 clang openjdk-17-x python neovim nodejs
+			gum htop gdb emacs lua54 clang openjdk-21 python neovim nodejs
 			rust)
 		;;
 	apt)

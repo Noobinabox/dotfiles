@@ -4,9 +4,15 @@ dotfiles_has_gum() {
   command -v gum >/dev/null 2>&1 && [[ -t 1 ]]
 }
 
+dotfiles_gum() {
+  local gum_command
+  gum_command="$(command -v gum)"
+  "$gum_command" "$@"
+}
+
 dotfiles_heading() {
   if dotfiles_has_gum; then
-    gum style --bold --foreground 63 "==> $*"
+    dotfiles_gum style --bold --foreground 63 "==> $*"
   else
     printf '\n==> %s\n' "$*"
   fi
@@ -14,7 +20,7 @@ dotfiles_heading() {
 
 dotfiles_info() {
   if dotfiles_has_gum; then
-    gum style --foreground 244 "  $*"
+    dotfiles_gum style --foreground 244 "  $*"
   else
     printf '  %s\n' "$*"
   fi
@@ -22,7 +28,7 @@ dotfiles_info() {
 
 dotfiles_success() {
   if dotfiles_has_gum; then
-    gum style --bold --foreground 114 "ok: $*"
+    dotfiles_gum style --bold --foreground 114 "ok: $*"
   else
     printf 'ok: %s\n' "$*"
   fi
@@ -30,7 +36,7 @@ dotfiles_success() {
 
 dotfiles_warn() {
   if dotfiles_has_gum; then
-    gum style --bold --foreground 179 "warn: $*" >&2
+    dotfiles_gum style --bold --foreground 179 "warn: $*" >&2
   else
     printf 'warn: %s\n' "$*" >&2
   fi
@@ -38,7 +44,7 @@ dotfiles_warn() {
 
 dotfiles_error() {
   if dotfiles_has_gum; then
-    gum style --bold --foreground 203 "error: $*" >&2
+    dotfiles_gum style --bold --foreground 203 "error: $*" >&2
   else
     printf 'error: %s\n' "$*" >&2
   fi
@@ -48,7 +54,7 @@ dotfiles_confirm() {
   local prompt="$1"
 
   if dotfiles_has_gum; then
-    gum confirm "$prompt"
+    dotfiles_gum confirm "$prompt"
   else
     read -r -p "$prompt [y/N] " reply
     [[ "$reply" == [Yy] || "$reply" == [Yy][Ee][Ss] ]]

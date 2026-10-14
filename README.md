@@ -274,6 +274,11 @@ Other settings in Spotify Player, bpytop, htop, and Codex are preserved.
 Stow `tools` once to link the new bat and app theme files. Restart running apps
 and editors after changing themes; reload the zsh prompt with `exec zsh -l`.
 
+Kitty is also Stow-managed at `~/.config/kitty/kitty.conf` and shares the
+Alacritty-style font, padding, opacity, cursor, bell, and generated 16-color
+palette settings. Kitty is skipped from Termux package checks because it is a
+desktop terminal rather than a Termux-native package.
+
 The picker uses `fzf` when available and falls back to a numbered shell prompt.
 It lists repository themes and pywal16 built-in themes. Selecting a pywal16
 theme creates `themes/pywal-<theme>.json` first if that repo theme does not

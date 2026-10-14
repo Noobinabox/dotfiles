@@ -340,4 +340,12 @@ if [[ "$repo_only" == false ]]; then
 	dotfiles_info "backup root: $backup_root"
 fi
 
+if [[ -n "${KITTY_WINDOW_ID:-}" ]] && command -v kitten >/dev/null 2>&1 && [[ -f "$repo_root/tools/.config/theme-pack/kitty/current.conf" ]]; then
+	if kitten @ set-colors --all --configured "$repo_root/tools/.config/theme-pack/kitty/current.conf" >/dev/null 2>&1; then
+		dotfiles_info "reloaded Kitty colors"
+	else
+		dotfiles_info "Kitty remote control unavailable; new Kitty windows will use the updated theme"
+	fi
+fi
+
 dotfiles_success "theme applied: $theme"

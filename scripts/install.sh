@@ -82,6 +82,7 @@ backup_path .config/glow/glow.yml
 backup_path .config/glow/theme.json
 backup_path .config/theme-pack
 backup_path .config/yazi
+backup_path .config/kitty
 backup_path .config/spotify-player/app.toml
 backup_path .config/htop/htoprc
 backup_path .config/bpytop/bpytop.conf

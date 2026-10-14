@@ -222,6 +222,25 @@ def termux_colors_properties(theme: dict[str, str]) -> str:
     return "\n".join(lines) + "\n"
 
 
+def kitty_theme(theme: dict[str, str]) -> str:
+    colors = [
+        theme["black"], theme["red"], theme["green"], theme["yellow"],
+        theme["blue"], theme["purple"], theme["cyan"], theme["white"],
+        theme["brightBlack"], theme["brightRed"], theme["brightGreen"],
+        theme["brightYellow"], theme["brightBlue"], theme["brightPurple"],
+        theme["brightCyan"], theme["brightWhite"],
+    ]
+    lines = [
+        f"foreground {theme['foreground']}",
+        f"background {theme['background']}",
+        f"cursor {theme['cursorColor']}",
+        f"selection_foreground {theme['background']}",
+        f"selection_background {theme['selectionBackground']}",
+    ]
+    lines.extend(f"color{index} {value}" for index, value in enumerate(colors))
+    return "\n".join(lines) + "\n"
+
+
 def glow_style(theme: dict[str, str]) -> dict[str, Any]:
     surface = color(theme, "surface", "background")
     code_background = color(theme, "surfaceDark", "background")
@@ -775,6 +794,7 @@ def generated_files(theme: dict[str, str]) -> dict[Path, str]:
     theme_dir = GENERATED_DIR / theme["name"]
     return {
         theme_dir / "alacritty.toml": alacritty_toml(theme),
+        theme_dir / "kitty.conf": kitty_theme(theme),
         theme_dir / "windows-terminal-scheme.json": json_text(windows_terminal_scheme(theme)),
         theme_dir / "windows-terminal-theme.json": json_text(windows_terminal_theme(theme)),
         theme_dir / "glow.json": json_text(glow_style(theme)),
@@ -873,6 +893,7 @@ def active_repo_files(theme: dict[str, str]) -> dict[Path, str]:
             (config_root / "htop/htoprc").read_text(encoding="utf-8"), "color_scheme", str(htop_scheme)
         ),
         config_root / "theme-pack/shell/current.zsh": generated[GENERATED_DIR / name / "shell.zsh"],
+        config_root / "theme-pack/kitty/current.conf": generated[GENERATED_DIR / name / "kitty.conf"],
         REPO_ROOT / "tools/.config/yazi/theme.toml": (
             "#:schema https://yazi-rs.github.io/schemas/theme.json\n\n"
             f"[flavor]\ndark = \"{name}\"\nlight = \"{name}\"\n"

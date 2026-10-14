@@ -328,6 +328,10 @@ ANSI terminal keys in the canonical JSON; app accent colors such as comments,
 borders, and errors are derived from that same palette unless explicitly set
 later. Use `./setup.sh --check` to confirm `pywal16` is installed.
 
+On Termux, applying a theme also writes the native terminal palette to
+`~/.termux/colors.properties`. Restart the Termux session or open a new one to
+see the updated colors.
+
 ## Auto-Sync
 
 This repo can sync itself every 10 minutes with a user-level systemd timer.

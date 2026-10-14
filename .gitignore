@@ -9,6 +9,8 @@ tools/.local/bin/*
 *.bak
 *.swp
 *.swo
+__pycache__/
+*.py[cod]
 
 # Secret material must be encrypted before it is tracked.
 secrets/*.env

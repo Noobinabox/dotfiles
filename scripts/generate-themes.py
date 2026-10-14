@@ -203,6 +203,25 @@ color = "{indexed_17}"
 """
 
 
+def termux_colors_properties(theme: dict[str, str]) -> str:
+    colors = [
+        theme["black"], theme["red"], theme["green"], theme["yellow"],
+        theme["blue"], theme["purple"], theme["cyan"], theme["white"],
+        theme["brightBlack"], theme["brightRed"], theme["brightGreen"],
+        theme["brightYellow"], theme["brightBlue"], theme["brightPurple"],
+        theme["brightCyan"], theme["brightWhite"],
+    ]
+    lines = [f"color{index}={value}" for index, value in enumerate(colors)]
+    lines.extend(
+        [
+            f"background={theme['background']}",
+            f"foreground={theme['foreground']}",
+            f"cursor={theme['cursorColor']}",
+        ]
+    )
+    return "\n".join(lines) + "\n"
+
+
 def glow_style(theme: dict[str, str]) -> dict[str, Any]:
     surface = color(theme, "surface", "background")
     code_background = color(theme, "surfaceDark", "background")
@@ -982,6 +1001,7 @@ def main() -> int:
     parser.add_argument("--write", action="store_true", help="Write generated outputs.")
     parser.add_argument("--apply-repo", metavar="THEME", help="Apply a generated theme to repo-managed configs.")
     parser.add_argument("--apply-alacritty", nargs=2, metavar=("THEME", "PATH"), help="Apply colors to an Alacritty config.")
+    parser.add_argument("--apply-termux", nargs=2, metavar=("THEME", "PATH"), help="Apply colors to a Termux colors.properties file.")
     parser.add_argument("--apply-windows-terminal", nargs=2, metavar=("THEME", "PATH"), help="Apply colors to Windows Terminal settings.")
     args = parser.parse_args()
 
@@ -990,7 +1010,7 @@ def main() -> int:
         if args.list:
             for theme in themes:
                 print(theme["name"])
-        if args.write or args.apply_repo or args.apply_alacritty or args.apply_windows_terminal:
+        if args.write or args.apply_repo or args.apply_alacritty or args.apply_termux or args.apply_windows_terminal:
             write_generated(themes)
         if args.check:
             return check_generated(themes)
@@ -999,6 +1019,9 @@ def main() -> int:
         if args.apply_alacritty:
             theme = find_theme(args.apply_alacritty[0], themes)
             apply_alacritty_theme(theme, Path(args.apply_alacritty[1]).expanduser())
+        if args.apply_termux:
+            theme = find_theme(args.apply_termux[0], themes)
+            replace_file(Path(args.apply_termux[1]).expanduser(), termux_colors_properties(theme))
         if args.apply_windows_terminal:
             theme = find_theme(args.apply_windows_terminal[0], themes)
             managed_names = {display_name(managed_theme) for managed_theme in themes}

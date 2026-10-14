@@ -13,8 +13,10 @@ fi
 
 if [[ "$platform" == termux ]]; then
 	alacritty_config="${ALACRITTY_CONFIG:-$HOME/.config/alacritty/alacritty.toml}"
+	termux_colors="${TERMUX_COLORS:-$HOME/.termux/colors.properties}"
 else
 	alacritty_config="${ALACRITTY_CONFIG:-/mnt/c/Users/slyon/AppData/Roaming/alacritty/alacritty.toml}"
+	termux_colors=""
 fi
 windows_terminal_settings="${WINDOWS_TERMINAL_SETTINGS:-/mnt/c/Users/slyon/AppData/Local/Packages/Microsoft.WindowsTerminal_8wekyb3d8bbwe/LocalState/settings.json}"
 
@@ -283,6 +285,7 @@ dotfiles_heading "generating theme outputs"
 
 if [[ "$repo_only" == false ]]; then
 	if [[ "$platform" == termux ]]; then
+		dotfiles_info "Termux detected; applying the native Termux color palette"
 		if [[ -f "$alacritty_config" ]]; then
 			dotfiles_info "Termux detected; applying the native Alacritty config"
 		else
@@ -324,6 +327,10 @@ if [[ "$repo_only" == false ]]; then
 		dotfiles_heading "applying Alacritty theme"
 		backup_file "$alacritty_config"
 		"$repo_root/scripts/generate-themes.py" --apply-alacritty "$theme" "$alacritty_config"
+	fi
+	if [[ -n "$termux_colors" ]]; then
+		backup_file "$termux_colors"
+		"$repo_root/scripts/generate-themes.py" --apply-termux "$theme" "$termux_colors"
 	fi
 	if [[ -n "$windows_terminal_settings" && -f "$windows_terminal_settings" ]]; then
 		dotfiles_heading "applying Windows Terminal theme"

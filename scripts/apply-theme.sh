@@ -3,7 +3,19 @@ set -euo pipefail
 
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 backup_root="${DOTFILES_BACKUP_DIR:-$HOME/.dotfiles-backup/$(date +%Y%m%d-%H%M%S)-$$}"
-alacritty_config="${ALACRITTY_CONFIG:-/mnt/c/Users/slyon/AppData/Roaming/alacritty/alacritty.toml}"
+if [[ -n "${PREFIX:-}" && -x "$PREFIX/bin/pkg" ]]; then
+	platform=termux
+elif grep -qi microsoft /proc/version 2>/dev/null; then
+	platform=wsl
+else
+	platform=linux
+fi
+
+if [[ "$platform" == termux ]]; then
+	alacritty_config="${ALACRITTY_CONFIG:-$HOME/.config/alacritty/alacritty.toml}"
+else
+	alacritty_config="${ALACRITTY_CONFIG:-/mnt/c/Users/slyon/AppData/Roaming/alacritty/alacritty.toml}"
+fi
 windows_terminal_settings="${WINDOWS_TERMINAL_SETTINGS:-/mnt/c/Users/slyon/AppData/Local/Packages/Microsoft.WindowsTerminal_8wekyb3d8bbwe/LocalState/settings.json}"
 
 discover_windows_config() {
@@ -270,18 +282,18 @@ dotfiles_heading "generating theme outputs"
 "$repo_root/scripts/generate-themes.py" --write
 
 if [[ "$repo_only" == false ]]; then
-	alacritty_config="$(discover_windows_config "$alacritty_config" '/mnt/c/Users/*/AppData/Roaming/alacritty/alacritty.toml')" || {
-		dotfiles_error "Alacritty config not found; set ALACRITTY_CONFIG to its WSL path"
-		exit 1
-	}
-	windows_terminal_settings="$(discover_windows_config "$windows_terminal_settings" '/mnt/c/Users/*/AppData/Local/Packages/Microsoft.WindowsTerminal_8wekyb3d8bbwe/LocalState/settings.json')" || {
-		dotfiles_error "Windows Terminal settings not found; set WINDOWS_TERMINAL_SETTINGS to its WSL path"
-		exit 1
-	}
-	dotfiles_heading "preflighting Windows terminal themes"
-	tmpdir="$(mktemp -d)"
-	trap 'rm -rf "$tmpdir"' EXIT
-	preflight_windows_apply "$tmpdir"
+	if [[ "$platform" == termux ]]; then
+		if [[ -f "$alacritty_config" ]]; then
+			dotfiles_info "Termux detected; applying the native Alacritty config"
+		else
+			dotfiles_info "Termux detected; no Alacritty config found, skipping terminal config"
+		fi
+	else
+		alacritty_config="$(discover_windows_config "$alacritty_config" '/mnt/c/Users/*/AppData/Roaming/alacritty/alacritty.toml' || true)"
+		windows_terminal_settings="$(discover_windows_config "$windows_terminal_settings" '/mnt/c/Users/*/AppData/Local/Packages/Microsoft.WindowsTerminal_8wekyb3d8bbwe/LocalState/settings.json' || true)"
+		[[ -n "$alacritty_config" ]] || dotfiles_info "Alacritty config unavailable; skipping it"
+		[[ -n "$windows_terminal_settings" ]] || dotfiles_info "Windows Terminal settings unavailable; skipping them"
+	fi
 fi
 
 dotfiles_heading "applying repo theme: $theme"
@@ -308,11 +320,16 @@ if tmux info >/dev/null 2>&1 && [[ -r "$HOME/.config/theme-pack/tmux/current.con
 fi
 
 if [[ "$repo_only" == false ]]; then
-	dotfiles_heading "applying Windows terminal themes"
-	backup_file "$alacritty_config"
-	backup_file "$windows_terminal_settings"
-	"$repo_root/scripts/generate-themes.py" --apply-alacritty "$theme" "$alacritty_config"
-	"$repo_root/scripts/generate-themes.py" --apply-windows-terminal "$theme" "$windows_terminal_settings"
+	if [[ -n "$alacritty_config" && -f "$alacritty_config" ]]; then
+		dotfiles_heading "applying Alacritty theme"
+		backup_file "$alacritty_config"
+		"$repo_root/scripts/generate-themes.py" --apply-alacritty "$theme" "$alacritty_config"
+	fi
+	if [[ -n "$windows_terminal_settings" && -f "$windows_terminal_settings" ]]; then
+		dotfiles_heading "applying Windows Terminal theme"
+		backup_file "$windows_terminal_settings"
+		"$repo_root/scripts/generate-themes.py" --apply-windows-terminal "$theme" "$windows_terminal_settings"
+	fi
 	dotfiles_info "backup root: $backup_root"
 fi
 

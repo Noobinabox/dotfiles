@@ -117,7 +117,8 @@ To bootstrap dependencies and stow configs in one run:
 ./setup.sh --stow
 ```
 
-`setup.sh` detects Linux, WSL, macOS, Windows, and Termux environments. WSL uses the
+`setup.sh` detects Linux, Fedora, WSL, macOS, Windows, and Termux environments.
+Fedora uses its native `dnf` package manager. WSL uses the
 Linux package manager for Linux tools and expects Windows Terminal (`wt.exe`)
 for the native terminal. When run from Windows, system packages are left to
 the native Windows setup (for example, `winget`) instead of trying to install

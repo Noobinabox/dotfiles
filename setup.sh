@@ -22,6 +22,8 @@ detect_platform() {
 			printf 'termux\n'
 		elif grep -qi microsoft /proc/version 2>/dev/null; then
 			printf 'wsl\n'
+		elif [[ -r /etc/os-release ]] && . /etc/os-release && [[ "${ID:-}" == fedora ]]; then
+			printf 'fedora\n'
 		else
 			printf 'linux\n'
 		fi
@@ -307,7 +309,7 @@ install_user_local_tools() {
 	elif [[ "$check_only" == true ]]; then
 		record_missing "nvim"
 	else
-		if [[ "$platform" != linux && "$platform" != wsl ]]; then
+		if [[ "$platform" != linux && "$platform" != fedora && "$platform" != wsl ]]; then
 			record_missing "nvim (install with the native platform package manager)"
 			return
 		fi

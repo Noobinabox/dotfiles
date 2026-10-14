@@ -15,7 +15,7 @@ assert_platform() {
 	}
 }
 
-for platform in linux wsl termux windows macos; do
+for platform in linux fedora wsl termux windows macos; do
 	assert_platform "$platform"
 done
 

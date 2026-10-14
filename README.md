@@ -117,12 +117,20 @@ To bootstrap dependencies and stow configs in one run:
 ./setup.sh --stow
 ```
 
+`setup.sh` detects Linux, WSL, macOS, Windows, and Termux environments. WSL uses the
+Linux package manager for Linux tools and expects Windows Terminal (`wt.exe`)
+for the native terminal. When run from Windows, system packages are left to
+the native Windows setup (for example, `winget`) instead of trying to install
+Linux packages or requiring Alacritty. Termux uses its native `pkg` package
+manager and does not download desktop Linux binaries.
+
 ## Daily Use
 
 After changing config in this repo, run:
 
 ```sh
 scripts/check.sh
+scripts/test-setup-platforms.sh
 ```
 
 Reload shell config:

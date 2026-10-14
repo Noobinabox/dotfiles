@@ -2,7 +2,9 @@
 
 # Distro package helpers
 dotfiles_pkg_manager() {
-  if command -v apt >/dev/null 2>&1; then
+  if [ -n "${PREFIX:-}" ] && [ -x "${PREFIX}/bin/pkg" ]; then
+    printf 'pkg\n'
+  elif command -v apt >/dev/null 2>&1; then
     printf 'apt\n'
   elif command -v dnf >/dev/null 2>&1; then
     printf 'dnf\n'
@@ -19,7 +21,7 @@ dotfiles_pkg_manager() {
 }
 
 dotfiles_sudo() {
-  if [ "$(id -u)" -eq 0 ]; then
+  if [ "$(id -u)" -eq 0 ] || [ "$(dotfiles_pkg_manager)" = pkg ]; then
     "$@"
   else
     sudo "$@"
@@ -33,6 +35,7 @@ dotfiles_pkg_update() {
     pacman) dotfiles_sudo pacman -Sy ;;
     zypper) dotfiles_sudo zypper refresh ;;
     apk) dotfiles_sudo apk update ;;
+    pkg) pkg update ;;
     *) return 1 ;;
   esac
 }
@@ -44,6 +47,7 @@ dotfiles_pkg_upgrade() {
     pacman) dotfiles_sudo pacman -Syu "$@" ;;
     zypper) dotfiles_sudo zypper update "$@" ;;
     apk) dotfiles_sudo apk upgrade "$@" ;;
+    pkg) pkg upgrade "$@" ;;
     *) return 1 ;;
   esac
 }
@@ -55,6 +59,7 @@ dotfiles_pkg_search() {
     pacman) pacman -Ss "$@" ;;
     zypper) zypper search "$@" ;;
     apk) apk search "$@" ;;
+    pkg) pkg search "$@" ;;
     *) return 1 ;;
   esac
 }
@@ -66,6 +71,7 @@ dotfiles_pkg_install() {
     pacman) dotfiles_sudo pacman -S ${DOTFILES_ASSUME_YES:+--noconfirm} "$@" ;;
     zypper) dotfiles_sudo zypper install ${DOTFILES_ASSUME_YES:+-y} "$@" ;;
     apk) dotfiles_sudo apk add "$@" ;;
+    pkg) pkg install -y "$@" ;;
     *) return 1 ;;
   esac
 }
@@ -77,6 +83,7 @@ dotfiles_pkg_remove() {
     pacman) dotfiles_sudo pacman -R "$@" ;;
     zypper) dotfiles_sudo zypper remove "$@" ;;
     apk) dotfiles_sudo apk del "$@" ;;
+    pkg) pkg uninstall "$@" ;;
     *) return 1 ;;
   esac
 }

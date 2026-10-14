@@ -4,24 +4,54 @@ set -euo pipefail
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 check_only=false
 run_stow=false
+print_platform=false
 node_version="${DOTFILES_NODE_VERSION:-24.18.0}"
 neovim_version="${DOTFILES_NEOVIM_VERSION:-v0.12.3}"
 
+detect_platform() {
+	if [[ -n "${DOTFILES_PLATFORM:-}" ]]; then
+		printf '%s\n' "$DOTFILES_PLATFORM"
+		return
+	fi
+
+	case "$(uname -s)" in
+	Darwin*) printf 'macos\n' ;;
+	MINGW* | MSYS* | CYGWIN*) printf 'windows\n' ;;
+	Linux*)
+		if [[ -n "${PREFIX:-}" && -x "$PREFIX/bin/pkg" ]]; then
+			printf 'termux\n'
+		elif grep -qi microsoft /proc/version 2>/dev/null; then
+			printf 'wsl\n'
+		else
+			printf 'linux\n'
+		fi
+		;;
+	*) printf 'unknown\n' ;;
+	esac
+}
+
+platform="$(detect_platform)"
+
 usage() {
 	command cat <<'USAGE'
-Usage: ./setup.sh [--check] [--stow]
+Usage: ./setup.sh [--check] [--stow] [--print-platform]
 
 Bootstraps applications used by this dotfiles repository.
 
 Options:
   --check   Report missing tools without installing.
   --stow    Run scripts/install.sh after dependency setup.
+  --print-platform
+            Print the detected platform and exit without installing anything.
   --help    Show this help.
 USAGE
 }
 
 while [[ "$#" -gt 0 ]]; do
 	case "$1" in
+	--print-platform)
+		print_platform=true
+		;;
 	--check)
 		check_only=true
 		;;
@@ -40,6 +70,11 @@ while [[ "$#" -gt 0 ]]; do
 	esac
 	shift
 done
+
+if [[ "$print_platform" == true ]]; then
+	printf '%s\n' "$platform"
+	exit 0
+fi
 
 # Provides dotfiles_pkg_manager and dotfiles_pkg_install.
 # shellcheck source=shell/.bashrc_aliases
@@ -93,10 +128,20 @@ install_system_packages() {
 	local manager packages=()
 
 	log "system packages"
+	if [[ "$platform" == windows || "$platform" == macos ]]; then
+		info "$platform detected; use the native package manager for system packages"
+		return 0
+	fi
 	manager="$(dotfiles_pkg_manager)"
 	info "package manager: $manager"
 
 	case "$manager" in
+	pkg)
+		packages=(bash zsh git openssh curl ca-certificates unzip tar xz stow
+			ripgrep fd fzf yazi bat tmux shellcheck shfmt less direnv gh glow
+			gum htop gdb emacs lua clang gcc openjdk-17 python neovim nodejs
+			rust)
+		;;
 	apt)
 		packages=(
 			bash zsh git openssh-client curl ca-certificates unzip tar xz-utils
@@ -262,6 +307,10 @@ install_user_local_tools() {
 	elif [[ "$check_only" == true ]]; then
 		record_missing "nvim"
 	else
+		if [[ "$platform" != linux && "$platform" != wsl ]]; then
+			record_missing "nvim (install with the native platform package manager)"
+			return
+		fi
 		local archive="$HOME/.local/opt/nvim-linux-x86_64.tar.gz"
 		curl -fsSL "https://github.com/neovim/neovim/releases/download/${neovim_version}/nvim-linux-x86_64.tar.gz" -o "$archive"
 		tar -C "$HOME/.local/opt" -xzf "$archive"
@@ -412,6 +461,7 @@ validate_wsl_helpers() {
 	log "WSL helpers"
 	if grep -qi microsoft /proc/version 2>/dev/null; then
 		have shutdown.exe || record_missing "shutdown.exe"
+		have wt.exe || record_missing "wt.exe (Windows Terminal)"
 	else
 		info "not WSL; skipping shutdown.exe check"
 	fi

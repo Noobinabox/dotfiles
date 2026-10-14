@@ -20,10 +20,10 @@ detect_platform() {
 	Linux*)
 		if [[ -n "${PREFIX:-}" && -x "$PREFIX/bin/pkg" ]]; then
 			printf 'termux\n'
-		elif grep -qi microsoft /proc/version 2>/dev/null; then
-			printf 'wsl\n'
 		elif [[ -r /etc/os-release ]] && . /etc/os-release && [[ "${ID:-}" == fedora ]]; then
 			printf 'fedora\n'
+		elif [[ ! -f /.dockerenv ]] && grep -qi microsoft /proc/version 2>/dev/null; then
+			printf 'wsl\n'
 		else
 			printf 'linux\n'
 		fi

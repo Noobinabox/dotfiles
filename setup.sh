@@ -137,9 +137,9 @@ install_system_packages() {
 
 	case "$manager" in
 	pkg)
-		packages=(bash zsh git openssh curl ca-certificates unzip tar xz stow
+		packages=(bash zsh git openssh curl ca-certificates unzip tar xz-utils stow
 			ripgrep fd fzf yazi bat tmux shellcheck shfmt less direnv gh glow
-			gum htop gdb emacs lua clang gcc openjdk-17 python neovim nodejs
+			gum htop gdb emacs lua54 clang openjdk-17-x python neovim nodejs
 			rust)
 		;;
 	apt)

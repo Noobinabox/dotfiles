@@ -1,3 +1,5 @@
+include = ["weather-highlights.toml"]
+
 # Optional key macros (none enabled by default); /help macro for details.
 # [[macros.rules]]
 # key = "F5"

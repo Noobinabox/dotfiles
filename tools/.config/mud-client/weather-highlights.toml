@@ -1,0 +1,231 @@
+# Weather highlights converted from tintin-rots/weather/weather.highlights.tt.
+# Duplicate source entries are collapsed; blink is unsupported by the client.
+
+[[highlights.rules]]
+name = "weather-01"
+match_type = "plain"
+pattern = "Snow lies upon the ground."
+foreground = "#FFFAFA"
+
+[[highlights.rules]]
+name = "weather-02"
+match_type = "plain"
+pattern = "The street is slowly covered by softly falling snow."
+foreground = "#FFFAFA"
+
+[[highlights.rules]]
+name = "weather-03"
+match_type = "plain"
+pattern = "Wet snow falls through the trees, but cannot cover the ground."
+foreground = "#FFFAFA"
+
+[[highlights.rules]]
+name = "weather-04"
+match_type = "plain"
+pattern = "Snow falls gently instantly thawing as it hits the water."
+foreground = "#FFFAFA"
+
+[[highlights.rules]]
+name = "weather-05"
+match_type = "plain"
+pattern = "Snow falls gently but disappears as soon as it hits the water."
+foreground = "#FFFAFA"
+
+[[highlights.rules]]
+name = "weather-06"
+match_type = "plain"
+pattern = "The road slowly starts to disappear under a carpet of snow."
+foreground = "#FFFAFA"
+
+[[highlights.rules]]
+name = "weather-07"
+match_type = "plain"
+pattern = "The occasional slowflake drifts down."
+foreground = "#FFFAFA"
+
+[[highlights.rules]]
+name = "weather-08"
+match_type = "plain"
+pattern = "Now and again the occasional snowflake drifts through the trees."
+foreground = "#FFFAFA"
+
+[[highlights.rules]]
+name = "weather-09"
+match_type = "plain"
+pattern = "The occasional snowflake drifts down."
+foreground = "#81A4D4"
+
+[[highlights.rules]]
+name = "weather-10"
+match_type = "plain"
+pattern = "The fields become blankets of white as snow quickly covers the ground."
+foreground = "#81A4D4"
+
+[[highlights.rules]]
+name = "weather-11"
+match_type = "plain"
+pattern = "The hills quickly become covered in thick snow."
+foreground = "#81A4D4"
+
+[[highlights.rules]]
+name = "weather-12"
+match_type = "plain"
+pattern = "Snow falls on the wet ground, but only in a few places does it manage to settle."
+foreground = "#81A4D4"
+
+[[highlights.rules]]
+name = "weather-13"
+match_type = "plain"
+pattern = "Driving snow and a freezing wind blow fiercely down the mountain."
+foreground = "#477BC3"
+bold = true
+
+[[highlights.rules]]
+name = "weather-14"
+match_type = "plain"
+pattern = "It is hard to see anything as the snowstorm intensifies."
+foreground = "#477BC3"
+bold = true
+
+[[highlights.rules]]
+name = "weather-15"
+match_type = "plain"
+pattern = "Blizzard conditions prevail as the storm intensifies."
+foreground = "#477BC3"
+bold = true
+
+[[highlights.rules]]
+name = "weather-16"
+match_type = "plain"
+pattern = "Flashes of lightning and the sound of heavy rain comes through the trees."
+foreground = "#F0FB3E"
+
+[[highlights.rules]]
+name = "weather-17"
+match_type = "plain"
+pattern = "Flashes of lightning are visible over the hills and driving rain."
+foreground = "#F0FB3E"
+
+[[highlights.rules]]
+name = "weather-18"
+match_type = "plain"
+pattern = "Flashes of lightning can be seen through the trees."
+foreground = "#F0FB3E"
+
+[[highlights.rules]]
+name = "weather-19"
+match_type = "plain"
+pattern = "Lightning lights up the fields as the rain continues."
+foreground = "#F0FB3E"
+
+[[highlights.rules]]
+name = "weather-20"
+match_type = "plain"
+pattern = "Lightning lights up the sullen sky through the rain."
+foreground = "#F0FB3E"
+
+[[highlights.rules]]
+name = "weather-21"
+match_type = "plain"
+pattern = "Occasional flashes of lightning illuminate this area."
+foreground = "#F0FB3E"
+
+[[highlights.rules]]
+name = "weather-22"
+match_type = "plain"
+pattern = "The mountains are lit by flashes of lightning as the storm intensifies."
+foreground = "#F0FB3E"
+
+[[highlights.rules]]
+name = "weather-23"
+match_type = "plain"
+pattern = "The road is suddenly lit by violent flashes of lightning as the rain continues."
+foreground = "#F0FB3E"
+
+[[highlights.rules]]
+name = "weather-24"
+match_type = "plain"
+pattern = "The storm intesifies as flashes of lightning pierce the sky."
+foreground = "#F0FB3E"
+
+[[highlights.rules]]
+name = "weather-25"
+match_type = "plain"
+pattern = "The water is lit by flashes of lightning."
+foreground = "#F0FB3E"
+
+[[highlights.rules]]
+name = "weather-26"
+match_type = "plain"
+pattern = "The water is occasionally lit by flashes of lightning."
+foreground = "#F0FB3E"
+
+[[highlights.rules]]
+name = "weather-27"
+match_type = "plain"
+pattern = "Puddles form on the street as heavy rain falls."
+foreground = "#5C81B5"
+underline = true
+
+[[highlights.rules]]
+name = "weather-28"
+match_type = "plain"
+pattern = "Rain falls heavily on the fields."
+foreground = "#789AC7"
+
+[[highlights.rules]]
+name = "weather-29"
+match_type = "plain"
+pattern = "Large drops of water fall from the trees, as heavy rain falls overhead."
+foreground = "#5C81B5"
+underline = true
+
+[[highlights.rules]]
+name = "weather-30"
+match_type = "plain"
+pattern = "Rain falls heavily on the hills, forming little streams as it runs away."
+foreground = "#789AC7"
+
+[[highlights.rules]]
+name = "weather-31"
+match_type = "plain"
+pattern = "Rain lashes down over the mountains, chilling you to the bone."
+foreground = "#5C81B5"
+underline = true
+
+[[highlights.rules]]
+name = "weather-32"
+match_type = "plain"
+pattern = "Rain falls heavily onto the water, dampening its motion."
+foreground = "#789AC7"
+
+[[highlights.rules]]
+name = "weather-33"
+match_type = "plain"
+pattern = "A steady stream of water pours in from above."
+foreground = "#789AC7"
+
+[[highlights.rules]]
+name = "weather-34"
+match_type = "plain"
+pattern = "Rain lashes down onto the water, stinging the eyes and soaking you to the skin."
+foreground = "#789AC7"
+
+[[highlights.rules]]
+name = "weather-35"
+match_type = "plain"
+pattern = "Puddles form in ruts in the road as rain quickly falls."
+foreground = "#789AC7"
+
+[[highlights.rules]]
+name = "weather-36"
+match_type = "plain"
+pattern = "Heavy rain can be heard above through the trees,"
+foreground = "#789AC7"
+
+[[highlights.rules]]
+name = "weather-37"
+match_type = "plain"
+pattern = "Rain falls heavily on the already saturated ground making movement difficuilt."
+foreground = "#5C81B5"
+underline = true

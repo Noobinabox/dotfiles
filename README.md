@@ -449,6 +449,10 @@ available separately for recovery.
 MUD client files are managed in plaintext by the `tools` Stow package at
 `~/.config/mud-client`. Run `scripts/install.sh tools` to install its config,
 RoTS data, Lua scripts, character profiles, runtime config, and LuaLS settings.
+The main config includes `weather-highlights.toml`, converted from
+`tintin-rots/weather/weather.highlights.tt` with its colors, bold, and underline
+styles. Duplicate entries are collapsed; the client does not support blink.
+Use `/reload` after changing the highlight rules.
 The installer backs up the existing directory before Stow links the whole
 directory. This keeps `config.toml.runtime.toml` a regular file, as required by
 the client, and lets atomic saves update the repository. Previous untracked

@@ -46,6 +46,9 @@ python3 scripts/test-generate-themes.py
 dotfiles_heading "checking vault conversion"
 scripts/test-convert-vault-to-org.sh
 
+dotfiles_heading "checking encrypted backups"
+python3 scripts/test-secrets.py
+
 dotfiles_heading "checking TinTin++ LSP"
 node scripts/test-tintin-lsp.js
 

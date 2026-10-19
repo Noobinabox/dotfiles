@@ -50,7 +50,7 @@ The repo is organized as stow packages:
   `htop`, `bpytop`, `harper-ls`, GitHub CLI config, Angular config, and Codex
   config and instructions
 - `systemd`: user service and timer for automatic dotfiles sync
-- `secrets`: encrypted secret env files
+- `secrets`: encrypted secret env files, SSH keys, and MUD client backups
 
 Generated state, caches, histories, auth databases, plugin installs, and nested
 Git metadata are intentionally excluded.
@@ -395,11 +395,15 @@ live outside the repo:
 
 - `~/.config/secrets/shell.env`
 - `~/.config/secrets/npm.env`
+- `~/.ssh` (keys and SSH configuration)
+- `~/.config/mud-client` (the entire directory, including private settings)
 
 Tracked secret files are GPG encrypted:
 
 - `secrets/shell.env.gpg`
 - `secrets/npm.env.gpg`
+- `secrets/ssh.tar.gz.gpg`
+- `secrets/mud-client.tar.gz.gpg`
 
 To decrypt on this machine:
 
@@ -420,6 +424,29 @@ To use recipient-based encryption instead of symmetric/passphrase encryption:
 ```sh
 GPG_RECIPIENT='your-key-id-or-email' scripts/encrypt-secrets.sh
 ```
+
+Both scripts accept optional names: `shell.env`, `npm.env`, `ssh`, and
+`mud-client`. With no names they process all four; missing sources/backups
+are reported and skipped. To back up only SSH and MUD client files:
+
+```sh
+GPG_SYMMETRIC=1 scripts/encrypt-secrets.sh ssh mud-client
+scripts/decrypt-secrets.sh ssh mud-client
+```
+
+Directory backups follow symlinks, storing their contents as ordinary files
+so they can be restored on another machine. Stop the MUD client before backing
+up to avoid capturing changing state. Socket files are skipped; other special
+files (such as FIFOs) cause backup to fail. Both scripts require `python3` for
+directory archives. Restore validates archive paths and file types and installs
+directories with mode 700 and files with mode 600. Existing destinations are
+moved into private sibling `.<name>.backup.XXXXXX/original` backups before
+replacement; unrelated contents survive in those backups. Destination symlinks
+are refused. Failed encryption preserves the previous encrypted backup, and
+failed decryption or archive validation preserves the current destination.
+`XDG_CONFIG_HOME` is honored for MUD client and env files; SSH uses `$HOME/.ssh`.
+Only ciphertext belongs in this repository; keep the GPG key or passphrase
+available separately for recovery.
 
 Verify secret-backed tools without printing secret values:
 

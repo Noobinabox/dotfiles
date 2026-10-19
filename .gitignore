@@ -13,11 +13,10 @@ __pycache__/
 *.py[cod]
 
 # Secret material must be encrypted before it is tracked.
-secrets/*.env
-secrets/*.txt
-secrets/*.json
+secrets/*
 !secrets/*.gpg
 !secrets/README.md
+secrets/.encrypt.*/
 
 # Runtime auth/state that should never be imported directly.
 **/auth.db

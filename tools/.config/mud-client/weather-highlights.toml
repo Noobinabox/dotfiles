@@ -1,5 +1,5 @@
 # Weather highlights converted from tintin-rots/weather/weather.highlights.tt.
-# Duplicate source entries are collapsed; blink is unsupported by the client.
+# Duplicate source entries are collapsed; original highlight styles are preserved.
 
 [[highlights.rules]]
 name = "weather-01"
@@ -79,6 +79,7 @@ match_type = "plain"
 pattern = "Driving snow and a freezing wind blow fiercely down the mountain."
 foreground = "#477BC3"
 bold = true
+blink = true
 
 [[highlights.rules]]
 name = "weather-14"
@@ -86,6 +87,7 @@ match_type = "plain"
 pattern = "It is hard to see anything as the snowstorm intensifies."
 foreground = "#477BC3"
 bold = true
+blink = true
 
 [[highlights.rules]]
 name = "weather-15"
@@ -93,72 +95,84 @@ match_type = "plain"
 pattern = "Blizzard conditions prevail as the storm intensifies."
 foreground = "#477BC3"
 bold = true
+blink = true
 
 [[highlights.rules]]
 name = "weather-16"
 match_type = "plain"
 pattern = "Flashes of lightning and the sound of heavy rain comes through the trees."
 foreground = "#F0FB3E"
+blink = true
 
 [[highlights.rules]]
 name = "weather-17"
 match_type = "plain"
 pattern = "Flashes of lightning are visible over the hills and driving rain."
 foreground = "#F0FB3E"
+blink = true
 
 [[highlights.rules]]
 name = "weather-18"
 match_type = "plain"
 pattern = "Flashes of lightning can be seen through the trees."
 foreground = "#F0FB3E"
+blink = true
 
 [[highlights.rules]]
 name = "weather-19"
 match_type = "plain"
 pattern = "Lightning lights up the fields as the rain continues."
 foreground = "#F0FB3E"
+blink = true
 
 [[highlights.rules]]
 name = "weather-20"
 match_type = "plain"
 pattern = "Lightning lights up the sullen sky through the rain."
 foreground = "#F0FB3E"
+blink = true
 
 [[highlights.rules]]
 name = "weather-21"
 match_type = "plain"
 pattern = "Occasional flashes of lightning illuminate this area."
 foreground = "#F0FB3E"
+blink = true
 
 [[highlights.rules]]
 name = "weather-22"
 match_type = "plain"
 pattern = "The mountains are lit by flashes of lightning as the storm intensifies."
 foreground = "#F0FB3E"
+blink = true
 
 [[highlights.rules]]
 name = "weather-23"
 match_type = "plain"
 pattern = "The road is suddenly lit by violent flashes of lightning as the rain continues."
 foreground = "#F0FB3E"
+blink = true
 
 [[highlights.rules]]
 name = "weather-24"
 match_type = "plain"
 pattern = "The storm intesifies as flashes of lightning pierce the sky."
 foreground = "#F0FB3E"
+blink = true
 
 [[highlights.rules]]
 name = "weather-25"
 match_type = "plain"
 pattern = "The water is lit by flashes of lightning."
 foreground = "#F0FB3E"
+blink = true
 
 [[highlights.rules]]
 name = "weather-26"
 match_type = "plain"
 pattern = "The water is occasionally lit by flashes of lightning."
 foreground = "#F0FB3E"
+blink = true
 
 [[highlights.rules]]
 name = "weather-27"

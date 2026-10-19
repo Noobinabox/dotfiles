@@ -125,6 +125,13 @@ default keymaps:
 
 ## File, Buffer, And Project Keymaps
 
+File pickers include hidden files and directories while respecting Git ignore
+rules. From the dotfiles repository, `<leader><leader>` therefore includes
+`tools/.config/mud-client/scripts/skjor.lua` and the other Stow-managed configs.
+Restart Neovim after changing picker settings.
+To verify hidden-file discovery and ignore handling from this config directory,
+run `nvim --headless -n -u NONE -i NONE -l scripts/test-file-picker.lua`.
+
 | Key                         | Action                               |
 | --------------------------- | ------------------------------------ |
 | `<leader>fb`                | Buffers                              |

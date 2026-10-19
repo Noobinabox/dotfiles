@@ -55,6 +55,20 @@ local ok, err = pcall(function()
   end
   assert(hover and vim.inspect(hover):find("MudClientApi", 1, true),
     "Standalone Lua did not receive the MudClientApi hover type: " .. vim.inspect(hover))
+  local completion = client:request_sync("textDocument/completion", {
+    textDocument = { uri = vim.uri_from_fname(file) },
+    position = { line = 0, character = 7 },
+  }, 5000, 0)
+  local items = completion and completion.result
+  items = items and (items.items or items) or {}
+  assert(vim.iter(items):any(function(item) return item.label:match("^send") end),
+    "Standalone Lua did not receive client.send completion")
+  local definition = client:request_sync("textDocument/definition", {
+    textDocument = { uri = vim.uri_from_fname(file) },
+    position = { line = 0, character = 8 },
+  }, 5000, 0)
+  assert(definition and definition.result and vim.inspect(definition.result):find("mud-client-api.lua", 1, true),
+    "Standalone Lua could not navigate to the MUD API definition")
 end)
 if client then
   client:stop(true)

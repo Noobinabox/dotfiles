@@ -22,6 +22,10 @@ return {
         ui_select = true,
         sources = {
           explorer = {},
+          files = {
+            hidden = true,
+            ignored = false,
+          },
         },
       },
     },

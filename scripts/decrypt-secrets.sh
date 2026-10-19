@@ -29,7 +29,7 @@ for name in "${secret_names[@]}"; do
 	work_dir="$(mktemp -d "$parent/.decrypt.XXXXXX")"
 	dotfiles_info "$name"
 	gpg --yes --decrypt --output "$work_dir/plaintext" "$encrypted_path"
-	if [[ "$name" == ssh || "$name" == mud-client ]]; then
+	if [[ "$name" == ssh ]]; then
 		mkdir "$work_dir/restored"
 		python3 "$repo_root/scripts/lib/secret-archive.py" unpack "$work_dir/plaintext" "$work_dir/restored"
 		restored="$work_dir/restored"

@@ -26,12 +26,10 @@ class SecretsTests(unittest.TestCase):
         self.home = self.root / "home"
         self.config = self.home / "custom-config"
         self.ssh = self.home / ".ssh"
-        self.mud = self.config / "mud-client"
         self.ssh.mkdir(parents=True)
-        self.mud.mkdir(parents=True)
         (self.ssh / "key").write_text("fixture SSH key\n")
-        (self.root / "linked config").write_text("fixture MUD config\n")
-        (self.mud / "config.toml").symlink_to(self.root / "linked config")
+        (self.root / "linked config").write_text("fixture linked config\n")
+        (self.ssh / "linked-config").symlink_to(self.root / "linked config")
         bin_dir = self.root / "bin"
         bin_dir.mkdir()
         wrapper = bin_dir / "gpg"
@@ -63,15 +61,15 @@ class SecretsTests(unittest.TestCase):
         return result
 
     def encrypt(self, *names):
-        self.run_script("encrypt-secrets.sh", *(names or ("ssh", "mud-client")))
+        self.run_script("encrypt-secrets.sh", *(names or ("ssh",)))
 
     def test_roundtrip_backups_modes_and_symlink_contents(self):
         self.encrypt()
         (self.ssh / "key").write_text("changed\n")
-        self.run_script("decrypt-secrets.sh", "ssh", "mud-client")
+        self.run_script("decrypt-secrets.sh", "ssh")
         self.assertEqual((self.ssh / "key").read_text(), "fixture SSH key\n")
-        self.assertEqual((self.mud / "config.toml").read_text(), "fixture MUD config\n")
-        self.assertFalse((self.mud / "config.toml").is_symlink())
+        self.assertEqual((self.ssh / "linked-config").read_text(), "fixture linked config\n")
+        self.assertFalse((self.ssh / "linked-config").is_symlink())
         self.assertEqual(self.ssh.stat().st_mode & 0o777, 0o700)
         self.assertEqual((self.ssh / "key").stat().st_mode & 0o777, 0o600)
         backup = next(self.home.glob(".ssh.backup.*/original/key"))
@@ -95,6 +93,18 @@ class SecretsTests(unittest.TestCase):
         self.run_script("encrypt-secrets.sh", "../bad", success=False)
         self.run_script("decrypt-secrets.sh", "../bad", success=False)
 
+    def test_mud_client_is_not_encrypted_or_restored(self):
+        mud = self.config / "mud-client"
+        mud.mkdir(parents=True)
+        (mud / "config.toml").write_text("fixture config\n")
+        self.run_script("encrypt-secrets.sh", "mud-client", success=False)
+        self.run_script("decrypt-secrets.sh", "mud-client", success=False)
+        self.run_script("encrypt-secrets.sh")
+        self.assertFalse((self.repo / "secrets/mud-client.tar.gz.gpg").exists())
+        (self.repo / "secrets/mud-client.tar.gz.gpg").write_bytes(b"obsolete backup")
+        self.run_script("decrypt-secrets.sh")
+        self.assertEqual((mud / "config.toml").read_text(), "fixture config\n")
+
     def test_special_file_does_not_replace_backup(self):
         self.encrypt("ssh")
         encrypted = self.repo / "secrets/ssh.tar.gz.gpg"
@@ -115,7 +125,7 @@ class SecretsTests(unittest.TestCase):
 
     def test_env_roundtrip_and_destination_symlink_refusal(self):
         runtime = self.config / "secrets"
-        runtime.mkdir()
+        runtime.mkdir(parents=True)
         (runtime / "shell.env").write_text("fixture=value\n")
         self.encrypt("shell.env")
         self.run_script("decrypt-secrets.sh", "shell.env")

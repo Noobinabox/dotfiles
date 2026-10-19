@@ -89,6 +89,13 @@ backup_path .config/bpytop/bpytop.conf
 backup_path .config/harper-ls/dictionary.txt
 backup_path .config/gh/config.yml
 if package_selected tools; then
+	# The client rejects runtime file symlinks and replaces snapshots atomically.
+	# Let Stow fold the directory, keeping the files within it regular.
+	if [[ -L "$target/.config/mud-client" ]] && ! path_is_inside_repo "$target/.config/mud-client"; then
+		dotfiles_error "$target/.config/mud-client links outside this repo; move it before stowing"
+		exit 1
+	fi
+	backup_path .config/mud-client
 	while IFS= read -r -d '' codex_doc; do
 		backup_path ".codex/$(basename "$codex_doc")"
 	done < <(find tools/.codex -maxdepth 1 -type f -name '*.md' -print0 | sort -z)

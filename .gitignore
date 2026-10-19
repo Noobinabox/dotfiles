@@ -28,3 +28,7 @@ secrets/.encrypt.*/
 **/id_*
 **/.zsh_history
 **/.bash_history
+
+# MUD client migration backups remain local.
+tools/.config/mud-client/**/*.backup.*
+tools/.config/mud-client/**/*.runtime.toml.lock

@@ -1,0 +1,645 @@
+# Optional key macros (none enabled by default); /help macro for details.
+# [[macros.rules]]
+# key = "F5"
+# command = "look"
+# enabled = true
+# override_builtin = false
+# allow_repeat = false
+# Dedicated keypad example (requires a terminal that reports keypad identity):
+# [[macros.rules]]
+# key = "Numpad8"
+# command = "north"
+
+[connection]
+host = "rotsmud.org"
+port = 3791
+username = ""
+password = ""
+auto_reconnect = true
+line_ending = "\r\n"
+
+[terminal]
+input_mode = "vim"
+multiline_input = false
+tick_rate_ms = 500
+animation_fps = 60
+mouse = true
+true_color = true
+echo_commands = true
+
+[layout]
+show_character = true
+show_opponent = true
+show_group = true
+show_social = true
+show_output = true
+scrollback_lines = 2000
+
+[layout.breakpoints]
+mobile_width = 80
+mobile_height = 24
+tablet_width = 140
+tablet_height = 30
+ultrawide_width = 200
+ultrawide_height = 45
+
+[layout.mobile]
+map_height = 5
+show_status = false
+
+[layout.tablet]
+map_height = 8
+show_status = true
+
+[layout.full_hd]
+sidebar_position = "right"
+sidebar_width = 70
+top = "info"
+sidebar_panels = ["map", "character"]
+
+[layout.ultrawide]
+top_height = 9
+left_width = 42
+right_width = 46
+top = "status_dashboard"
+left = "details"
+right = "map"
+
+[colors]
+appearance = "dark"
+background = "#1a1b26"
+foreground = "#c0caf5"
+border = "#3b4261"
+title = "#7aa2f7"
+accent = "#bb9af7"
+success = "#9ece6a"
+warning = "#e0af68"
+danger = "#f7768e"
+muted = "#565f89"
+player = "#7dcfff"
+enemy = "#f7768e"
+
+[theme]
+active = "tokyo-night"
+auto_race = false
+
+# Add custom palettes under [themes.<name>] with the same keys as [colors].
+
+[gauges]
+unicode = true
+width = 14
+
+[animation]
+enabled = true
+reduced_motion = false
+low_performance = false
+map_fps = 12
+weather_fps = 5
+
+[weather]
+enabled = true
+# Legacy name: controls the World pane weather background scene.
+show_info_marker = true
+
+[social]
+scrollback_lines = 500
+
+# Every panels.* table also supports border_style = "plain", alignment = "left",
+# refresh_ms = 0, and [panels.<name>.theme] color overrides. Input refresh_ms must
+# remain 0. See docs/configuration.md#panels or /help panels for examples.
+[panels.info]
+enabled = true
+title = "World"
+min_width = 20
+min_height = 5
+priority = 100
+visible_modes = []
+
+[panels.social]
+enabled = true
+title = "Social"
+min_width = 30
+min_height = 5
+priority = 95
+visible_modes = ["1080p", "ultrawide"]
+
+[panels.map]
+enabled = true
+title = "Map"
+min_width = 20
+min_height = 5
+priority = 90
+visible_modes = []
+
+[panels.opponent]
+enabled = true
+title = "Opponent"
+min_width = 20
+min_height = 4
+priority = 80
+visible_modes = []
+
+[panels.group]
+enabled = true
+title = "Group"
+min_width = 20
+min_height = 3
+priority = 70
+visible_modes = []
+
+[panels.character]
+enabled = true
+title = "Character"
+min_width = 20
+min_height = 6
+priority = 60
+visible_modes = []
+
+[panels.output]
+enabled = true
+title = "MUD Output"
+min_width = 20
+min_height = 5
+priority = 100
+visible_modes = []
+
+[panels.input]
+enabled = true
+title = "Command"
+min_width = 20
+min_height = 3
+priority = 100
+visible_modes = []
+
+[map]
+show_links = true
+show_legend = true
+room_spacing_columns = 3
+room_spacing_rows = 2
+current_room_symbol = "X"
+current_room_color = "#cc0000"
+stub_symbol = "∘"
+link_color = "#505050"
+avoid_color = "#e0af68"
+block_color = "#f7768e"
+hide_color = "#565f89"
+invis_color = "#7aa2f7"
+fog_color = "#89ddff"
+void_color = "#414868"
+
+[map.persistence]
+load_on_startup = true
+path = "rots.toml"
+save_on_exit = true
+
+[map.doors]
+show = true
+glyph = "╬"
+open_glyph = "□"
+closed_glyph = "▣"
+pickable_glyph = "⊞"
+locked_glyph = "⊠"
+gate_ns_glyph = "╪"
+gate_ew_glyph = "╫"
+open_color = "#65b875"
+closed_color = "#d6ad55"
+pickable_color = "#d6ad55"
+locked_color = "#d45c5c"
+trigger_color = "#c678dd"
+unknown_color = "#777777"
+
+[map.boundary]
+show = true
+glyph = "¦"
+# Omit color to inherit colors.accent; uncomment to override.
+# color = "yellow"
+
+[map.teleport]
+show = true
+glyph = "◇"
+color = "#61afef"
+
+[map.terrain.City]
+symbol = "⌂"
+color = "#ffffff"
+density = ""
+spread = ""
+fade = ""
+double = false
+
+[map.terrain.Road]
+symbol = "═"
+color = "#ffffff"
+density = ""
+spread = ""
+fade = ""
+double = false
+
+[map.terrain.Floor]
+symbol = "∙"
+color = "#404040"
+density = ""
+spread = ""
+fade = ""
+double = false
+
+[map.terrain.Field]
+symbol = "″"
+color = "#8a8a1e"
+density = "sparse"
+spread = "wide"
+fade = "fadeout"
+double = false
+
+[map.terrain.Forest]
+symbol = "♣"
+color = "#228B22"
+density = "scant"
+spread = "wide"
+fade = "fadeout"
+double = false
+
+[map.terrain.Dense_forest]
+symbol = "♠"
+color = "#264224"
+density = "dense"
+spread = ""
+fade = "fadeout"
+double = false
+
+[map.terrain."Dense Forest"]
+symbol = "♠"
+color = "#264224"
+density = "dense"
+spread = ""
+fade = "fadeout"
+double = false
+
+[map.terrain.Hills]
+symbol = "∩"
+color = "#8d6e63"
+density = ""
+spread = ""
+fade = ""
+double = false
+
+[map.terrain.Mountain]
+symbol = "▲"
+color = "#5d4037"
+density = "scant"
+spread = "wide"
+fade = "fadeout"
+double = false
+
+[map.terrain.Mountains]
+symbol = "▲"
+color = "#5d4037"
+density = "scant"
+spread = "wide"
+fade = "fadeout"
+double = false
+
+[map.terrain.Water]
+symbol = "≈"
+color = "#1565c0"
+density = ""
+spread = ""
+fade = ""
+double = false
+
+[map.terrain.Water_noswim]
+symbol = "≋"
+color = "#0d47a1"
+density = ""
+spread = ""
+fade = ""
+double = false
+
+[map.terrain.Underwater]
+symbol = "≋"
+color = "#0d47a1"
+density = ""
+spread = ""
+fade = ""
+double = false
+
+[map.terrain.Swamp]
+symbol = "%"
+color = "#7e3285"
+density = ""
+spread = "wide"
+fade = ""
+double = false
+
+[map.terrain.Crack]
+symbol = "✕"
+color = "#5d4037"
+density = ""
+spread = ""
+fade = ""
+double = false
+
+[msdp]
+client_id = "mud-client"
+client_version = "0.1.0"
+ansi_colors = true
+xterm_256_colors = true
+utf_8 = false
+report_variables = [
+  "CHARACTER_NAME",
+  "RACE",
+  "LEVEL",
+  "HEALTH",
+  "HEALTH_MAX",
+  "MANA",
+  "MANA_MAX",
+  "MOVEMENT",
+  "MOVEMENT_MAX",
+  "EXPERIENCE",
+  "EXPERIENCE_MAX",
+  "OFFENSIVE_BONUS",
+  "DODGE",
+  "PARRY",
+  "ATTACK_SPEED",
+  "STR",
+  "INT",
+  "WILL",
+  "DEX",
+  "CON",
+  "LEA",
+  "WILLPOWER",
+  "SPELL_SAVE",
+  "SPIRIT",
+  "SPELL_POWER",
+  "SPELL_PEN",
+  "OPPONENT_NAME",
+  "OPPONENT_LEVEL",
+  "OPPONENT_HEALTH",
+  "OPPONENT_HEALTH_MAX",
+  "ROOM",
+  "ROOM_NAME",
+  "ROOM_VNUM",
+  "ROOM_EXITS",
+  "WORLD_TIME",
+  "WEATHER",
+  "GROUP",
+]
+
+[msdp.mapping]
+character_name = "CHARACTER_NAME"
+race = "RACE"
+level = "LEVEL"
+health = "HEALTH"
+health_max = "HEALTH_MAX"
+mana = "MANA"
+mana_max = "MANA_MAX"
+movement = "MOVEMENT"
+movement_max = "MOVEMENT_MAX"
+experience = "EXPERIENCE"
+experience_max = "EXPERIENCE_MAX"
+offensive_bonus = "OFFENSIVE_BONUS"
+dodge = "DODGE"
+parry = "PARRY"
+attack_speed = "ATTACK_SPEED"
+strength = "STR"
+intelligence = "INT"
+will = "WILL"
+dexterity = "DEX"
+constitution = "CON"
+learning = "LEA"
+willpower = "WILLPOWER"
+spell_save = "SPELL_SAVE"
+spirit = "SPIRIT"
+spell_power = "SPELL_POWER"
+spell_pen = "SPELL_PEN"
+warrior_level = "WARRIOR_LEVEL"
+ranger_level = "RANGER_LEVEL"
+mystic_level = "MYSTIC_LEVEL"
+mage_level = "MAGE_LEVEL"
+health_regeneration = "HEALTH_REGENERATION"
+stamina_regeneration = "STAMINA_REGENERATION"
+movement_regeneration = "MOVEMENT_REGENERATION"
+opponent_name = "OPPONENT_NAME"
+opponent_health = "OPPONENT_HEALTH"
+opponent_health_max = "OPPONENT_HEALTH_MAX"
+opponent_level = "OPPONENT_LEVEL"
+room = "ROOM"
+room_name = "ROOM_NAME"
+room_vnum = "ROOM_VNUM"
+room_exits = "ROOM_EXITS"
+world_time = "WORLD_TIME"
+weather = "WEATHER"
+group = "GROUP"
+group_members = "MEMBERS"
+group_member_name = "NAME"
+group_member_health = "HEALTH"
+group_member_mana = "MANA"
+group_member_movement = "MOVEMENT"
+
+[variables]
+max_expansion_depth = 8
+max_expanded_bytes = 65536
+
+[variables.values]
+door = ""
+# target = "orc"
+
+[aliases]
+enabled = true
+max_expansion_depth = 8
+max_expanded_commands = 256
+
+[[aliases.rules]]
+name = "Regeneration and Vit"
+match_type = "regex"
+pattern = "^rr(.*)"
+lua = "regen_and_vit"
+
+[[aliases.rules]]
+name = "Mark Room Avoid"
+match_type = "exact"
+pattern = "mv"
+commands = ["/map roomflag avoid"]
+
+[[aliases.rules]]
+name = "Open door"
+match_type = "exact"
+pattern = "od"
+commands = ["open ${door}"]
+
+[[aliases.rules]]
+name = "Close door"
+match_type = "exact"
+pattern = "cd"
+commands = ["close ${door}"]
+
+[[aliases.rules]]
+name = "Knock door"
+match_type = "exact"
+pattern = "kg"
+commands = ["knock ${door}"]
+
+[[aliases.rules]]
+name = "Lock door"
+match_type = "exact"
+pattern = "ld"
+commands = ["lock ${door}"]
+
+[[aliases.rules]]
+name = "Unlock Door"
+match_type = "exact"
+pattern = "ud"
+commands = ["unlock ${door}"]
+
+[[aliases.rules]]
+name = "Pick door"
+match_type = "exact"
+pattern = "pd"
+commands = ["pick ${door}"]
+
+[[aliases.rules]]
+name = "Lock Door"
+match_type = "exact"
+pattern = "ld"
+commands = ["lock ${door}"]
+
+# Example Lua alias hooks from scripts/init.lua:
+[[aliases.rules]]
+name = "smart-kill"
+match_type = "regex"
+pattern = "^sk\\s+(.+)$"
+lua = "smart_kill"
+
+[[aliases.rules]]
+name = "run-path"
+match_type = "regex"
+pattern = "^runto\\s+(.+)$"
+lua = "run_path"
+
+# Color-based RoTS targeting; see docs/targeting.md.
+[[aliases.rules]]
+name = "targeting-actions"
+match_type = "regex"
+pattern = "^[pflcabkqxhiy](?:[0-9]+|t)$"
+lua = "targeting_action"
+
+[[aliases.rules]]
+name = "targeting-list"
+match_type = "exact"
+pattern = "vt"
+lua = "targeting_list"
+
+[[aliases.rules]]
+name = "targeting-manual"
+match_type = "regex"
+pattern = "^target(?:\\s+.*)?$"
+lua = "targeting_manual"
+
+[lua]
+enabled = true
+script_dir = "scripts"
+entrypoint = "init.lua"
+scripts = ["init.lua", "targeting.lua"]
+instruction_budget = 100000
+max_actions_per_hook = 32
+runtime_errors_to_output = true
+
+[triggers]
+enabled = true
+max_commands_per_line = 8
+
+# Example Lua trigger hooks from scripts/init.lua:
+[[triggers.rules]]
+name = "enemy-arrives-lua"
+match_type = "regex"
+pattern = "^(.+) arrives\\.$"
+lua = "enemy_arrives"
+
+[[triggers.rules]]
+name = "assign-door"
+match_type = "regex"
+pattern = "^The (.+) seems to be closed."
+commands = ["/variable door {1}"]
+
+
+[[triggers.rules]]
+name = "room-header-memory"
+match_type = "regex"
+pattern = "^(.+)\\s+Exits are:"
+lua = "remember_room"
+
+[[triggers.rules]]
+name = "needs-warning"
+match_type = "regex"
+pattern = "^You are (hungry|thirsty)\\."
+lua = "needs_warning"
+
+# Server room titles must be bright yellow, mobile lines bright cyan.
+[[triggers.rules]]
+name = "targeting-room-header"
+match_type = "regex"
+pattern = "^.+$"
+foreground = "lightyellow"
+categories = ["normal"]
+priority = 100
+lua = "targeting_reset"
+
+[[triggers.rules]]
+name = "targeting-word-of-sight"
+match_type = "plain"
+pattern = "Your mind probes the area seeking other souls."
+categories = ["normal"]
+priority = 100
+lua = "targeting_reset"
+
+[[triggers.rules]]
+name = "targeting-reveal"
+match_type = "plain"
+pattern = "A surge of light reveals to you every corner of the room."
+categories = ["normal"]
+priority = 100
+lua = "targeting_reset"
+
+[[triggers.rules]]
+name = "targeting-mobile"
+match_type = "regex"
+pattern = "^.+$"
+foreground = "lightcyan"
+categories = ["normal"]
+lua = "targeting_observe"
+
+# Optional ANSI color filters:
+# foreground = "lightred"
+# background = "index:17"
+
+[events]
+enabled = true
+max_dispatch_depth = 8
+max_events_per_dispatch = 32
+max_commands_per_dispatch = 16
+history_limit = 100
+
+[[events.handlers]]
+name = "low-health-warning"
+event = "LowHealth"
+notification = "Low health event fired."
+lua = "low_health"
+
+[[events.handlers]]
+name = "combat-started-lua"
+match_type = "regex"
+event = "^CombatStarted:(.+)$"
+lua = "combat_started"
+
+[[events.handlers]]
+name = "route-requested-lua"
+match_type = "regex"
+event = "^RouteRequested:(.+)$"
+lua = "route_requested"
+
+[highlights]
+enabled = true
+
+[logging]
+level = "mud_client=info"
+raw_protocol = false

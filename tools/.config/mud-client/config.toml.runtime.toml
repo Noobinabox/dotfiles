@@ -1,0 +1,17 @@
+version = 1
+macros = []
+highlights = []
+substitutions = []
+
+[variables]
+food = "dense"
+last_room = "Central Square of Vinyanost"
+
+[[aliases]]
+name = "gg"
+enabled = true
+priority = 10000
+match_type = "exact"
+pattern = "gg"
+commands = ["get ${food} all;eat ${food}"]
+

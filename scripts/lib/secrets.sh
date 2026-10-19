@@ -4,13 +4,13 @@
 select_secrets() {
 	secret_names=("$@")
 	if [[ ${#secret_names[@]} -eq 0 ]]; then
-		secret_names=(shell.env npm.env ssh mud-client)
+		secret_names=(shell.env npm.env ssh)
 	fi
 	for name in "${secret_names[@]}"; do
 		case "$name" in
-		shell.env | npm.env | ssh | mud-client) ;;
+		shell.env | npm.env | ssh) ;;
 		*)
-			dotfiles_error "unknown secret: $name (use shell.env, npm.env, ssh, mud-client)"
+			dotfiles_error "unknown secret: $name (use shell.env, npm.env, ssh)"
 			return 1
 			;;
 		esac
@@ -23,10 +23,6 @@ secret_paths() {
 	ssh)
 		source_path="$HOME/.ssh"
 		encrypted_path="$secrets_dir/ssh.tar.gz.gpg"
-		;;
-	mud-client)
-		source_path="${XDG_CONFIG_HOME:-$HOME/.config}/mud-client"
-		encrypted_path="$secrets_dir/mud-client.tar.gz.gpg"
 		;;
 	*)
 		source_path="$runtime_dir/$name"

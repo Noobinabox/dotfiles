@@ -407,6 +407,16 @@ Configured LSP servers include:
 - `tintin_lsp`
 - `ts_ls`
 
+`lua_ls` loads `~/.config/mud-client/scripts/mud-client-api.lua` as a shared
+annotation library. This provides `client` completion, hover types, and API
+definitions even when editing standalone Lua scripts outside the MUD config
+directory. The Stow link keeps this path pointed at the dotfiles copy. The MUD
+directory's `.luarc.json` also includes its scripts as a project library.
+Restart Neovim or run `:LspRestart lua_ls` after changing the LSP settings.
+With `tools` installed and LuaLS available through Mason, verify a standalone
+script from this Neovim config directory with
+`nvim --headless -n -u NONE -i NONE -l scripts/test-mud-lua.lua`.
+
 `pyright` provides Python completion, hover, references, diagnostics, and type
 information. Its root detection includes common Python project files such as
 `requirements.txt`, so single-file Pulumi Python projects attach at the project

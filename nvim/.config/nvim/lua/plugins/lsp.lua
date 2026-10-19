@@ -64,6 +64,9 @@ local mason_servers = {
         },
         workspace = {
           checkThirdParty = false,
+          library = {
+            vim.fn.expand("~/.config/mud-client/scripts/mud-client-api.lua"),
+          },
         },
       },
     },

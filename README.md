@@ -33,6 +33,7 @@ nvim/.config/nvim/init.lua     ~/.config/nvim/init.lua
 tmux/.config/tmux/tmux.conf    ~/.config/tmux/tmux.conf
 tools/.config/yazi             ~/.config/yazi
 tools/.config/spotify-player   ~/.config/spotify-player
+tools/.config/mud-client       ~/.config/mud-client
 tools/.codex/*.md              ~/.codex/*.md
 ```
 
@@ -48,9 +49,9 @@ The repo is organized as stow packages:
 - `tmux`: tmux config
 - `tools`: small CLI/tool configs such as `glow`, `yazi`, `spotify-player`,
   `htop`, `bpytop`, `harper-ls`, GitHub CLI config, Angular config, and Codex
-  config and instructions
+  config and instructions, plus MUD client config, Lua scripts, and character profiles
 - `systemd`: user service and timer for automatic dotfiles sync
-- `secrets`: encrypted secret env files, SSH keys, and MUD client backups
+- `secrets`: encrypted secret env files and SSH keys
 
 Generated state, caches, histories, auth databases, plugin installs, and nested
 Git metadata are intentionally excluded.
@@ -396,14 +397,12 @@ live outside the repo:
 - `~/.config/secrets/shell.env`
 - `~/.config/secrets/npm.env`
 - `~/.ssh` (keys and SSH configuration)
-- `~/.config/mud-client` (the entire directory, including private settings)
 
 Tracked secret files are GPG encrypted:
 
 - `secrets/shell.env.gpg`
 - `secrets/npm.env.gpg`
 - `secrets/ssh.tar.gz.gpg`
-- `secrets/mud-client.tar.gz.gpg`
 
 To decrypt on this machine:
 
@@ -425,18 +424,17 @@ To use recipient-based encryption instead of symmetric/passphrase encryption:
 GPG_RECIPIENT='your-key-id-or-email' scripts/encrypt-secrets.sh
 ```
 
-Both scripts accept optional names: `shell.env`, `npm.env`, `ssh`, and
-`mud-client`. With no names they process all four; missing sources/backups
-are reported and skipped. To back up only SSH and MUD client files:
+Both scripts accept optional names: `shell.env`, `npm.env`, and `ssh`.
+With no names they process all three; missing sources/backups are reported
+and skipped. To back up only SSH files:
 
 ```sh
-GPG_SYMMETRIC=1 scripts/encrypt-secrets.sh ssh mud-client
-scripts/decrypt-secrets.sh ssh mud-client
+GPG_SYMMETRIC=1 scripts/encrypt-secrets.sh ssh
+scripts/decrypt-secrets.sh ssh
 ```
 
 Directory backups follow symlinks, storing their contents as ordinary files
-so they can be restored on another machine. Stop the MUD client before backing
-up to avoid capturing changing state. Socket files are skipped; other special
+so they can be restored on another machine. Socket files are skipped; other special
 files (such as FIFOs) cause backup to fail. Both scripts require `python3` for
 directory archives. Restore validates archive paths and file types and installs
 directories with mode 700 and files with mode 600. Existing destinations are
@@ -444,9 +442,20 @@ moved into private sibling `.<name>.backup.XXXXXX/original` backups before
 replacement; unrelated contents survive in those backups. Destination symlinks
 are refused. Failed encryption preserves the previous encrypted backup, and
 failed decryption or archive validation preserves the current destination.
-`XDG_CONFIG_HOME` is honored for MUD client and env files; SSH uses `$HOME/.ssh`.
+`XDG_CONFIG_HOME` is honored for env files; SSH uses `$HOME/.ssh`.
 Only ciphertext belongs in this repository; keep the GPG key or passphrase
 available separately for recovery.
+
+MUD client files are managed in plaintext by the `tools` Stow package at
+`~/.config/mud-client`. Run `scripts/install.sh tools` to install its config,
+RoTS data, Lua scripts, character profiles, runtime config, and LuaLS settings.
+The installer backs up the existing directory before Stow links the whole
+directory. This keeps `config.toml.runtime.toml` a regular file, as required by
+the client, and lets atomic saves update the repository. Previous untracked
+files and old backups remain in the installer's timestamped backup directory.
+External directory symlinks are refused. Keep passwords out of these tracked
+configs. MUD client files are no longer encrypted or
+restored by the secret scripts; obsolete MUD archives are ignored.
 
 Verify secret-backed tools without printing secret values:
 

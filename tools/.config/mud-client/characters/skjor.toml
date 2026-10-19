@@ -1,0 +1,66 @@
+[variables.values]
+food = "cram"
+primary = "gleaming"
+secondary = "mithril"
+hitter = "bearded"
+has_shield = "true"
+
+[lua]
+scripts = ["init.lua", "targeting.lua", "skjor.lua"]
+
+[[aliases.rules]]
+name = "wield primary"
+match_type = "exact"
+pattern = "wp"
+lua = "wield_primary"
+
+[[aliases.rules]]
+name = "wield hitter"
+match_type = "exact"
+pattern = "wt"
+lua = "wield_hitter"
+
+[[aliases.rules]]
+name = "agg"
+match_type = "exact"
+pattern = "agg"
+commands = [
+    "rem shield",
+    "wt",
+    "rem all.inscribed",
+    "wear all.pointed",
+    "wear studded",
+    "rem all.alloy",
+    "#2 {wear 3.bracer}",
+    "wear werewolf",
+    "wear buckle"
+]
+
+[[aliases.rules]]
+name = "def"
+match_type = "exact"
+pattern = "def"
+commands = [
+    "std",
+    "wp",
+    "wear spikes",
+    "rem all.pointed",
+    "wear all.inscribed",
+    "rem all.bracer",
+    "wear all.alloy",
+    "wear belt",
+    "wear mirkwolf",
+    "wear buckle",
+]
+
+[[triggers.rules]]
+name = "Wearing shield"
+match_type = "regex"
+pattern = "You start to use (.*) as a shield."
+commands = ["/variable has_shield true"]
+
+[[triggers.rules]]
+name = "Removing shield"
+match_type = "regex"
+pattern = "You stop using (.*) shield."
+commands = ["/variable has_shield false"]

@@ -6,7 +6,7 @@ hitter = "bearded"
 has_shield = "true"
 
 [lua]
-scripts = ["init.lua", "targeting.lua", "skjor.lua"]
+scripts = ["skjor.lua"]
 
 [[aliases.rules]]
 name = "wield primary"

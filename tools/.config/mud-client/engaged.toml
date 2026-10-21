@@ -1,35 +1,58 @@
+[lua]
+scripts = "engaged.lua"
+
 [[triggers.rurles]]
 name = "Something has attacked us"
 match_type = "regex"
 pattern = "(.+) attacks YOU!"
-lua = "engaged_increase"
+event = "IncreaseEngaged"
 
 [[triggers.rules]]
 name = "We have attacked something"
 match_type = "regex"
 pattern = "^You attack (.+)"
-lua = "engaged_increase"
+event = "IncreaseEngaged"
 
 [[triggers.rules]]
 name = "We've ambushed something"
 match_type = "regex"
 pattern = "^You leap from your cover towards (.+)"
-lua = "engaged_increase"
+event = "IncreaseEngaged"
 
 [[triggers.rules]]
 name = "We've ambushed and killed something"
 match_type = "regex"
 pattern = "^(.+) slumps over dead from your fatal ambush!"
-lua = "engaged_increase"
+event = "IncreaseEngaged"
 
 [[triggers.rules]]
 name = "We've ambushed and killed something"
 match_type = "regex"
 pattern = "^(.+) slumps over dead from your fatal ambush!"
-lua = "engaged_increase"
+event = "IncreaseEngaged"
 
 [[triggers.rules]]
 name = "We've killed something"
 match_type = "regex"
 pattern = "^You receive your share of experience -- (.+) points."
-lua = "engaged_decrease"
+event = "KillCaptured"
+
+[[triggers.rules]]
+name = "Fleeing"
+match_type = "regex"
+pattern = "^You flee head over heels.$"
+event = "FlyYouFools"
+
+
+[[events.handlers]]
+name = "increase engaged"
+match_type = "regex"
+event = "IncreasedEngaged"
+lua = "engaged_increased"
+
+
+[[events.handlers]]
+name = "decrease engaged"
+match_type = "regex"
+event = "KillCaptured"
+lua = "engaged_decreased"

@@ -1,4 +1,4 @@
-include = ["weather-highlights.toml"]
+include = ["weather-highlights.toml", "engaged.toml"]
 
 # Optional key macros (none enabled by default); /help macro for details.
 # [[macros.rules]]

@@ -1,12 +1,12 @@
 current_room = "1504"
-previous_room = "1500"
+previous_room = "1506"
 follow = true
 static_mode = false
 nofollow = false
 direction_arrow = true
 unicode = true
 show_vnums = false
-last_direction = "n"
+last_direction = "e"
 next_generated_id = 9
 
 [rooms.1]
@@ -195375,7 +195375,7 @@ description = ""
 size = ""
 
 [last_move]
-from = "1500"
-to = "1513"
-direction = "n"
+from = "1504"
+to = "1505"
+direction = "e"
 created_room = false

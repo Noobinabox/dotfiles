@@ -1,0 +1,35 @@
+[[triggers.rurles]]
+name = "Something has attacked us"
+match_type = "regex"
+pattern = "(.+) attacks YOU!"
+lua = "engaged_increase"
+
+[[triggers.rules]]
+name = "We have attacked something"
+match_type = "regex"
+pattern = "^You attack (.+)"
+lua = "engaged_increase"
+
+[[triggers.rules]]
+name = "We've ambushed something"
+match_type = "regex"
+pattern = "^You leap from your cover towards (.+)"
+lua = "engaged_increase"
+
+[[triggers.rules]]
+name = "We've ambushed and killed something"
+match_type = "regex"
+pattern = "^(.+) slumps over dead from your fatal ambush!"
+lua = "engaged_increase"
+
+[[triggers.rules]]
+name = "We've ambushed and killed something"
+match_type = "regex"
+pattern = "^(.+) slumps over dead from your fatal ambush!"
+lua = "engaged_increase"
+
+[[triggers.rules]]
+name = "We've killed something"
+match_type = "regex"
+pattern = "^You receive your share of experience -- (.+) points."
+lua = "engaged_decrease"

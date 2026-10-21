@@ -13,8 +13,8 @@ include = ["weather-highlights.toml"]
 # command = "north"
 
 [connection]
-host = "rotsmud.org"
-port = 3791
+host = "localhost"
+port = 2323
 username = ""
 password = ""
 auto_reconnect = true

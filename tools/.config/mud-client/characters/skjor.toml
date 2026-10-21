@@ -21,6 +21,12 @@ pattern = "wt"
 lua = "wield_hitter"
 
 [[aliases.rules]]
+name = "weapon list"
+match_type = "exact"
+pattern = "weapons"
+lua = "weapon_list"
+
+[[aliases.rules]]
 name = "agg"
 match_type = "exact"
 pattern = "agg"

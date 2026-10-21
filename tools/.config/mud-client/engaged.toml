@@ -1,6 +1,9 @@
 [lua]
 scripts = "engaged.lua"
 
+[[variables.values]]
+current_engaged = 0
+
 [[triggers.rurles]]
 name = "Something has attacked us"
 match_type = "regex"
@@ -56,3 +59,9 @@ name = "decrease engaged"
 match_type = "regex"
 event = "KillCaptured"
 lua = "engaged_decreased"
+
+[[events.handlers]]
+name = "reset engaged"
+match_type = "regex"
+event = "FlyYouFools"
+lua = "reset_engaged"

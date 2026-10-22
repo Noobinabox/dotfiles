@@ -11,7 +11,8 @@ messages; NeoMutt does not upload a second copy. Drafts use `Drafts`; adjust
 Install `neomutt`, Python 3, and GnuPG using your platform's package manager
 (on Debian/Ubuntu: `sudo apt install neomutt python3 gpg`). NeoMutt must have
 IMAP, SMTP, TLS, and XOAUTH2 support. The wrapper finds the upstream
-`mutt_oauth2.py` shipped under `/usr/share/neomutt/oauth2`,
+`mutt_oauth2.py` first in `~/.config/neomutt-work`, then under
+`/usr/share/neomutt/oauth2`,
 `/usr/local/share/neomutt/oauth2`, or `/opt/homebrew/share/neomutt/oauth2`.
 If your package omits it, obtain it from the [NeoMutt OAuth2 sources](https://github.com/neomutt/neomutt/tree/main/contrib/oauth2)
 and export `NEOMUTT_OAUTH2_HELPER` pointing to the installed script.
@@ -36,10 +37,10 @@ Ask IT for an approved public-client app registration and its application
 registration must support your work tenant, with the required user/admin
 consent. The bundled helper uses Microsoft's `/common` authority, so it needs
 an approved multitenant registration. For an approved single-tenant registration,
-copy the helper to a private location outside Git, replace `/common/` in all
+copy the helper to `~/.config/neomutt-work/mutt_oauth2.py`, replace `/common/` in all
 three Microsoft endpoint URLs with your directory (tenant) ID, and set the
-Microsoft registration's `tenant` field to that ID. Export
-`NEOMUTT_OAUTH2_HELPER` pointing at that copy in every shell launching NeoMutt.
+Microsoft registration's `tenant` field to that ID. The wrapper automatically
+prefers this private copy; `NEOMUTT_OAUTH2_HELPER` overrides either location.
 Keep the copy updated when the packaged helper changes. IT should approve the
 registration and authority choice; see Microsoft's [tenant authority guidance](https://learn.microsoft.com/en-us/troubleshoot/entra/entra-id/app-integration/error-code-aadsts50020-user-account-identity-provider-does-not-exist).
 Use your own approved registration rather than another mail client's
@@ -105,9 +106,9 @@ GPG_RECIPIENT='YOUR-GPG-FINGERPRINT' scripts/encrypt-secrets.sh neomutt
 ```
 
 Commit the resulting `secrets/neomutt.tar.gz.gpg` alongside the public config.
-This archive contains account settings, the GPG recipient fingerprint, and the
-already encrypted OAuth token store. On a new machine, import your GPG private
-key securely, then run:
+This archive contains account settings, the GPG recipient fingerprint, the
+already encrypted OAuth token store, and any tenant-specific helper copy.
+On a new machine, import your GPG private key securely, then run:
 
 ```sh
 scripts/decrypt-secrets.sh neomutt

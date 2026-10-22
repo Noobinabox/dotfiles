@@ -50,6 +50,18 @@ if MOCK_EXIT=7 bash "$wrapper" --email test@example.invalid >"$work_dir/out"; th
 else
 	[[ "$?" == 7 ]]
 fi
+
+# A tenant-specific private helper takes precedence over the packaged helper.
+cp "$mock_helper" "$HOME/.config/neomutt-work/mutt_oauth2.py"
+output="$(env -u NEOMUTT_OAUTH2_HELPER bash "$wrapper" --email test@example.invalid)"
+[[ "$output" == fixture-access-value ]]
+# An explicit override still wins, even when the private helper is present.
+if NEOMUTT_OAUTH2_HELPER="$work_dir/missing.py" bash "$wrapper" >"$work_dir/out" 2>"$work_dir/error"; then
+	exit 1
+fi
+[[ ! -s "$work_dir/out" ]]
+rg -q 'install mutt_oauth2.py' "$work_dir/error"
+
 mv "$EXPECTED_TOKEN_PATH" "$work_dir/token-fixture"
 ln -s "$work_dir/token-fixture" "$EXPECTED_TOKEN_PATH"
 if bash "$wrapper" >"$work_dir/out" 2>"$work_dir/error"; then

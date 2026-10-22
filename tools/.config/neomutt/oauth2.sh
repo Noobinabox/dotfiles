@@ -5,7 +5,7 @@ umask 077
 # Reuse the maintained NeoMutt helper instead of implementing OAuth ourselves.
 helper="${NEOMUTT_OAUTH2_HELPER:-}"
 if [[ -z "$helper" ]]; then
-	for candidate in /usr/share/neomutt/oauth2/mutt_oauth2.py /usr/local/share/neomutt/oauth2/mutt_oauth2.py /opt/homebrew/share/neomutt/oauth2/mutt_oauth2.py; do
+	for candidate in "$HOME/.config/neomutt-work/mutt_oauth2.py" /usr/share/neomutt/oauth2/mutt_oauth2.py /usr/local/share/neomutt/oauth2/mutt_oauth2.py /opt/homebrew/share/neomutt/oauth2/mutt_oauth2.py; do
 		if [[ -r "$candidate" ]]; then
 			helper="$candidate"
 			break

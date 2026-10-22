@@ -177,6 +177,32 @@ plugins.
 The `install` shell function intentionally shadows the coreutils file-copy
 utility. Use `command install ...` when you need the coreutils command.
 
+Lazygit and Sesh are installed into `~/.local/bin` from pinned upstream releases
+with SHA256 verification on Linux, WSL, Fedora, and macOS. Termux builds the
+pinned versions with Go; Windows uses its native package manager. Existing
+executables on `PATH` are kept. To install only these two tools:
+
+```sh
+bash scripts/install-tui-tools.sh
+```
+
+Use `--check` to report missing tools without downloading or installing.
+Set `DOTFILES_TUI_BIN_DIR` to override the default installation directory.
+
+## Git and Project Sessions
+
+Run `lg` (or `lazygit`) inside a Git repository to review changes, stage selected
+lines, and manage branches. In tmux, `Ctrl-a g` opens Lazygit in a popup rooted
+at the current pane's directory.
+
+Sesh uses the existing zoxide history and tmux sessions to switch projects.
+Press `Ctrl-a T` in tmux to open its session picker, or run `sesh picker`.
+Selecting a project connects to its session, creating one when needed.
+Use `sesh connect /path/to/project` to open a project directly.
+
+After applying these dotfiles, restart your shell for `lg` and reload tmux with
+`tmux source-file ~/.config/tmux/tmux.conf` for the popup bindings.
+
 ## File Navigation
 
 `vf` is the fast file launcher. It searches files recursively, including hidden

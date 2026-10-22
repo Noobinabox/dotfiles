@@ -98,6 +98,7 @@ remove() { dotfiles_pkg_remove "$@"; }
 alias gl='git log --graph --all --decorate --oneline'
 alias gs='git status -sb'
 alias ga='git add -A'
+alias lg='lazygit'
 
 # general
 alias cls='clear'

@@ -142,7 +142,7 @@ install_system_packages() {
 		packages=(bash zsh git openssh curl ca-certificates unzip tar xz-utils stow
 			ripgrep fd fzf yazi bat tmux shellcheck shfmt less direnv gh glow
 			gum htop gdb emacs lua54 clang openjdk-21 python neovim nodejs
-			rust)
+			rust golang)
 		;;
 	apt)
 		packages=(
@@ -366,6 +366,21 @@ install_dotnet_tools() {
 	fi
 }
 
+install_tui_tools() {
+	log "Lazygit and Sesh"
+	if [[ "$check_only" == true || "$platform" == windows ]]; then
+		local tool
+		for tool in lazygit sesh; do
+			have "$tool" || record_missing "$tool"
+		done
+		if [[ "$check_only" == false && "$platform" == windows ]]; then
+			info "install missing TUI tools with the native Windows package manager"
+		fi
+	else
+		DOTFILES_PLATFORM="$platform" bash "$repo_root/scripts/install-tui-tools.sh"
+	fi
+}
+
 install_neovim_tools() {
 	local mason_packages=(
 		clangd
@@ -477,6 +492,7 @@ install_oh_my_zsh
 install_nvm_node
 install_npm_globals
 install_user_local_tools
+install_tui_tools
 install_dotnet_tools
 install_neovim_tools
 install_doom

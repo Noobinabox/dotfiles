@@ -23,8 +23,6 @@ secrets/.encrypt.*/
 **/auth.db-*
 **/token-cache.json
 **/credentials.json
-**/*.tokens.gpg
-tools/.config/neomutt/account.rc
 **/hosts.yml
 **/known_hosts
 **/id_*

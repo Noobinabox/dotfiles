@@ -49,8 +49,7 @@ The repo is organized as stow packages:
 - `tmux`: tmux config
 - `tools`: small CLI/tool configs such as `glow`, `yazi`, `spotify-player`,
   `htop`, `bpytop`, `harper-ls`, GitHub CLI config, Angular config, and Codex
-  config and instructions, plus MUD client config, Lua scripts, character profiles,
-  and NeoMutt with Microsoft 365 OAuth2
+  config and instructions, plus MUD client config, Lua scripts, and character profiles
 - `systemd`: user service and timer for automatic dotfiles sync
 - `secrets`: encrypted secret env files and SSH keys
 
@@ -128,11 +127,6 @@ Linux packages or requiring Alacritty. Termux uses its native `pkg` package
 manager and does not download desktop Linux binaries.
 
 ## Daily Use
-
-For work email, follow [NeoMutt Microsoft 365 setup](docs/neomutt.md). Account
-settings and OAuth2 tokens are backed up to `secrets/neomutt.tar.gz.gpg` using
-the existing encryption scripts; first-time sign-in requires an approved
-Microsoft Entra app registration.
 
 After changing config in this repo, run:
 
@@ -403,14 +397,12 @@ live outside the repo:
 - `~/.config/secrets/shell.env`
 - `~/.config/secrets/npm.env`
 - `~/.ssh` (keys and SSH configuration)
-- `~/.config/neomutt-work` (work email settings, GPG recipient, and token store)
 
 Tracked secret files are GPG encrypted:
 
 - `secrets/shell.env.gpg`
 - `secrets/npm.env.gpg`
 - `secrets/ssh.tar.gz.gpg`
-- `secrets/neomutt.tar.gz.gpg`
 
 To decrypt on this machine:
 
@@ -432,8 +424,8 @@ To use recipient-based encryption instead of symmetric/passphrase encryption:
 GPG_RECIPIENT='your-key-id-or-email' scripts/encrypt-secrets.sh
 ```
 
-Both scripts accept optional names: `shell.env`, `npm.env`, `ssh`, and `neomutt`.
-With no names they process all four; missing sources/backups are reported
+Both scripts accept optional names: `shell.env`, `npm.env`, and `ssh`.
+With no names they process all three; missing sources/backups are reported
 and skipped. To back up only SSH files:
 
 ```sh
@@ -451,7 +443,6 @@ replacement; unrelated contents survive in those backups. Destination symlinks
 are refused. Failed encryption preserves the previous encrypted backup, and
 failed decryption or archive validation preserves the current destination.
 `XDG_CONFIG_HOME` is honored for env files; SSH uses `$HOME/.ssh`.
-NeoMutt uses the fixed `$HOME/.config/neomutt-work` private directory.
 Only ciphertext belongs in this repository; keep the GPG key or passphrase
 available separately for recovery.
 

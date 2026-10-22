@@ -1,3 +1,0 @@
-# Keep the edited copy in ~/.config/neomutt-work/account.rc, outside Stow/Git.
-set my_work_email = "your.name@company.example"
-set my_work_name = "Your Name"

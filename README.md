@@ -208,8 +208,8 @@ After applying these dotfiles, restart your shell for `lg` and reload tmux with
 Tmux Resurrect saves sessions, windows, pane layouts, and working directories.
 Continuum saves automatically every five minutes and restores the last snapshot
 when the first tmux server starts. After rebooting, start `tmux`, then use Sesh
-to switch projects. Manual save is `Ctrl-a`, then `Ctrl-s`; manual restore is
-`Ctrl-a`, then `Ctrl-r`.
+to switch projects. Both `Ctrl-a s` and `Ctrl-a Ctrl-s` open the session picker;
+manual save has no shortcut. Manual restore is `Ctrl-a`, then `Ctrl-r`.
 
 Neovim uses its native session files to save open files, splits, tabs, and cursor
 positions every minute, after file writes, on focus loss, and when exiting.

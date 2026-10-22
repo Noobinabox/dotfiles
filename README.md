@@ -195,6 +195,10 @@ Run `lg` (or `lazygit`) inside a Git repository to review changes, stage selecte
 lines, and manage branches. In tmux, `Ctrl-a g` opens Lazygit in a popup rooted
 at the current pane's directory.
 
+`Ctrl-a y` (or `Ctrl-a e`) opens Yazi in a popup at the current pane's
+directory. Press `q` to close Yazi and return to the pane. Browsing elsewhere
+in the popup does not change the underlying shell's working directory.
+
 Sesh uses the existing zoxide history and tmux sessions to switch projects.
 Press `Ctrl-a T` in tmux to open its session picker, or run `sesh picker`.
 Selecting a project connects to its session, creating one when needed.

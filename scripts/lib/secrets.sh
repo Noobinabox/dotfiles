@@ -4,13 +4,13 @@
 select_secrets() {
 	secret_names=("$@")
 	if [[ ${#secret_names[@]} -eq 0 ]]; then
-		secret_names=(shell.env npm.env ssh)
+		secret_names=(shell.env npm.env ssh neomutt)
 	fi
 	for name in "${secret_names[@]}"; do
 		case "$name" in
-		shell.env | npm.env | ssh) ;;
+		shell.env | npm.env | ssh | neomutt) ;;
 		*)
-			dotfiles_error "unknown secret: $name (use shell.env, npm.env, ssh)"
+			dotfiles_error "unknown secret: $name (use shell.env, npm.env, ssh, neomutt)"
 			return 1
 			;;
 		esac
@@ -23,6 +23,10 @@ secret_paths() {
 	ssh)
 		source_path="$HOME/.ssh"
 		encrypted_path="$secrets_dir/ssh.tar.gz.gpg"
+		;;
+	neomutt)
+		source_path="$HOME/.config/neomutt-work"
+		encrypted_path="$secrets_dir/neomutt.tar.gz.gpg"
 		;;
 	*)
 		source_path="$runtime_dir/$name"

@@ -96,6 +96,7 @@ if package_selected tools; then
 		exit 1
 	fi
 	backup_path .config/mud-client
+	backup_path .config/neomutt
 	while IFS= read -r -d '' codex_doc; do
 		backup_path ".codex/$(basename "$codex_doc")"
 	done < <(find tools/.codex -maxdepth 1 -type f -name '*.md' -print0 | sort -z)

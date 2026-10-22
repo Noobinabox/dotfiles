@@ -135,6 +135,37 @@ class SecretsTests(unittest.TestCase):
         self.ssh.symlink_to(self.home / "real-ssh")
         self.run_script("decrypt-secrets.sh", "ssh", success=False)
 
+    def test_neomutt_roundtrip_and_private_restore(self):
+        mail = self.home / ".config/neomutt-work"
+        mail.mkdir(parents=True)
+        (mail / "account.rc").write_text('set my_work_email = "fixture@example.invalid"\n')
+        (mail / "work.tokens.gpg").write_bytes(b"fixture encrypted token store")
+        self.encrypt("neomutt")
+        encrypted = self.repo / "secrets/neomutt.tar.gz.gpg"
+        self.assertTrue(encrypted.is_file())
+        original = encrypted.read_bytes()
+        self.env["TEST_GPG_FAIL"] = "1"
+        self.run_script("encrypt-secrets.sh", "neomutt", success=False)
+        self.assertEqual(encrypted.read_bytes(), original)
+        self.run_script("decrypt-secrets.sh", "neomutt", success=False)
+        self.assertTrue((mail / "account.rc").is_file())
+        self.env.pop("TEST_GPG_FAIL")
+        (mail / "account.rc").write_text("changed\n")
+        self.run_script("decrypt-secrets.sh", "neomutt")
+        self.assertIn("fixture@example.invalid", (mail / "account.rc").read_text())
+        self.assertEqual((mail / "work.tokens.gpg").read_bytes(), b"fixture encrypted token store")
+        self.assertEqual(mail.stat().st_mode & 0o777, 0o700)
+        self.assertEqual((mail / "account.rc").stat().st_mode & 0o777, 0o600)
+        self.assertEqual((mail / "work.tokens.gpg").stat().st_mode & 0o777, 0o600)
+        backup = next(mail.parent.glob(".neomutt.backup.*/original/account.rc"))
+        self.assertEqual(backup.read_text(), "changed\n")
+        shutil.rmtree(mail)
+        self.run_script("decrypt-secrets.sh", "neomutt")
+        self.assertTrue((mail / "account.rc").is_file())
+        mail.rename(mail.parent / "real-neomutt")
+        mail.symlink_to(mail.parent / "real-neomutt")
+        self.run_script("decrypt-secrets.sh", "neomutt", success=False)
+
     def test_hostile_archives_preserve_destination(self):
         for kind in ("traversal", "absolute", "symlink", "hardlink", "fifo", "corrupt"):
             with self.subTest(kind=kind):

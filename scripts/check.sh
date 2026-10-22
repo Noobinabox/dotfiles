@@ -52,6 +52,9 @@ python3 scripts/test-secrets.py
 dotfiles_heading "checking MUD client stow behavior"
 bash scripts/test-mud-client-stow.sh
 
+dotfiles_heading "checking NeoMutt configuration"
+bash scripts/test-neomutt.sh
+
 dotfiles_heading "checking TinTin++ LSP"
 node scripts/test-tintin-lsp.js
 

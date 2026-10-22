@@ -32,7 +32,7 @@ encrypt_one() {
 		dotfiles_warn "missing $source_path; skipped"
 		return 0
 	fi
-	if [[ "$name" == ssh ]]; then
+	if [[ "$name" == ssh || "$name" == neomutt ]]; then
 		[[ -d "$source_path" ]] || {
 			dotfiles_error "expected directory: $source_path"
 			return 1

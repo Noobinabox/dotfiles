@@ -42,6 +42,9 @@ done < <(find tools/.codex -maxdepth 1 -type f -name '*.md' -print0 | sort -z)
 dotfiles_heading "checking TUI installer"
 bash scripts/test-tui-tools.sh
 
+dotfiles_heading "checking workspace recovery"
+bash scripts/test-workspace-recovery.sh
+
 dotfiles_heading "checking generated themes"
 scripts/generate-themes.py --check
 python3 scripts/test-generate-themes.py

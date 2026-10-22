@@ -203,6 +203,31 @@ Use `sesh connect /path/to/project` to open a project directly.
 After applying these dotfiles, restart your shell for `lg` and reload tmux with
 `tmux source-file ~/.config/tmux/tmux.conf` for the popup bindings.
 
+## Workspace Recovery After Reboot
+
+Tmux Resurrect saves sessions, windows, pane layouts, and working directories.
+Continuum saves automatically every five minutes and restores the last snapshot
+when the first tmux server starts. After rebooting, start `tmux`, then use Sesh
+to switch projects. Manual save is `Ctrl-a`, then `Ctrl-s`; manual restore is
+`Ctrl-a`, then `Ctrl-r`.
+
+Neovim uses its native session files to save open files, splits, tabs, and cursor
+positions every minute, after file writes, on focus loss, and when exiting.
+Starting `nvim` without file arguments restores the saved workspace for the
+current directory and tmux session/window/pane. Explicit file arguments open
+normally. `<Space>qs` saves and `<Space>qr` restores manually. In already-open
+Neovim instances, run `:lua require("config.sessions").setup()` once, then
+`<Space>qs` to capture the current layout. New instances enable saving at startup.
+
+Editor snapshots stay under Neovim's state directory (`~/.local/state/nvim/sessions`
+by default), outside Git projects. Tmux snapshots stay in Resurrect's local data
+directory. Save file changes before rebooting: snapshots preserve layout and
+filenames, not unsaved text or process memory. Configured applications restart;
+running tests, servers, and network connections do not resume execution.
+
+The tmux plugin loader runs after the palette, and theme application reloads
+the full tmux configuration to preserve Continuum's status-line save hook.
+
 ## File Navigation
 
 `vf` is the fast file launcher. It searches files recursively, including hidden

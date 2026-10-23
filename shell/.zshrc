@@ -101,6 +101,32 @@ zle -N edit-command-line
 bindkey '^G' edit-command-line
 bindkey -r '^X^E'
 
+# Copy the last URL visible in the current tmux pane with Ctrl-y twice.
+function copy-last-url() {
+  local url clipboard_command
+
+  [[ -n ${TMUX:-} ]] || return 0
+
+  url="$(tmux capture-pane -p -S - 2>/dev/null | \
+    grep -Eo "https?://[^[:space:]<>\"']+" | tail -n 1)"
+  url="${url%%[.,;:!?)]}"
+  [[ -n $url ]] || return 0
+
+  if (( $+commands[pbcopy] )); then
+    clipboard_command=pbcopy
+  elif (( $+commands[wl-copy] )); then
+    clipboard_command=wl-copy
+  elif (( $+commands[xclip] )); then
+    clipboard_command='xclip -selection clipboard'
+  else
+    return 0
+  fi
+
+  print -rn -- "$url" | command $=clipboard_command
+}
+zle -N copy-last-url
+bindkey '^Y^Y' copy-last-url
+
 # export MANPATH="/usr/local/man:$MANPATH"
 
 # You may need to manually set your language environment

@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+style_file="${LYNX_STYLE_FILE:-$HOME/.config/theme-pack/lynx/current.lss}"
+
+exec /usr/bin/lynx -lss="$style_file" -vikeys "$@"

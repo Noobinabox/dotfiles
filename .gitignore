@@ -4,6 +4,7 @@ tools/.local/*
 !tools/.local/bin/
 tools/.local/bin/*
 !tools/.local/bin/tintin-lsp
+!tools/.local/bin/lynx
 *.log
 *.tmp
 *.bak

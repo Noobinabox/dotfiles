@@ -1,0 +1,12 @@
+# Keep Lynx focused on document content while retaining interactive links.
+user_mode=MINIMAL
+keypad_mode=NUMBERS_AS_ARROWS
+vi_keys=ON
+show_color=ALWAYS
+show_rate=OFF
+scrollbar=OFF
+popup=OFF
+underline_links=ON
+pause_when_showing_message=OFF
+show_dot_files=OFF
+default_colors=OFF

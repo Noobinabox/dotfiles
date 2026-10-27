@@ -88,6 +88,7 @@ backup_path .config/htop/htoprc
 backup_path .config/bpytop/bpytop.conf
 backup_path .config/harper-ls/dictionary.txt
 backup_path .config/gh/config.yml
+backup_path .local/bin/lynx
 if package_selected tools; then
 	# The client rejects runtime file symlinks and replaces snapshots atomically.
 	# Let Stow fold the directory, keeping the files within it regular.

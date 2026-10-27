@@ -340,6 +340,13 @@ Alacritty-style font, padding, opacity, cursor, bell, and generated 16-color
 palette settings. Kitty is skipped from Termux package checks because it is a
 desktop terminal rather than a Termux-native package.
 
+Lynx is wrapped at `~/.local/bin/lynx` so it always uses the active generated
+theme at `~/.config/theme-pack/lynx/current.lss` and Vim-style movement keys
+(`-vikeys`). Theme changes through `scripts/apply-theme.sh` regenerate that
+style file with the rest of the palette. Its Stow-managed `~/.lynxrc` uses
+Minimal user mode to hide navigation chrome and status noise while retaining
+interactive links.
+
 The picker uses `fzf` when available and falls back to a numbered shell prompt.
 It lists repository themes and pywal16 built-in themes. Selecting a pywal16
 theme creates `themes/pywal-<theme>.json` first if that repo theme does not

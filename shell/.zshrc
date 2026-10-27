@@ -44,7 +44,8 @@ ZSH_THEME="powerlevel10k/powerlevel10k"
 # HYPHEN_INSENSITIVE="true"
 
 # Uncomment one of the following lines to change the auto-update behavior
-# zstyle ':omz:update' mode disabled  # disable automatic updates
+# Check for updates manually with `omz update`; startup should never wait on a network.
+zstyle ':omz:update' mode disabled
 # zstyle ':omz:update' mode auto      # update automatically without asking
 # zstyle ':omz:update' mode reminder  # just remind me to update when it's time
 
@@ -341,12 +342,7 @@ unalias ga 2>/dev/null
 source ~/.bashrc_aliases
 
 export NVM_DIR="$HOME/.nvm"
-[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
-[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
-
-
-# Load Angular CLI autocompletion.
-source <(ng completion script)
+source "$HOME/.config/zsh/nvm-lazy.zsh"
 export PATH="$HOME/.local/bin:$HOME/.dotnet/tools:$PATH"
 
 # add Pulumi to the PATH

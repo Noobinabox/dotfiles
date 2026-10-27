@@ -317,7 +317,6 @@ fi
 dotfiles_info "restart Spotify Player, bpytop, htop, and editors; reload zsh with exec zsh -l"
 
 if tmux info >/dev/null 2>&1 && [[ -r "$HOME/.config/theme-pack/tmux/current.conf" ]]; then
-	# Reload plugins after the palette so Continuum retains its autosave hook.
 	tmux source-file "$HOME/.config/tmux/tmux.conf"
 	tmux refresh-client -S 2>/dev/null || true
 	dotfiles_info "reloaded tmux theme"

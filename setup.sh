@@ -465,10 +465,6 @@ install_tmux_plugins() {
 
 	if [[ "$check_only" == true ]]; then
 		info "present: tpm"
-		local plugin plugin_root="${TMUX_PLUGIN_MANAGER_PATH:-${XDG_CONFIG_HOME:-$HOME/.config}/tmux/plugins}"
-		for plugin in tmux-resurrect tmux-continuum; do
-			[[ -d "$plugin_root/$plugin" ]] || record_missing "tmux:$plugin"
-		done
 		return
 	fi
 

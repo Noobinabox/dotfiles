@@ -65,27 +65,13 @@ Shared formatter choices:
 
 Leader is `<Space>`.
 
-## Editor Session Recovery
+## Fresh Editor Workspaces
 
-The `config.sessions` module saves file buffers, window splits, tabs, and cursor positions
-every minute, after file writes, on focus loss, and on exit. Snapshots live under
-`stdpath("state")/sessions`, with a separate namespace for each tmux
-session/window/pane and working directory. Outside tmux, snapshots are per
-working directory. A plain `nvim` restores that workspace; explicit file
-arguments, headless runs, read-only views, and diff views do not auto-restore.
-`<leader>qs` saves manually and `<leader>qr` restores manually. Save file changes
-before rebooting; sessions do not store unsaved text. Special terminal buffers
-and running processes are not preserved.
-
-Pane coordinates are resolved on each save and restore, including after tmux
-renumbers windows. Snapshots replace the previous file atomically, so failed
-writes retain the last usable session. Manual restoration refuses to proceed
-while any buffer has unsaved changes.
-
-Tmux Resurrect relaunches Neovim without its original file arguments so this
-session restoration can recover the latest editing layout. In existing editors,
-run `:lua require("config.sessions").setup()` once and `<leader>qs` to save the
-current layout immediately. New editors enable the configuration at startup.
+Neovim starts fresh without automatic session saving or restoration.
+The former `<leader>qs` and `<leader>qr` session shortcuts are removed.
+Save files and restart existing editors to stop their previously loaded session
+timers. Old snapshots under `stdpath("state")/sessions` are left on disk and
+are no longer loaded.
 
 ## Editor Behavior
 

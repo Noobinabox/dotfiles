@@ -210,30 +210,32 @@ Use `sesh connect /path/to/project` to open a project directly.
 After applying these dotfiles, restart your shell for `lg` and reload tmux with
 `tmux source-file ~/.config/tmux/tmux.conf` for the tmux bindings.
 
-## Workspace Recovery After Reboot
+## Fresh Workspaces and Shell Startup
 
-Tmux Resurrect saves sessions, windows, pane layouts, and working directories.
-Continuum saves automatically every five minutes and restores the last snapshot
-when the first tmux server starts. After rebooting, start `tmux`, then use Sesh
-to switch projects. Both `Ctrl-a s` and `Ctrl-a Ctrl-s` open the session picker;
-manual save has no shortcut. Manual restore is `Ctrl-a`, then `Ctrl-r`.
+Tmux and Neovim start fresh; automatic session saving and restoration are disabled.
+Both `Ctrl-a s` and `Ctrl-a Ctrl-s` open tmux's session picker. Sesh still
+switches between running sessions and creates project sessions on demand.
+Neovim's former `<Space>qs` and `<Space>qr` session shortcuts are removed.
+Restart existing Neovim instances after saving your files to stop their old timers.
+Old snapshot files are left on disk and are no longer loaded.
 
-Neovim uses its native session files to save open files, splits, tabs, and cursor
-positions every minute, after file writes, on focus loss, and when exiting.
-Starting `nvim` without file arguments restores the saved workspace for the
-current directory and tmux session/window/pane. Explicit file arguments open
-normally. `<Space>qs` saves and `<Space>qr` restores manually. In already-open
-Neovim instances, run `:lua require("config.sessions").setup()` once, then
-`<Space>qs` to capture the current layout. New instances enable saving at startup.
+NVM initializes on the first `nvm`, `node`, `npm`, `npx`, `corepack`, `ng`,
+`yarn`, or `pnpm` command. That first command pays the initialization cost;
+subsequent commands run normally.
+The selected Node binaries remain on `PATH` immediately for global CLI tools and
+editor language servers. Unusual or unavailable default aliases use NVM's normal
+initialization instead.
+Angular completion no longer launches a Node
+process at shell startup. To enable it for a shell, run
+`source <(ng completion script)` manually. Oh My Zsh updates are manual with
+`omz update`, so opening a shell never waits for its update check.
 
-Editor snapshots stay under Neovim's state directory (`~/.local/state/nvim/sessions`
-by default), outside Git projects. Tmux snapshots stay in Resurrect's local data
-directory. Save file changes before rebooting: snapshots preserve layout and
-filenames, not unsaved text or process memory. Configured applications restart;
-running tests, servers, and network connections do not resume execution.
-
-The tmux plugin loader runs after the palette, and theme application reloads
-the full tmux configuration to preserve Continuum's status-line save hook.
+Run `scripts/install.sh shell` to install the lazy NVM helper, then open a new
+shell. Reload tmux with `tmux source-file ~/.config/tmux/tmux.conf`.
+If the current server previously loaded Continuum, disable its old timer with
+`tmux set -g @continuum-save-interval 0`, disable restoration with
+`tmux set -g @continuum-restore off`, and remove its old restore shortcut with
+`tmux unbind C-r`. New tmux servers load neither recovery plugin.
 
 ## File Navigation
 

@@ -3,7 +3,7 @@ set -euo pipefail
 
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 target="${STOW_TARGET:-$HOME}"
-packages=(shell npm git nvim doom tmux tools systemd)
+packages=(shell npm git nvim doom tmux tools w3m systemd)
 # shellcheck source=scripts/lib/gum.sh
 source "$repo_root/scripts/lib/gum.sh"
 

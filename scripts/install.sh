@@ -10,7 +10,7 @@ source "$repo_root/scripts/lib/gum.sh"
 if [[ "$#" -gt 0 ]]; then
 	packages=("$@")
 else
-	packages=(shell npm git nvim doom tmux tools systemd)
+		packages=(shell npm git nvim doom tmux tools w3m systemd)
 fi
 
 cd "$repo_root"

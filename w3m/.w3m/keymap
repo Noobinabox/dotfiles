@@ -1,0 +1,44 @@
+# Vim-style w3m key bindings
+
+# Movement
+keymap h MOVE_LEFT
+keymap j MOVE_DOWN
+keymap k MOVE_UP
+keymap l MOVE_RIGHT
+
+# Scrolling
+keymap C-d NEXT_HALF_PAGE
+keymap C-u PREV_HALF_PAGE
+keymap C-f NEXT_PAGE
+keymap C-b PREV_PAGE
+keymap g BEGIN
+keymap G END
+
+# Links and buffers
+keymap TAB NEXT_LINK
+keymap M-TAB PREV_LINK
+keymap C-m GOTO_LINK
+keymap C-j GOTO_LINK
+keymap T TAB_LINK
+keymap H BACK
+keymap L NEXT
+
+# Search
+keymap / SEARCH
+keymap ? SEARCH_BACK
+keymap n SEARCH_NEXT
+keymap N SEARCH_PREV
+
+# URLs and tabs
+keymap o GOTO
+keymap O TAB_GOTO
+keymap t NEW_TAB
+keymap x CLOSE_TAB
+keymap J PREV_TAB
+keymap K NEXT_TAB
+
+# Misc
+keymap r RELOAD
+keymap R REDRAW
+keymap q QUIT
+keymap Q EXIT

@@ -98,6 +98,7 @@ status_line_use_colors = true
 session_picker_view = "dense"
 screen_reader_detection_done = true
 pet = "fireball"
+terminal_title = ["activity", "thread-name", "project-name"]
 
 [tui.model_availability_nux]
 "gpt-5.5" = 4

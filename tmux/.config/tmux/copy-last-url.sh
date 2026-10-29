@@ -2,7 +2,9 @@
 
 set -euo pipefail
 
-pane_output="$(tmux capture-pane -pS -)"
+# Join visual rows that were created by terminal wrapping so URLs are matched
+# as one logical line. Normal line breaks remain intact.
+pane_output="$(tmux capture-pane -pJ -S -)"
 last_url="$(printf '%s\n' "$pane_output" |
   grep -oE 'https?://[^[:space:]<>"'"'"'()]+' |
   sed -E 's/[.,;:!?]+$//' |

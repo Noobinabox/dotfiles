@@ -1,16 +1,16 @@
 # Terminal-friendly w3m defaults
-color=true
-high-intensity=true
-display_link=true
-display_link_number=true
-fold_line=true
-use_history=true
-save_hist=false
-confirm_qq=false
-wrap_search=true
-ignorecase_search=true
-vi_prec_num=true
-open_tab_blank=true
-close_tab_back=true
-auto_uncompress=false
-accept_encoding=identity
+color 1
+high-intensity 1
+display_link 1
+display_link_number 1
+fold_line 1
+use_history 1
+save_hist 1
+confirm_qq 0
+wrap_search 1
+ignorecase_search 1
+vi_prec_num 1
+open_tab_blank 1
+close_tab_back 1
+auto_uncompress 0
+accept_encoding identity

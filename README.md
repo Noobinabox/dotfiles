@@ -104,7 +104,7 @@ Bootstrap applications used by the managed configs:
 
 Ubuntu on WSL is the primary bootstrap target. `./setup.sh` installs the curated
 application dependencies and stows the configuration before installing Neovim,
-Doom, tmux, and Yazi plugins. Use `./setup.sh --no-stow` to install tools only.
+Doom, tmux, and Yazi plugins. Neovim restores the checked-in plugin lockfile. Use `./setup.sh --no-stow` to install tools only.
 `--check` reports missing dependencies without installing tools or starting editors.
 
 Setup enables Ubuntu Universe, configures Yazi’s signed APT source, installs
@@ -130,7 +130,7 @@ are installed independently. Custom applications such as `mud-client` require
 their own repository build/install steps. Spotify Player and Tree-sitter CLI
 are installed through Cargo. Bootstrap npm
 installs use the public registry independently of corporate npm credentials.
-Setup tries npm’s alternate HTTPS hostname if its primary hostname is unreachable.
+Setup tries `registry.npmjs.com` if `registry.npmjs.org` is unreachable.
 `DOTFILES_NPM_REGISTRY` selects an explicit registry and disables that fallback.
 Shell plugins and app credentials are kept outside Git; decrypt managed secrets separately after setup.
 
@@ -316,15 +316,17 @@ entry. Once Yazi is open, use its own Vim-style selection workflow:
 
 Yazi is the richer file browsing and management layer. Its config is stowed
 from `tools/.config/yazi` to `~/.config/yazi`, uses Vim-style navigation, and
-loads the active managed theme flavor. Restore managed Yazi packages and
-flavors with:
+loads the active managed theme flavor. Activate the tracked configuration and
+install any package dependencies with:
 
 ```sh
 scripts/install.sh tools
 ya pkg install
 ```
 
-To restore the Yazi packages against the repo config without stowing first:
+Yazi flavors are vendored and customized in this repository. The package manifest
+intentionally excludes those flavors so `ya` preserves the tracked theme files.
+To install any package dependencies against the repo config without stowing first:
 
 ```sh
 YAZI_CONFIG_HOME="$PWD/tools/.config/yazi" ya pkg install

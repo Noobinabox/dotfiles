@@ -474,13 +474,13 @@ install_tui_tools() {
 install_neovim_tools() {
 	local mason_packages=(
 		clangd
-		codebook-lsp
+		codebook
 		harper-ls
 		lua-language-server
 		marksman
 		omnisharp
 		typescript-language-server
-		cmake-format
+		cmakelang
 		csharpier
 		prettier
 		pyright
@@ -490,6 +490,8 @@ install_neovim_tools() {
 		local tool="$1"
 
 		case "$tool" in
+		codebook) [[ -x "$HOME/.local/share/nvim/mason/bin/codebook-lsp" ]] ;;
+		cmakelang) [[ -x "$HOME/.local/share/nvim/mason/bin/cmake-format" ]] ;;
 		omnisharp)
 			[[ -x "$HOME/.local/share/nvim/mason/bin/OmniSharp" || -x "$HOME/.local/share/nvim/mason/bin/omnisharp-mono" ]]
 			;;
@@ -514,8 +516,23 @@ install_neovim_tools() {
 		return
 	fi
 
-	nvim --headless "+Lazy! sync" +qa
-	nvim --headless "+MasonInstall ${mason_packages[*]}" +qa
+	(
+		local lockfile="$HOME/.config/nvim/lazy-lock.json"
+		local backup
+		backup="$(mktemp)"
+		cp "$lockfile" "$backup"
+		# Lazy install rewrites the lock, including already installed checkouts.
+		# Preserve the tracked versions before invoking restore.
+		trap 'cp "$backup" "$lockfile"; rm -f "$backup"' EXIT
+		nvim --headless "+Lazy! install" +qa
+		cp "$backup" "$lockfile"
+		nvim --headless "+Lazy! restore" +qa
+	)
+	if ! nvim --headless "+MasonInstall ${mason_packages[*]}" +qa; then
+		printf 'Mason tool installation failed. Recent installer diagnostics:\n' >&2
+		tail -n 30 "${XDG_STATE_HOME:-$HOME/.local/state}/nvim/mason.log" >&2 || true
+		return 1
+	fi
 }
 
 install_doom() {

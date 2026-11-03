@@ -130,7 +130,8 @@ are installed independently. Custom applications such as `mud-client` require
 their own repository build/install steps. Spotify Player and Tree-sitter CLI
 are installed through Cargo. Bootstrap npm
 installs use the public registry independently of corporate npm credentials.
-`DOTFILES_NPM_REGISTRY` overrides that registry when required by the network.
+Setup tries npm’s alternate HTTPS hostname if its primary hostname is unreachable.
+`DOTFILES_NPM_REGISTRY` selects an explicit registry and disables that fallback.
 Shell plugins and app credentials are kept outside Git; decrypt managed secrets separately after setup.
 
 To verify a fresh Ubuntu home in Docker, run

@@ -341,6 +341,17 @@ install_npm_globals() {
 		return
 	fi
 
+	# Some networks reject TLS to the primary npm hostname. Both endpoints
+	# belong to npm; retain certificate checks and honor explicit overrides.
+	if ! curl --connect-timeout 15 --max-time 30 -fsS "$NPM_CONFIG_REGISTRY/-/ping" >/dev/null; then
+		if [[ -n "${DOTFILES_NPM_REGISTRY:-}" ]]; then
+			printf 'Configured npm registry is unreachable; check DOTFILES_NPM_REGISTRY and network access.\n' >&2
+			return 1
+		fi
+		export NPM_CONFIG_REGISTRY=https://registry.npmjs.com
+		curl --connect-timeout 15 --max-time 30 -fsS "$NPM_CONFIG_REGISTRY/-/ping" >/dev/null
+		info "using npm alternate HTTPS endpoint: $NPM_CONFIG_REGISTRY"
+	fi
 	npm install -g "${packages[@]}"
 }
 
@@ -575,7 +586,7 @@ install_cargo_tools() {
 			continue
 		fi
 		case "$tool" in
-		tree-sitter) cargo install tree-sitter-cli --version 0.26.1 --locked --force ;;
+		tree-sitter) cargo install tree-sitter-cli --version 0.26.13 --locked --force ;;
 		spotify_player) cargo install spotify_player --locked ;;
 		esac
 	done

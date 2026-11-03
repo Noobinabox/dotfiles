@@ -346,4 +346,4 @@ source "$HOME/.config/zsh/nvm-lazy.zsh"
 export PATH="$HOME/.local/bin:$HOME/.dotnet/tools:$PATH"
 
 # add Pulumi to the PATH
-export PATH=$PATH:/home/seth/.pulumi/bin
+export PATH="$PATH:$HOME/.pulumi/bin"

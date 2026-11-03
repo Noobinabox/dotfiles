@@ -35,6 +35,7 @@ STUB
 
 cat >"$stub_bin/node" <<'STUB'
 #!/usr/bin/env bash
+cat >/dev/null
 printf '%s\n' '@openai/codex' prettier
 STUB
 

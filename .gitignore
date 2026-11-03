@@ -5,6 +5,7 @@ tools/.local/*
 tools/.local/bin/*
 !tools/.local/bin/tintin-lsp
 !tools/.local/bin/lynx
+!tools/.local/bin/dotfiles-sync
 *.log
 *.tmp
 *.bak

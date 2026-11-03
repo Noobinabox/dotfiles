@@ -102,15 +102,34 @@ Bootstrap applications used by the managed configs:
 ./setup.sh
 ```
 
-On Debian or Ubuntu, Yazi comes from its upstream apt repository on this
-machine. Add that source before running `./setup.sh` if `apt install yazi` is
-not available yet:
+Ubuntu on WSL is the primary bootstrap target. `./setup.sh` installs the curated
+application dependencies and stows the configuration before installing Neovim,
+Doom, tmux, and Yazi plugins. Use `./setup.sh --no-stow` to install tools only.
+`--check` reports missing dependencies without installing tools or starting editors.
+
+Setup enables Ubuntu Universe, configures the signed Charm (Gum/Glow) and Yazi
+APT sources, and installs .NET SDKs 8 and 10 plus the ASP.NET Core 8 runtime.
+It uses Ubuntu's .NET backports PPA when an SDK is unavailable in the current
+feeds. Neovim must be 0.12.x; setup downloads the configured 0.12 release for
+x86_64 or ARM64 if needed. `DOTFILES_NEOVIM_VERSION` selects a 0.12 patch release.
+Node defaults to the current LTS through NVM; set `DOTFILES_NODE_VERSION` to pin it.
+
+On a fresh Ubuntu WSL instance, start with:
 
 ```sh
-curl -fsSL https://yazi-rs.github.io/builds/yazi-keyring.gpg | sudo tee /usr/share/keyrings/yazi-keyring.gpg >/dev/null
-echo 'deb [signed-by=/usr/share/keyrings/yazi-keyring.gpg] https://yazi-rs.github.io/builds/ stable main' | sudo tee /etc/apt/sources.list.d/yazi.list >/dev/null
-sudo apt update
+sudo apt-get update
+sudo apt-get install -y git
+# Clone this repository, cd into it, then:
+./setup.sh
 ```
+
+Use Windows Terminal and install a Nerd Font on Windows for the configured icons.
+Chrome, Firefox, Snap services, and machine-specific tools from inventory exports
+are installed independently. Custom applications such as `mud-client` require
+their own repository build/install steps. Spotify Player and Tree-sitter CLI are installed through Cargo. Bootstrap npm
+installs use the public registry independently of corporate npm credentials.
+Shell plugins and app credentials are
+kept outside Git; decrypt managed secrets separately after setup.
 
 To bootstrap dependencies and stow configs in one run:
 
@@ -594,7 +613,6 @@ Some tools are referenced by config but are not vendored here:
 - rustup and `~/.cargo/env`
 - tmux plugins
 - Doom Emacs core
-- Yazi apt source on Debian or Ubuntu, if the distro package is not available
 
 Install or update those tools with their normal package managers.
 
@@ -614,22 +632,19 @@ optional package managers produce an empty inventory with a warning. Package
 versions, caches, histories, credentials, and plugin/vendor state are not
 captured.
 
-These snapshots are for auditing and portability; they are not automatically
-installed by `setup.sh`. The curated, distro-aware package lists in `setup.sh`
-remain the normal bootstrap path. Review the inventories, then restore all or
-selected sources with:
+These snapshots are reference material for auditing an old machine. `setup.sh`
+uses a curated dependency list and does not replay snapshots, which include OS
+internals, project-specific packages, and optional applications.
+
+To restore the inventories separately, use:
 
 ```sh
 scripts/install-exported-apps.sh
 scripts/install-exported-apps.sh apt snap flatpak
 ```
 
-The APT snapshot includes manually selected packages as reported by
-`apt-mark`; it does not represent every dependency installed on the system.
-Run the restore script in Bash after configuring the required APT sources
-and Flatpak remotes. Some Snaps also require install options such as `--classic`;
-review their requirements before restoring. AppImages, manually copied binaries,
-and applications outside these package managers need separate documentation.
-Global npm output covers the active Node installation only. The exporter runs
-on demand; the existing Git sync workflow can commit the generated files after
-review. It does not refresh inventories automatically or install applications.
+The APT snapshot is not replayed wholesale because it includes dependencies,
+system components, and machine-specific packages. Global npm output covers the
+active Node installation only. AppImages and manually copied binaries need
+separate handling. The exporter runs on demand; the existing Git sync workflow
+can commit the generated files after review.

@@ -44,6 +44,8 @@ bash scripts/test-tui-tools.sh
 
 dotfiles_heading "checking application inventory"
 bash scripts/test-export-installed-apps.sh
+bash scripts/test-setup-bootstrap.sh
+bash scripts/test-setup-platforms.sh
 
 dotfiles_heading "checking lazy Node initialization"
 zsh -f scripts/test-nvm-lazy.zsh

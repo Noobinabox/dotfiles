@@ -356,3 +356,8 @@ cat() {
     command cat "$@"
   fi
 }
+
+# Resolve the managed Glow theme for the current home directory.
+glow() {
+  command glow --style="${XDG_CONFIG_HOME:-$HOME/.config}/glow/theme.json" "$@"
+}

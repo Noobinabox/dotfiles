@@ -3,9 +3,9 @@ set -euo pipefail
 
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 check_only=false
-run_stow=false
+run_stow=true
 print_platform=false
-node_version="${DOTFILES_NODE_VERSION:-24.18.0}"
+node_version="${DOTFILES_NODE_VERSION:-lts/*}"
 neovim_version="${DOTFILES_NEOVIM_VERSION:-v0.12.3}"
 
 detect_platform() {
@@ -36,13 +36,14 @@ platform="$(detect_platform)"
 
 usage() {
 	command cat <<'USAGE'
-Usage: ./setup.sh [--check] [--stow] [--print-platform]
+Usage: ./setup.sh [--check] [--stow | --no-stow] [--print-platform]
 
 Bootstraps applications used by this dotfiles repository.
 
 Options:
   --check   Report missing tools without installing.
-  --stow    Run scripts/install.sh after dependency setup.
+  --stow    Stow configs before plugin setup (default).
+  --no-stow Install tools only; skip configuration and plugin setup.
   --print-platform
             Print the detected platform and exit without installing anything.
   --help    Show this help.
@@ -56,6 +57,9 @@ while [[ "$#" -gt 0 ]]; do
 		;;
 	--check)
 		check_only=true
+		;;
+	--no-stow)
+		run_stow=false
 		;;
 	--stow)
 		run_stow=true
@@ -96,10 +100,13 @@ info() {
 	dotfiles_info "$*"
 }
 
+export PATH="$HOME/.local/bin:$HOME/.cargo/bin:$HOME/.dotnet/tools:$HOME/.pulumi/bin:$PATH"
+export NPM_CONFIG_USERCONFIG=/dev/null
+export NPM_CONFIG_REGISTRY=https://registry.npmjs.org
 missing=()
 
 have() {
-	command -v "$1" >/dev/null 2>&1
+	type -P "$1" >/dev/null 2>&1
 }
 
 have_any() {
@@ -147,10 +154,11 @@ install_system_packages() {
 	apt)
 		packages=(
 			bash zsh git openssh-client curl ca-certificates unzip tar xz-utils
-			build-essential make cmake stow gpg ripgrep fd-find fzf yazi bat tmux w3m kitty
+			build-essential make cmake stow gpg ripgrep fd-find fzf bat tmux w3m lynx
 			shellcheck shfmt less bash-completion libnotify-bin direnv gh glow gum htop
 			bpytop gdb emacs lua5.4 clang clangd clang-format gcc g++ default-jdk
-			python3-pipx
+			pipx python3-venv software-properties-common jq ffmpeg poppler-utils
+			libasound2-dev libdbus-1-dev libssl-dev pkg-config
 		)
 		;;
 	dnf)
@@ -192,10 +200,10 @@ install_system_packages() {
 	esac
 
 	if [[ "$check_only" == true ]]; then
-		for cmd in bash zsh git ssh curl stow gpg rg fzf yazi ya tmux w3m shellcheck shfmt lesspipe notify-send direnv gh glow gum htop bpytop gdb emacs lua clangd clang-format gcc g++ make cmake java javac; do
+		for cmd in bash zsh git ssh curl stow gpg jq ffmpeg pdftotext lynx pipx rg fzf yazi ya tmux w3m shellcheck shfmt lesspipe notify-send direnv gh glow gum htop bpytop gdb emacs lua clangd clang-format gcc g++ make cmake java javac; do
 			have "$cmd" || record_missing "$cmd"
 		done
-		if [[ "$platform" != termux ]]; then
+		if [[ "$platform" != termux && "$platform" != wsl ]]; then
 			have kitty || record_missing kitty
 		fi
 		if ! have_pywal16; then
@@ -207,7 +215,33 @@ install_system_packages() {
 		return
 	fi
 
+	if [[ "$manager" == apt ]]; then
+		sudo apt-get update
+		sudo apt-get install -y curl ca-certificates gpg software-properties-common
+		sudo add-apt-repository -y universe
+		install_ubuntu_repositories
+		packages+=(yazi dotnet-sdk-10.0 dotnet-sdk-8.0 aspnetcore-runtime-8.0)
+		if [[ "$platform" != wsl ]]; then packages+=(kitty); fi
+	fi
 	dotfiles_pkg_install "${packages[@]}"
+}
+
+install_ubuntu_repositories() {
+	# Sources required by the curated application list on a fresh Ubuntu install.
+	sudo mkdir -p /etc/apt/keyrings
+	curl -fsSL https://repo.charm.sh/apt/gpg.key | sudo gpg --dearmor --yes -o /etc/apt/keyrings/charm.gpg
+	printf 'deb [signed-by=/etc/apt/keyrings/charm.gpg] https://repo.charm.sh/apt/ * *\n' | sudo tee /etc/apt/sources.list.d/charm.list >/dev/null
+	curl -fsSL https://yazi-rs.github.io/builds/yazi-keyring.gpg | sudo tee /etc/apt/keyrings/yazi.gpg >/dev/null
+	printf 'deb [signed-by=/etc/apt/keyrings/yazi.gpg] https://yazi-rs.github.io/builds/ stable main\n' | sudo tee /etc/apt/sources.list.d/yazi.list >/dev/null
+	sudo apt-get update
+	local package
+	for package in dotnet-sdk-8.0 dotnet-sdk-10.0; do
+		if ! apt-cache policy "$package" | grep -Eq 'Candidate: [0-9]'; then
+			sudo add-apt-repository -y ppa:dotnet/backports
+			sudo apt-get update
+			break
+		fi
+	done
 }
 
 install_oh_my_zsh() {
@@ -243,9 +277,9 @@ install_nvm_node() {
 	fi
 
 	# shellcheck source=/dev/null
-	source "$HOME/.nvm/nvm.sh"
+	source "$HOME/.nvm/nvm.sh" --no-use
 
-	if ! nvm version "$node_version" >/dev/null 2>&1; then
+	if [[ "$(nvm version "$node_version")" == "N/A" ]]; then
 		if [[ "$check_only" == true ]]; then
 			record_missing "node $node_version"
 			return
@@ -253,6 +287,7 @@ install_nvm_node() {
 		nvm install "$node_version"
 	fi
 
+	if [[ "$check_only" == false ]]; then nvm alias default "$node_version" >/dev/null; fi
 	nvm use "$node_version" >/dev/null
 }
 
@@ -307,19 +342,33 @@ install_user_local_tools() {
 		curl -fsSL https://get.pulumi.com | sh
 	fi
 
-	if have nvim; then
+	if have nvim && nvim --version | sed -n '1p' | grep -Eq '^NVIM v0\.12\.[0-9]+$'; then
 		info "present: nvim"
 	elif [[ "$check_only" == true ]]; then
-		record_missing "nvim"
+		record_missing "nvim $neovim_version"
 	else
 		if [[ "$platform" != linux && "$platform" != fedora && "$platform" != wsl ]]; then
 			record_missing "nvim (install with the native platform package manager)"
 			return
 		fi
-		local archive="$HOME/.local/opt/nvim-linux-x86_64.tar.gz"
-		curl -fsSL "https://github.com/neovim/neovim/releases/download/${neovim_version}/nvim-linux-x86_64.tar.gz" -o "$archive"
+		local arch
+		case "$(uname -m)" in
+		x86_64 | amd64) arch=x86_64 ;;
+		aarch64 | arm64) arch=arm64 ;;
+		*)
+			printf 'Unsupported Neovim architecture\n' >&2
+			exit 1
+			;;
+		esac
+		[[ "$neovim_version" =~ ^v0\.12\.[0-9]+$ ]] || {
+			printf 'DOTFILES_NEOVIM_VERSION must be v0.12.x\n' >&2
+			exit 1
+		}
+		local archive="$HOME/.local/opt/nvim-linux-$arch.tar.gz"
+		curl -fsSL "https://github.com/neovim/neovim/releases/download/${neovim_version}/nvim-linux-${arch}.tar.gz" -o "$archive"
 		tar -C "$HOME/.local/opt" -xzf "$archive"
-		ln -sfn "$HOME/.local/opt/nvim-linux-x86_64/bin/nvim" "$HOME/.local/bin/nvim"
+		ln -sfn "$HOME/.local/opt/nvim-linux-${arch}/bin/nvim" "$HOME/.local/bin/nvim"
+		hash -r
 	fi
 
 	if have zoxide; then
@@ -357,6 +406,13 @@ install_dotnet_tools() {
 		return
 	fi
 
+	if [[ "$check_only" == true && "$(dotfiles_pkg_manager)" == apt ]]; then
+		local version
+		for version in 8 10; do
+			dotnet --list-sdks | grep -Eq "^${version}\\." || record_missing "dotnet SDK $version"
+		done
+		dotnet --list-runtimes | grep -Eq '^Microsoft.AspNetCore.App 8\.' || record_missing "ASP.NET Core runtime 8"
+	fi
 	if have csharpier; then
 		info "present: csharpier"
 	elif [[ "$check_only" == true ]]; then
@@ -417,7 +473,7 @@ install_neovim_tools() {
 	fi
 
 	if [[ "$check_only" == true ]]; then
-		nvim --headless "+lua print('nvim-ok')" +qa >/dev/null 2>&1
+		# Check only filesystem state; starting Neovim can install plugins.
 		for tool in "${mason_packages[@]}"; do
 			mason_tool_present "$tool" || record_missing "mason:$tool"
 		done
@@ -468,20 +524,51 @@ install_tmux_plugins() {
 		return
 	fi
 
-	"$HOME/.tmux/plugins/tpm/bin/install_plugins"
+	# TPM reads options through tmux; a fresh WSL home has no running server.
+	(
+		local socket="dotfiles-setup-$$"
+		trap 'tmux -L "$socket" kill-server 2>/dev/null || true' EXIT
+		tmux -L "$socket" -f "$HOME/.config/tmux/tmux.conf" new-session -d -s bootstrap
+		local tmux_context
+		tmux_context="$(tmux -L "$socket" display-message -p '#{socket_path}'),0,0"
+		local status=0
+		TMUX="$tmux_context" "$HOME/.tmux/plugins/tpm/bin/install_plugins" || status=$?
+		tmux -L "$socket" kill-server
+		exit "$status"
+	)
+}
+
+install_cargo_tools() {
+	local tool
+	for tool in spotify_player tree-sitter; do
+		if have "$tool"; then
+			if [[ "$tool" != tree-sitter ]]; then continue; fi
+			local version
+			version="$(tree-sitter --version | awk '{print $2}')"
+			if [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ && "$(printf '%s\n' 0.26.1 "$version" | sort -V | sed -n '1p')" == 0.26.1 ]]; then continue; fi
+		fi
+		if [[ "$check_only" == true ]]; then
+			record_missing "$tool"
+			continue
+		fi
+		case "$tool" in
+		tree-sitter) cargo install tree-sitter-cli --version 0.26.1 --locked --force ;;
+		spotify_player) cargo install spotify_player --locked ;;
+		esac
+	done
 }
 
 validate_shells() {
 	log "shell validation"
-	zsh -n "$HOME/.zshrc"
-	bash -n "$HOME/.bashrc"
+	if have zsh; then zsh -n "$repo_root/shell/.zshrc"; fi
+	bash -n "$repo_root/shell/.bashrc"
 }
 
 validate_wsl_helpers() {
 	log "WSL helpers"
-	if grep -qi microsoft /proc/version 2>/dev/null; then
-		have shutdown.exe || record_missing "shutdown.exe"
-		have wt.exe || record_missing "wt.exe (Windows Terminal)"
+	if [[ "$platform" == wsl ]]; then
+		have shutdown.exe || info "optional Windows interop unavailable: shutdown.exe"
+		have wt.exe || info "optional Windows Terminal unavailable: wt.exe"
 	else
 		info "not WSL; skipping shutdown.exe check"
 	fi
@@ -492,21 +579,28 @@ install_oh_my_zsh
 install_nvm_node
 install_npm_globals
 install_user_local_tools
+install_cargo_tools
 install_tui_tools
 install_dotnet_tools
-install_neovim_tools
-install_doom
-install_tmux_plugins
-validate_wsl_helpers
 
-if [[ "$run_stow" == true && "$check_only" == false ]]; then
-	log "stowing dotfiles"
-	"$repo_root/scripts/install.sh"
+if [[ "$run_stow" == true ]]; then
+	if [[ "$check_only" == false ]]; then
+		log "stowing dotfiles"
+		"$repo_root/scripts/install.sh"
+	fi
+	install_neovim_tools
+	install_doom
+	install_tmux_plugins
+	if have ya; then
+		if [[ "$check_only" == false ]]; then ya pkg install; fi
+	else
+		record_missing "ya"
+	fi
 fi
-
+validate_wsl_helpers
 validate_shells
 
-if [[ "$check_only" == true && "${#missing[@]}" -gt 0 ]]; then
+if [[ "${#missing[@]}" -gt 0 ]]; then
 	log "missing dependencies"
 	printf '  %s\n' "${missing[@]}"
 	exit 1

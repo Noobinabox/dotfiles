@@ -42,6 +42,9 @@ done < <(find tools/.codex -maxdepth 1 -type f -name '*.md' -print0 | sort -z)
 dotfiles_heading "checking TUI installer"
 bash scripts/test-tui-tools.sh
 
+dotfiles_heading "checking application inventory"
+bash scripts/test-export-installed-apps.sh
+
 dotfiles_heading "checking lazy Node initialization"
 zsh -f scripts/test-nvm-lazy.zsh
 

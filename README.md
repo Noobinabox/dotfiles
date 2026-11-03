@@ -597,3 +597,44 @@ Some tools are referenced by config but are not vendored here:
 - Yazi apt source on Debian or Ubuntu, if the distro package is not available
 
 Install or update those tools with their normal package managers.
+
+## Installed Application Inventory
+
+Export the package managers and developer-tool ecosystems currently installed
+on Ubuntu:
+
+```sh
+scripts/export-installed-apps.sh
+git diff -- packages/ubuntu
+```
+
+The exporter writes machine snapshots for review to `packages/ubuntu/` for APT,
+Snap, Flatpak, global npm packages, pipx, Cargo, and global .NET tools. Missing
+optional package managers produce an empty inventory with a warning. Package
+versions, caches, histories, credentials, and plugin/vendor state are not
+captured.
+
+These snapshots are for auditing and portability; they are not automatically
+installed by `setup.sh`. The curated, distro-aware package lists in `setup.sh`
+remain the normal bootstrap path. Restore only the inventories you want after
+reviewing them, for example:
+
+```sh
+sed '/^#/d;/^$/d' packages/ubuntu/apt-manual.txt | xargs -r sudo apt install
+while IFS="$(printf '\t')" read -r app channel; do
+  sudo snap install "$app" --channel="$channel"
+done < <(sed '/^#/d;/^$/d' packages/ubuntu/snap.tsv)
+while IFS="$(printf '\t')" read -r app remote; do
+  flatpak install --or-update "$remote" "$app"
+done < <(sed '/^#/d;/^$/d' packages/ubuntu/flatpak.tsv)
+```
+
+The APT snapshot includes manually selected packages as reported by
+`apt-mark`; it does not represent every dependency installed on the system.
+Run these restore examples in Bash after configuring the required APT sources
+and Flatpak remotes. Some Snaps also require install options such as `--classic`;
+review their requirements before restoring. AppImages, manually copied binaries,
+and applications outside these package managers need separate documentation.
+Global npm output covers the active Node installation only. The exporter runs
+on demand; the existing Git sync workflow can commit the generated files after
+review. It does not refresh inventories automatically or install applications.

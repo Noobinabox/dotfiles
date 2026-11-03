@@ -135,3 +135,11 @@ if [ -r "$HOME/.cargo/env" ]; then
 	# shellcheck source=/home/seth/.cargo/env
 	. "$HOME/.cargo/env"
 fi
+
+# Make user-local tools available in Ubuntu's default interactive Bash shell.
+export PATH="$HOME/.local/bin:$HOME/.dotnet/tools:$HOME/.pulumi/bin:$PATH"
+export NVM_DIR="$HOME/.nvm"
+if [ -s "$NVM_DIR/nvm.sh" ]; then
+	# shellcheck source=/dev/null
+	. "$NVM_DIR/nvm.sh"
+fi

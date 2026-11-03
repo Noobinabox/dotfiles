@@ -114,6 +114,7 @@ It uses Ubuntu's .NET backports PPA when an SDK is unavailable in the current
 feeds. Neovim must be 0.12.x; setup downloads the configured 0.12 release for
 x86_64 or ARM64 if needed. `DOTFILES_NEOVIM_VERSION` selects a 0.12 patch release.
 Node defaults to the current LTS through NVM; set `DOTFILES_NODE_VERSION` to pin it.
+Bash loads NVM for Ubuntu’s default shell; Zsh retains its lazy Node initialization.
 
 On a fresh Ubuntu WSL instance, start with:
 
@@ -136,7 +137,8 @@ Shell plugins and app credentials are kept outside Git; decrypt managed secrets 
 
 To verify a fresh Ubuntu home in Docker, run
 `scripts/test-setup-ubuntu-docker.sh`. It runs setup twice, then `--check`, with
-`DOTFILES_PLATFORM=wsl` and a separate username. It preserves logs and deletes
+`DOTFILES_PLATFORM=wsl` and a separate username. It also checks Bash/Zsh startup
+and preservation of the Neovim plugin lockfile. It preserves logs and deletes
 its disposable container. It downloads and builds the full toolchain; Windows
 interop and graphical rendering require a real WSL session.
 

@@ -30,6 +30,7 @@ docker exec -e DEBIAN_FRONTEND=noninteractive "$container" bash -c '
   printf "bootstrap ALL=(ALL) NOPASSWD:ALL\n" > /etc/sudoers.d/bootstrap
   mkdir /home/bootstrap/dotfiles /home/bootstrap/setup-logs
   tar -xf /tmp/checkout.tar -C /home/bootstrap/dotfiles
+  cp /home/bootstrap/dotfiles/nvim/.config/nvim/lazy-lock.json /home/bootstrap/expected-lazy-lock.json
   chown -R bootstrap:bootstrap /home/bootstrap/dotfiles /home/bootstrap/setup-logs
 ' >"$logs/prerequisites.log" 2>&1
 for phase in first repeat check; do
@@ -46,4 +47,16 @@ for phase in first repeat check; do
       }
     '
 done
-printf 'Ubuntu container bootstrap, repeat install, and dependency checks passed\n'
+for shell in bash zsh; do
+	docker exec -u bootstrap -e HOME=/home/bootstrap -e TERM=xterm-256color "$container" \
+		"$shell" -lic 'set -e; node --version; nvim --version; command -v csharpier; command -v pulumi' \
+		>"$logs/$shell-startup.log" 2>&1
+done
+docker exec -u bootstrap "$container" python3 -c '
+import json
+from pathlib import Path
+expected = json.loads(Path("/home/bootstrap/expected-lazy-lock.json").read_text())
+actual = json.loads(Path("/home/bootstrap/.config/nvim/lazy-lock.json").read_text())
+assert expected == actual, "Neovim plugin lock changed during setup"
+'
+printf 'Ubuntu bootstrap, repeat install, dependency checks, shells, and lock preservation passed\n'

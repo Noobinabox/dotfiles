@@ -616,22 +616,17 @@ captured.
 
 These snapshots are for auditing and portability; they are not automatically
 installed by `setup.sh`. The curated, distro-aware package lists in `setup.sh`
-remain the normal bootstrap path. Restore only the inventories you want after
-reviewing them, for example:
+remain the normal bootstrap path. Review the inventories, then restore all or
+selected sources with:
 
 ```sh
-sed '/^#/d;/^$/d' packages/ubuntu/apt-manual.txt | xargs -r sudo apt install
-while IFS="$(printf '\t')" read -r app channel; do
-  sudo snap install "$app" --channel="$channel"
-done < <(sed '/^#/d;/^$/d' packages/ubuntu/snap.tsv)
-while IFS="$(printf '\t')" read -r app remote; do
-  flatpak install --or-update "$remote" "$app"
-done < <(sed '/^#/d;/^$/d' packages/ubuntu/flatpak.tsv)
+scripts/install-exported-apps.sh
+scripts/install-exported-apps.sh apt snap flatpak
 ```
 
 The APT snapshot includes manually selected packages as reported by
 `apt-mark`; it does not represent every dependency installed on the system.
-Run these restore examples in Bash after configuring the required APT sources
+Run the restore script in Bash after configuring the required APT sources
 and Flatpak remotes. Some Snaps also require install options such as `--classic`;
 review their requirements before restoring. AppImages, manually copied binaries,
 and applications outside these package managers need separate documentation.

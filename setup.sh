@@ -7,6 +7,8 @@ run_stow=true
 print_platform=false
 node_version="${DOTFILES_NODE_VERSION:-lts/*}"
 neovim_version="${DOTFILES_NEOVIM_VERSION:-v0.12.3}"
+gum_version=2.0.2
+glow_version=3.0.0
 
 detect_platform() {
 	if [[ -n "${DOTFILES_PLATFORM:-}" ]]; then
@@ -102,7 +104,7 @@ info() {
 
 export PATH="$HOME/.local/bin:$HOME/.cargo/bin:$HOME/.dotnet/tools:$HOME/.pulumi/bin:$PATH"
 export NPM_CONFIG_USERCONFIG=/dev/null
-export NPM_CONFIG_REGISTRY=https://registry.npmjs.org
+export NPM_CONFIG_REGISTRY="${DOTFILES_NPM_REGISTRY:-https://registry.npmjs.org}"
 missing=()
 
 have() {
@@ -155,7 +157,7 @@ install_system_packages() {
 		packages=(
 			bash zsh git openssh-client curl ca-certificates unzip tar xz-utils
 			build-essential make cmake stow gpg ripgrep fd-find fzf bat tmux w3m lynx
-			shellcheck shfmt less bash-completion libnotify-bin direnv gh glow gum htop
+			shellcheck shfmt less bash-completion libnotify-bin direnv gh htop
 			bpytop gdb emacs lua5.4 clang clangd clang-format gcc g++ default-jdk
 			pipx python3-venv software-properties-common jq ffmpeg poppler-utils
 			libasound2-dev libdbus-1-dev libssl-dev pkg-config
@@ -224,19 +226,40 @@ install_system_packages() {
 		if [[ "$platform" != wsl ]]; then packages+=(kitty); fi
 	fi
 	dotfiles_pkg_install "${packages[@]}"
+	if [[ "$manager" == apt ]]; then install_charm_tools; fi
 }
 
+install_charm_tools() (
+	local directory tool version filename base checksum arch
+	directory="$(mktemp -d)"
+	trap 'rm -rf "$directory"' EXIT
+	arch="$(dpkg --print-architecture)"
+	for tool in gum glow; do
+		if have "$tool"; then continue; fi
+		case "$tool" in gum) version="$gum_version" ;; glow) version="$glow_version" ;; esac
+		filename="${tool}_${version}_${arch}.deb"
+		base="https://github.com/charmbracelet/$tool/releases/download/v$version"
+		curl --retry 3 -fsSL "$base/$filename" -o "$directory/$filename"
+		curl --retry 3 -fsSL "$base/checksums.txt" -o "$directory/checksums.txt"
+		checksum="$(awk -v file="$filename" '$2 == file {print $1}' "$directory/checksums.txt")"
+		[[ "$checksum" =~ ^[a-f0-9]{64}$ ]] || {
+			printf 'Missing checksum for %s\n' "$filename" >&2
+			exit 1
+		}
+		(cd "$directory" && printf '%s  %s\n' "$checksum" "$filename" | sha256sum --check --status)
+		sudo apt-get install -y "$directory/$filename"
+	done
+)
+
 install_ubuntu_repositories() {
-	# Sources required by the curated application list on a fresh Ubuntu install.
+	# Yazi publishes signed packages outside the Ubuntu archives.
 	sudo mkdir -p /etc/apt/keyrings
-	curl -fsSL https://repo.charm.sh/apt/gpg.key | sudo gpg --dearmor --yes -o /etc/apt/keyrings/charm.gpg
-	printf 'deb [signed-by=/etc/apt/keyrings/charm.gpg] https://repo.charm.sh/apt/ * *\n' | sudo tee /etc/apt/sources.list.d/charm.list >/dev/null
 	curl -fsSL https://yazi-rs.github.io/builds/yazi-keyring.gpg | sudo tee /etc/apt/keyrings/yazi.gpg >/dev/null
 	printf 'deb [signed-by=/etc/apt/keyrings/yazi.gpg] https://yazi-rs.github.io/builds/ stable main\n' | sudo tee /etc/apt/sources.list.d/yazi.list >/dev/null
 	sudo apt-get update
 	local package
 	for package in dotnet-sdk-8.0 dotnet-sdk-10.0; do
-		if ! apt-cache policy "$package" | grep -Eq 'Candidate: [0-9]'; then
+		if ! apt-cache policy "$package" | grep -E 'Candidate: [0-9]' >/dev/null; then
 			sudo add-apt-repository -y ppa:dotnet/backports
 			sudo apt-get update
 			break

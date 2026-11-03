@@ -107,8 +107,9 @@ application dependencies and stows the configuration before installing Neovim,
 Doom, tmux, and Yazi plugins. Use `./setup.sh --no-stow` to install tools only.
 `--check` reports missing dependencies without installing tools or starting editors.
 
-Setup enables Ubuntu Universe, configures the signed Charm (Gum/Glow) and Yazi
-APT sources, and installs .NET SDKs 8 and 10 plus the ASP.NET Core 8 runtime.
+Setup enables Ubuntu Universe, configures Yazi’s signed APT source, installs
+Gum/Glow from pinned upstream release packages with checksum verification, and
+installs .NET SDKs 8 and 10 plus the ASP.NET Core 8 runtime.
 It uses Ubuntu's .NET backports PPA when an SDK is unavailable in the current
 feeds. Neovim must be 0.12.x; setup downloads the configured 0.12 release for
 x86_64 or ARM64 if needed. `DOTFILES_NEOVIM_VERSION` selects a 0.12 patch release.
@@ -126,10 +127,17 @@ sudo apt-get install -y git
 Use Windows Terminal and install a Nerd Font on Windows for the configured icons.
 Chrome, Firefox, Snap services, and machine-specific tools from inventory exports
 are installed independently. Custom applications such as `mud-client` require
-their own repository build/install steps. Spotify Player and Tree-sitter CLI are installed through Cargo. Bootstrap npm
+their own repository build/install steps. Spotify Player and Tree-sitter CLI
+are installed through Cargo. Bootstrap npm
 installs use the public registry independently of corporate npm credentials.
-Shell plugins and app credentials are
-kept outside Git; decrypt managed secrets separately after setup.
+`DOTFILES_NPM_REGISTRY` overrides that registry when required by the network.
+Shell plugins and app credentials are kept outside Git; decrypt managed secrets separately after setup.
+
+To verify a fresh Ubuntu home in Docker, run
+`scripts/test-setup-ubuntu-docker.sh`. It runs setup twice, then `--check`, with
+`DOTFILES_PLATFORM=wsl` and a separate username. It preserves logs and deletes
+its disposable container. It downloads and builds the full toolchain; Windows
+interop and graphical rendering require a real WSL session.
 
 To bootstrap dependencies and stow configs in one run:
 

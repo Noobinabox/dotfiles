@@ -1,0 +1,10 @@
+[Unit]
+Description=Sync Obsidian vault
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=%h/.local/bin/obsidian-sync
+TimeoutStartSec=10min
+UMask=0077

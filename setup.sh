@@ -10,6 +10,7 @@ node_version="${DOTFILES_NODE_VERSION:-lts/*}"
 neovim_version="${DOTFILES_NEOVIM_VERSION:-v0.12.3}"
 gum_version=2.0.2
 glow_version=3.0.0
+obsidian_version=1.12.7
 
 detect_platform() {
 	if [[ -n "${DOTFILES_PLATFORM:-}" ]]; then
@@ -166,6 +167,7 @@ install_system_packages() {
 			bpytop gdb emacs lua5.4 clang clangd clang-format gcc g++ default-jdk
 			pipx python3-venv software-properties-common jq ffmpeg poppler-utils
 			libasound2-dev libdbus-1-dev libssl-dev pkg-config
+			libnspr4 libnss3 libgbm1 libgtk-3-0t64
 		)
 		;;
 	dnf)
@@ -323,6 +325,7 @@ install_npm_globals() {
 	local packages=(
 		@angular/cli
 		@openai/codex
+		obsidian-headless
 		bash-language-server
 		markdownlint-cli
 		prettier
@@ -340,7 +343,7 @@ install_npm_globals() {
 	fi
 
 	if [[ "$check_only" == true ]]; then
-		for cmd in ng codex bash-language-server markdownlint prettier tsc typescript-language-server yaml-language-server vscode-json-language-server vscode-html-language-server vscode-css-language-server; do
+		for cmd in ng codex ob bash-language-server markdownlint prettier tsc typescript-language-server yaml-language-server vscode-json-language-server vscode-html-language-server vscode-css-language-server; do
 			have "$cmd" || record_missing "$cmd"
 		done
 		return
@@ -625,6 +628,64 @@ restore_setup_secrets() {
 	fi
 }
 
+install_obsidian() {
+	log "Obsidian desktop runtime"
+	if have obsidian; then return; fi
+	if [[ "$platform" != linux && "$platform" != wsl ]]; then
+		info "Install the Obsidian desktop app with your native platform installer."
+		return
+	fi
+	if [[ "$check_only" == true ]]; then
+		record_missing "obsidian"
+		return
+	fi
+	(
+		local suffix directory staging
+		case "$(uname -m)" in
+		x86_64 | amd64) suffix="" ;;
+		aarch64 | arm64) suffix=-arm64 ;;
+		*)
+			printf 'Unsupported Obsidian architecture\n' >&2
+			exit 1
+			;;
+		esac
+		directory=""
+		mkdir -p "$HOME/.local/opt" "$HOME/.local/bin"
+		staging="$(mktemp -d "$HOME/.local/opt/.obsidian.XXXXXX")"
+		trap 'rm -rf "$staging"' EXIT
+		curl --retry 3 -fsSL "https://github.com/obsidianmd/obsidian-releases/releases/download/v$obsidian_version/Obsidian-$obsidian_version$suffix.AppImage" -o "$staging/Obsidian.AppImage"
+		chmod +x "$staging/Obsidian.AppImage"
+		(cd "$staging" && ./Obsidian.AppImage --appimage-extract >/dev/null)
+		[[ -x "$staging/squashfs-root/AppRun" ]] || {
+			printf 'Invalid Obsidian AppImage extraction\n' >&2
+			exit 1
+		}
+		directory="$(mktemp -d "$HOME/.local/opt/obsidian-$obsidian_version.XXXXXX")"
+		mv "$staging/squashfs-root" "$directory/runtime"
+		ln -sfn "$directory/runtime/AppRun" "$HOME/.local/bin/obsidian"
+	)
+}
+
+configure_obsidian_sync() {
+	if [[ "$run_stow" == false || "$check_only" == true ]]; then return; fi
+	log "Obsidian vault sync timer"
+	if have crontab && crontab -l 2>/dev/null | sed '/^[[:space:]]*#/d' | grep -E '(ob[[:space:]]+sync|obsidian-sync)' >/dev/null; then
+		info "Existing Obsidian cron job detected; remove it before activating obsidian-sync.timer."
+		return
+	fi
+	if ! have systemctl || ! systemctl --user show-environment >/dev/null 2>&1; then
+		info "User systemd unavailable; enable systemd in WSL, then rerun setup to activate Obsidian sync."
+		return
+	fi
+	systemctl --user daemon-reload
+	if "$HOME/.local/bin/obsidian-sync" --check; then
+		systemctl --user enable --now obsidian-sync.timer
+	else
+		info 'Obsidian sync awaits login/vault linking: ob login; ob sync-setup --vault "REMOTE NAME" --path ~/vault'
+		info 'Then rerun setup, or enable it with: systemctl --user enable --now obsidian-sync.timer'
+	fi
+}
+
 validate_shells() {
 	log "shell validation"
 	if have zsh; then zsh -n "$repo_root/shell/.zshrc"; fi
@@ -646,6 +707,7 @@ install_oh_my_zsh
 install_nvm_node
 install_npm_globals
 install_user_local_tools
+install_obsidian
 install_cargo_tools
 install_tui_tools
 install_dotnet_tools
@@ -674,4 +736,5 @@ if [[ "${#missing[@]}" -gt 0 ]]; then
 fi
 
 restore_setup_secrets
+configure_obsidian_sync
 log "setup complete"

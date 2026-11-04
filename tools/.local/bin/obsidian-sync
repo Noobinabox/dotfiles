@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+config="${XDG_CONFIG_HOME:-$HOME/.config}/obsidian-sync.env"
+if [[ -f "$config" ]]; then
+	# shellcheck source=/dev/null
+	source "$config"
+fi
+vault="${OBSIDIAN_SYNC_PATH:-$HOME/vault}"
+if [[ "${1:-}" != "" && "${1:-}" != --check ]] || (($# > 1)); then
+	printf 'Usage: obsidian-sync [--check]\n' >&2
+	exit 2
+fi
+# User services do not inherit the interactive shell's NVM initialization.
+export NVM_DIR="${NVM_DIR:-$HOME/.nvm}"
+if [[ -s "$NVM_DIR/nvm.sh" ]]; then
+	# shellcheck source=/dev/null
+	source "$NVM_DIR/nvm.sh" --no-use
+	nvm use --silent default >/dev/null
+fi
+command -v ob >/dev/null || {
+	printf 'Missing Obsidian Headless CLI; run setup.sh.\n' >&2
+	exit 1
+}
+if [[ "${1:-}" == --check ]]; then
+	status="$(ob sync-status --path "$vault" 2>/dev/null)" || exit 1
+	if [[ "$status" == *'Not logged in.'* || "$status" == *'encryption key missing'* ]]; then exit 1; fi
+	exit 0
+fi
+exec ob sync --path "$vault"

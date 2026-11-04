@@ -14,7 +14,7 @@ source "$test_root/functions.sh"
 check_only=true
 # Production checks require executable files; provide the version probes here.
 have() {
-	case "$1" in nvim | dotnet | csharpier | npm) return 0 ;; *) type -P "$1" >/dev/null 2>&1 ;; esac
+	case "$1" in obsidian) return 1 ;; nvim | dotnet | csharpier | npm) return 0 ;; *) type -P "$1" >/dev/null 2>&1 ;; esac
 }
 nvim() { printf 'NVIM v%s\n' "$test_version"; }
 for test_version in 0.11.5 0.12.3 0.13.0 0.12.3-dev; do
@@ -24,6 +24,9 @@ for test_version in 0.11.5 0.12.3 0.13.0 0.12.3-dev; do
 	for item in "${missing[@]}"; do [[ "$item" != "nvim "* ]] || found=true; done
 	if [[ "$test_version" == 0.12.3 ]]; then [[ "$found" == false ]]; else [[ "$found" == true ]]; fi
 done
+missing=()
+install_obsidian >/dev/null
+[[ "${missing[*]}" == obsidian ]]
 # Checking a fresh home must not create directories or install anything.
 [[ -z "$(ls -A "$HOME")" ]]
 dotnet() {

@@ -104,6 +104,9 @@ if package_selected tools; then
 fi
 backup_path .config/systemd/user/dotfiles-sync.service
 backup_path .config/systemd/user/dotfiles-sync.timer
+backup_path .config/systemd/user/obsidian-sync.service
+backup_path .config/systemd/user/obsidian-sync.timer
+backup_path .local/bin/obsidian-sync
 
 dotfiles_heading "stowing packages"
 for package in "${packages[@]}"; do

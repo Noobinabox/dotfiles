@@ -668,3 +668,45 @@ system components, and machine-specific packages. Global npm output covers the
 active Node installation only. AppImages and manually copied binaries need
 separate handling. The exporter runs on demand; the existing Git sync workflow
 can commit the generated files after review.
+
+## Obsidian Headless Sync
+
+Setup installs the Linux Obsidian AppImage and `obsidian-headless` (`ob`) and stows a user systemd timer for
+`~/vault`. On a new machine, link the vault interactively:
+
+```sh
+ob login
+ob sync-list-remote
+ob sync-setup --vault "REMOTE NAME" --path ~/vault
+systemctl --user enable --now obsidian-sync.timer
+```
+
+Setup automatically enables the timer when a linked vault and login are already
+available. Without user systemd (including Docker), it installs the files and
+prints activation instructions. WSL must have systemd enabled for the timer.
+The job syncs once, then waits five minutes after completion before the next run.
+It initializes NVM itself, so it works without an interactive shell. Setup also installs the extracted Linux Obsidian AppImage runtime on Ubuntu/WSL
+without requiring FUSE. Download/extraction and the launcher path are verified;
+graphical startup requires WSLg and working Electron sandbox support and remains
+unverified. Windows desktop installation remains a separate choice.
+
+Use `~/.config/obsidian-sync.env` with `OBSIDIAN_SYNC_PATH=/absolute/vault/path`
+for a different vault (quote paths containing spaces), then restart the timer.
+Both setup and the service read this file. Login/session state and vault
+encryption keys remain outside Git; a new machine requires login and vault linking.
+Check `systemctl --user status obsidian-sync.timer` and
+`journalctl --user -u obsidian-sync.service`. Disable it with
+`systemctl --user disable --now obsidian-sync.timer`.
+
+Use one sync method per device. When using this headless timer, disable the
+desktop application’s own Obsidian Sync on that device, as required by the
+[Obsidian Headless Sync guidance](https://help.obsidian.md/sync/headless).
+
+The timer requires the user systemd manager and the WSL distribution to remain
+running. `loginctl enable-linger "$USER"` keeps the user manager available after
+logout, but the timer cannot start or keep alive a shut-down WSL distribution.
+It resumes when WSL and the user manager start again.
+
+If migrating from the old cron-based vault sync, remove that Obsidian cron entry
+before enabling `obsidian-sync.timer` so only one scheduled sync job remains.
+Setup detects existing Obsidian cron entries and defers timer activation.

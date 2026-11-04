@@ -133,13 +133,20 @@ are installed through Cargo. Bootstrap npm
 installs use the public registry independently of corporate npm credentials.
 Setup tries `registry.npmjs.com` if `registry.npmjs.org` is unreachable.
 `DOTFILES_NPM_REGISTRY` selects an explicit registry and disables that fallback.
-Shell plugins and app credentials are kept outside Git; decrypt managed secrets separately after setup.
+Setup finishes by decrypting the tracked GPG environment files and SSH backup
+through `scripts/decrypt-secrets.sh`. Supply the encryption passphrase or import
+your private GPG key beforehand. A failed restore stops setup with instructions
+for retrying. Existing secret destinations are backed up by the restore helper.
+Use `./setup.sh --skip-secrets` to defer decryption; `--check` and `--no-stow`
+do not restore secrets. Open a new shell afterward to load restored environment
+variables. Private GPG keys are not stored in this repository.
 
 To verify a fresh Ubuntu home in Docker, run
 `scripts/test-setup-ubuntu-docker.sh`. It runs setup twice, then `--check`, with
 `DOTFILES_PLATFORM=wsl` and a separate username. It also checks Bash/Zsh startup
 and preservation of the Neovim plugin lockfile. It preserves logs and deletes
-its disposable container. It downloads and builds the full toolchain; Windows
+its disposable container. Container verification uses `--skip-secrets` and never
+restores personal credentials. It downloads and builds the full toolchain; Windows
 interop and graphical rendering require a real WSL session.
 
 To bootstrap dependencies and stow configs in one run:
@@ -503,7 +510,7 @@ Tracked secret files are GPG encrypted:
 - `secrets/npm.env.gpg`
 - `secrets/ssh.tar.gz.gpg`
 
-To decrypt on this machine:
+Normal `./setup.sh` restores these at the end. To restore them separately:
 
 ```sh
 scripts/decrypt-secrets.sh

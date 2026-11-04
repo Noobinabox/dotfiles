@@ -55,4 +55,31 @@ if install_npm_globals >/dev/null 2>&1; then
 	printf 'Explicit npm registry failure was ignored\n' >&2
 	exit 1
 fi
+# Setup delegates to the existing restore helper only in its default mode.
+repo_root="$test_root/secret-fixture"
+mkdir -p "$repo_root/scripts"
+export SETUP_SECRET_MARKER="$test_root/restore-called"
+cat >"$repo_root/scripts/decrypt-secrets.sh" <<'STUB'
+#!/usr/bin/env bash
+printf 'called\n' > "$SETUP_SECRET_MARKER"
+exit "${SETUP_SECRET_STATUS:-0}"
+STUB
+chmod +x "$repo_root/scripts/decrypt-secrets.sh"
+export check_only=true run_stow=true restore_encrypted_secrets=true
+restore_setup_secrets >/dev/null
+[[ ! -e "$SETUP_SECRET_MARKER" ]]
+export check_only=false restore_encrypted_secrets=false
+restore_setup_secrets >/dev/null
+[[ ! -e "$SETUP_SECRET_MARKER" ]]
+export restore_encrypted_secrets=true run_stow=false
+restore_setup_secrets >/dev/null
+[[ ! -e "$SETUP_SECRET_MARKER" ]]
+export run_stow=true
+restore_setup_secrets >/dev/null
+[[ -e "$SETUP_SECRET_MARKER" ]]
+export SETUP_SECRET_STATUS=7
+if restore_setup_secrets >/dev/null 2>&1; then
+	printf 'Secret restore failure was ignored\n' >&2
+	exit 1
+fi
 printf 'fresh-home bootstrap checks passed\n'

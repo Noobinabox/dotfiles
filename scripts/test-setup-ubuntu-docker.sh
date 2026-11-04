@@ -39,7 +39,7 @@ for phase in first repeat check; do
 		-e HOME=/home/bootstrap -e DOTFILES_PLATFORM=wsl -e DOTFILES_NPM_REGISTRY \
 		-e DEBIAN_FRONTEND=noninteractive -e TERM=xterm-256color \
 		-e CARGO_BUILD_JOBS=2 -e SETUP_PHASE="$phase" "$container" bash -c '
-      args=()
+      args=(--skip-secrets)
       if [[ "$SETUP_PHASE" == check ]]; then args+=(--check); fi
       ./setup.sh "${args[@]}" > "/home/bootstrap/setup-logs/$SETUP_PHASE.log" 2>&1 || {
         tail -n 50 "/home/bootstrap/setup-logs/$SETUP_PHASE.log"

@@ -4,6 +4,7 @@ set -euo pipefail
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 check_only=false
 run_stow=true
+restore_encrypted_secrets=true
 print_platform=false
 node_version="${DOTFILES_NODE_VERSION:-lts/*}"
 neovim_version="${DOTFILES_NEOVIM_VERSION:-v0.12.3}"
@@ -38,7 +39,7 @@ platform="$(detect_platform)"
 
 usage() {
 	command cat <<'USAGE'
-Usage: ./setup.sh [--check] [--stow | --no-stow] [--print-platform]
+Usage: ./setup.sh [--check] [--stow | --no-stow] [--skip-secrets] [--print-platform]
 
 Bootstraps applications used by this dotfiles repository.
 
@@ -46,6 +47,7 @@ Options:
   --check   Report missing tools without installing.
   --stow    Stow configs before plugin setup (default).
   --no-stow Install tools only; skip configuration and plugin setup.
+  --skip-secrets Skip restoring encrypted environment files and SSH keys.
   --print-platform
             Print the detected platform and exit without installing anything.
   --help    Show this help.
@@ -59,6 +61,9 @@ while [[ "$#" -gt 0 ]]; do
 		;;
 	--check)
 		check_only=true
+		;;
+	--skip-secrets)
+		restore_encrypted_secrets=false
 		;;
 	--no-stow)
 		run_stow=false
@@ -609,6 +614,21 @@ install_cargo_tools() {
 	done
 }
 
+restore_setup_secrets() {
+	if [[ "$check_only" == true || "$run_stow" == false || "$restore_encrypted_secrets" == false ]]; then
+		return 0
+	fi
+	log "restoring encrypted secrets"
+	if [[ -t 0 ]]; then
+		GPG_TTY="$(tty)"
+		export GPG_TTY
+	fi
+	if ! "$repo_root/scripts/decrypt-secrets.sh"; then
+		printf 'Secret restore failed. Supply the encryption passphrase or import the required GPG private key, then retry scripts/decrypt-secrets.sh. Use --skip-secrets for a tool/config-only setup.\n' >&2
+		return 1
+	fi
+}
+
 validate_shells() {
 	log "shell validation"
 	if have zsh; then zsh -n "$repo_root/shell/.zshrc"; fi
@@ -657,5 +677,5 @@ if [[ "${#missing[@]}" -gt 0 ]]; then
 	exit 1
 fi
 
+restore_setup_secrets
 log "setup complete"
-info "secrets are separate; run scripts/decrypt-secrets.sh when needed"

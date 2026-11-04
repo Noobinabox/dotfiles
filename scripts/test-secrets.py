@@ -4,6 +4,7 @@
 import io
 import os
 import pathlib
+import pty
 import shutil
 import subprocess
 import tarfile
@@ -36,6 +37,9 @@ class SecretsTests(unittest.TestCase):
         wrapper.write_text(
             '#!/usr/bin/env bash\n'
             'if [[ ${TEST_GPG_FAIL:-0} == 1 ]]; then exit 1; fi\n'
+            'if [[ -n ${TEST_GPG_TTY_RECORD:-} ]]; then\n'
+            '  printf %s "${GPG_TTY:-}" > "$TEST_GPG_TTY_RECORD"\n'
+            'fi\n'
             'exec "$TEST_REAL_GPG" --batch --pinentry-mode loopback '
             '--passphrase fixture-only "$@"\n'
         )
@@ -62,6 +66,44 @@ class SecretsTests(unittest.TestCase):
 
     def encrypt(self, *names):
         self.run_script("encrypt-secrets.sh", *(names or ("ssh",)))
+
+    def test_terminal_is_propagated_before_archive_pipeline(self):
+        master, slave = pty.openpty()
+        self.addCleanup(os.close, master)
+        self.addCleanup(os.close, slave)
+        record = self.root / "gpg-terminal"
+        self.env.update(GPG_TTY="/dev/stale-session", TEST_GPG_TTY_RECORD=str(record))
+        expected = os.ttyname(slave)
+        for script in ("encrypt-secrets.sh", "decrypt-secrets.sh"):
+            with self.subTest(script=script):
+                result = subprocess.run(
+                    ["bash", str(self.repo / "scripts" / script), "ssh"],
+                    env=self.env, stdin=slave, capture_output=True, text=True,
+                )
+                self.assertEqual(result.returncode, 0, result.stderr)
+                self.assertEqual(record.read_text(), expected)
+
+    def test_stderr_terminal_is_used_when_stdin_is_redirected(self):
+        master, slave = pty.openpty()
+        self.addCleanup(os.close, master)
+        self.addCleanup(os.close, slave)
+        record = self.root / "gpg-terminal"
+        self.env.update(GPG_TTY="/dev/stale-session", TEST_GPG_TTY_RECORD=str(record))
+        result = subprocess.run(
+            ["bash", str(self.repo / "scripts/encrypt-secrets.sh"), "ssh"],
+            env=self.env, stdin=subprocess.DEVNULL, stdout=subprocess.PIPE,
+            stderr=slave, text=True,
+        )
+        self.assertEqual(result.returncode, 0, result.stdout)
+        self.assertEqual(record.read_text(), os.ttyname(slave))
+
+    def test_headless_restore_preserves_explicit_gpg_terminal(self):
+        record = self.root / "gpg-terminal"
+        self.env.update(GPG_TTY="/dev/explicit-session", TEST_GPG_TTY_RECORD=str(record))
+        self.encrypt("ssh")
+        self.assertEqual(record.read_text(), "/dev/explicit-session")
+        self.run_script("decrypt-secrets.sh", "ssh")
+        self.assertEqual(record.read_text(), "/dev/explicit-session")
 
     def test_roundtrip_backups_modes_and_symlink_contents(self):
         self.encrypt()

@@ -1,5 +1,17 @@
 #!/usr/bin/env bash
 
+# Resolve the terminal before an archive pipeline replaces GPG's stdin.
+prepare_gpg_terminal() {
+	local terminal
+	if terminal="$(tty 2>/dev/null)"; then
+		GPG_TTY="$terminal"
+		export GPG_TTY
+	elif [[ -t 2 ]] && terminal="$(tty <&2 2>/dev/null)"; then
+		GPG_TTY="$terminal"
+		export GPG_TTY
+	fi
+}
+
 # Shared selectors keep backups and restores paired. No arguments selects all.
 select_secrets() {
 	secret_names=("$@")

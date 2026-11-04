@@ -619,10 +619,6 @@ restore_setup_secrets() {
 		return 0
 	fi
 	log "restoring encrypted secrets"
-	if [[ -t 0 ]]; then
-		GPG_TTY="$(tty)"
-		export GPG_TTY
-	fi
 	if ! "$repo_root/scripts/decrypt-secrets.sh"; then
 		printf 'Secret restore failed. Supply the encryption passphrase or import the required GPG private key, then retry scripts/decrypt-secrets.sh. Use --skip-secrets for a tool/config-only setup.\n' >&2
 		return 1

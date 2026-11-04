@@ -9,6 +9,7 @@ source "$repo_root/scripts/lib/gum.sh"
 # shellcheck source=scripts/lib/secrets.sh
 source "$repo_root/scripts/lib/secrets.sh"
 umask 077
+prepare_gpg_terminal
 select_secrets "$@"
 work_dir=""
 trap '[[ -z "$work_dir" ]] || rm -rf "$work_dir"' EXIT

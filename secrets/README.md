@@ -21,3 +21,10 @@ private sibling backup directories. See the root README for recovery details.
 MUD client configuration is managed by Stow under `tools/.config/mud-client`,
 not by these encryption scripts. Old MUD archives are not restored.
 
+
+The encrypt/decrypt helpers set `GPG_TTY` from the current terminal before
+starting GPG, including when an SSH archive is streamed through stdin. This
+keeps the passphrase prompt attached to the terminal when sessions change.
+For agent/pinentry troubleshooting, set `export GPG_TTY="$(tty)"` in an interactive
+shell and retry the same helper command. Headless calls retain an explicitly
+provided `GPG_TTY`; no passphrase is placed in command arguments.

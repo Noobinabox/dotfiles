@@ -1,5 +1,5 @@
 model = "gpt-6.1-sol"
-model_reasoning_effort = "xhigh"
+model_reasoning_effort = "medium"
 approvals_reviewer = "auto_review"
 plan_mode_reasoning_effort = "high"
 [projects."/home/seth/repos/sg2/fusion/fusion-supervisor-databricks"]

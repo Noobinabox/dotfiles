@@ -39,6 +39,12 @@
 ;; numbers are disabled. For relative line numbers, set this to `relative'.
 (setq display-line-numbers-type 'relative)
 
+;; Edit Jupytext percent scripts as cells; keep rich output in JupyterLab.
+(use-package! code-cells
+  :mode ("\\.ipynb\\'" . code-cells-convert-ipynb)
+  :hook ((python-mode . code-cells-mode-maybe)
+         (python-ts-mode . code-cells-mode-maybe)))
+
 ;; If you use `org' and don't want your org files in the default location below,
 ;; change `org-directory'. It must be set before org loads!
 (setq org-directory "~/org/")

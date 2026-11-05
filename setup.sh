@@ -440,6 +440,19 @@ install_user_local_tools() {
 	fi
 }
 
+install_jupytext() {
+	log "Jupytext notebook pairing"
+	if have jupytext; then
+		info "present: jupytext"
+	elif [[ "$check_only" == true ]]; then
+		record_missing "jupytext"
+	elif have pipx; then
+		pipx install jupytext
+	else
+		record_missing "pipx (required to install jupytext)"
+	fi
+}
+
 install_dotnet_tools() {
 	log "dotnet tools"
 
@@ -707,6 +720,7 @@ install_oh_my_zsh
 install_nvm_node
 install_npm_globals
 install_user_local_tools
+install_jupytext
 install_obsidian
 install_cargo_tools
 install_tui_tools

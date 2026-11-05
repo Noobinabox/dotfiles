@@ -214,6 +214,35 @@ plugins.
 The `install` shell function intentionally shadows the coreutils file-copy
 utility. Use `command install ...` when you need the coreutils command.
 
+### Python notebooks in Doom Emacs
+
+Bootstrap installs Jupytext through pipx and Doom installs `code-cells`.
+For an existing checkout, install Jupytext with `pipx install jupytext`, run
+`~/.config/emacs/bin/doom sync`, and restart Emacs. If pipx is unavailable,
+install it with your system package manager first.
+
+Pair a notebook once with `jupytext --set-formats ipynb,py:percent notebook.ipynb`.
+Edit the resulting `notebook.py` in Doom; `# %%` marks code cells and
+`# %% [markdown]` marks commented Markdown cells. Run
+`jupytext --sync notebook.ipynb` after saving to update the pair, then reload
+the notebook in JupyterLab to view and execute it. Save browser edits before
+syncing and reload external changes before continuing to edit.
+
+Cell mode activates automatically for Python files that already contain cell
+markers. For a new buffer, use `M-x code-cells-mode` after adding markers.
+Use `C-c % n` / `C-c % p` to navigate, `C-c % e` to evaluate the current cell,
+and `C-c % s` to evaluate and advance. Start `M-x run-python` first, using the
+project's Python environment. Emacs evaluation uses a separate Python REPL
+from the JupyterLab kernel; results are shown in the REPL, not saved as notebook
+outputs. JupyterLab and project kernels are installed separately.
+
+Prefer editing the paired `.py`: opening and saving `.ipynb` directly through
+code-cells discards its saved cell outputs. See the
+[code-cells manual](https://elpa.gnu.org/packages/code-cells.html) and
+[Jupytext pairing guide](https://jupytext.readthedocs.io/en/latest/paired-notebooks.html).
+
+### Lazygit and Sesh
+
 Lazygit and Sesh are installed into `~/.local/bin` from pinned upstream releases
 with SHA256 verification on Linux, WSL, Fedora, and macOS. Termux builds the
 pinned versions with Go; Windows uses its native package manager. Existing

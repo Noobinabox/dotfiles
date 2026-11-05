@@ -86,3 +86,33 @@ if restore_setup_secrets >/dev/null 2>&1; then
 	exit 1
 fi
 printf 'fresh-home bootstrap checks passed\n'
+
+# Notebook tooling: checks are read-only, existing installs are retained,
+# missing pipx is actionable, and installer failures propagate.
+have() { [[ ",${notebook_commands}," == *",$1,"* ]]; }
+pipx() {
+	printf '%s\n' "$*" >"$test_root/pipx-call"
+	return "${pipx_status:-0}"
+}
+check_only=true
+notebook_commands=pipx
+missing=()
+install_jupytext >/dev/null
+[[ "${missing[*]}" == jupytext && ! -e "$test_root/pipx-call" ]]
+check_only=false
+notebook_commands=jupytext,pipx
+install_jupytext >/dev/null
+[[ ! -e "$test_root/pipx-call" ]]
+notebook_commands=
+missing=()
+install_jupytext >/dev/null
+[[ "${missing[*]}" == 'pipx (required to install jupytext)' ]]
+notebook_commands=pipx
+install_jupytext >/dev/null
+[[ "$(cat "$test_root/pipx-call")" == 'install jupytext' ]]
+pipx_status=7
+if install_jupytext >/dev/null; then
+	printf 'Jupytext installation failure was ignored\n' >&2
+	exit 1
+fi
+printf 'Jupytext bootstrap checks passed\n'

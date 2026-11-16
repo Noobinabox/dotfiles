@@ -599,8 +599,8 @@ restored by the secret scripts; obsolete MUD archives are ignored.
 Verify secret-backed tools without printing secret values:
 
 ```sh
-zsh -lic 'for v in GENAI_GATEWAY_AZURE_API_KEY DATABRICKS_HOST DATABRICKS_TOKEN AZURE_ARTIFACTS_NPM_USERNAME AZURE_ARTIFACTS_NPM_PASSWORD; do [[ -n ${(P)v} ]] && echo "$v=present" || echo "$v=missing"; done'
-zsh -lic 'npm whoami --registry=https://pkgs.dev.azure.com/Vizientinc/_packaging/Vizient/npm/registry/'
+zsh -lic 'for v in GENAI_GATEWAY_AZURE_API_KEY DATABRICKS_HOST DATABRICKS_TOKEN JFROG_NPM_AUTH_TOKEN; do [[ -n ${(P)v} ]] && echo "$v=present" || echo "$v=missing"; done'
+zsh -lic 'npm whoami --registry=https://artifacts.vizientinc.com/artifactory/api/npm/npm/'
 zsh -lic 'curl -fsS -H "Authorization: Bearer $DATABRICKS_TOKEN" "$DATABRICKS_HOST/api/2.0/clusters/list" >/dev/null && echo "databricks=ok"'
 ```
 

@@ -217,9 +217,45 @@ class CodexThemeTests(unittest.TestCase):
                         self.assertEqual(run("show", "-gv", "status-left"),
                                          "#{?client_prefix,> ,}#S")
                         self.assertEqual(run("show", "-gv", "status-right"),
-                                         "#{pane_current_path}")
+                                         '#{?#{e|>=:#{client_width},24}, #{=/-#{e|-:#{e|/:#{client_width},4},5}/...:#{b:pane_current_path}} ,}')
                         self.assertEqual(run("display-message", "-p", "-t", "theme-test",
                                              "#{E:status-left}"), "theme-test")
+            finally:
+                subprocess.run(command + ["kill-server"], capture_output=True, timeout=10)
+
+    def test_tmux_directory_preview_adapts_to_client_width(self):
+        tmux = shutil.which("tmux")
+        if not tmux:
+            self.skipTest("tmux is not installed")
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            command = [tmux, "-S", str(root / "tmux.sock")]
+
+            def run(*arguments):
+                return subprocess.run(command + list(arguments), check=True,
+                                      capture_output=True, text=True, timeout=10).stdout.strip()
+
+            try:
+                run("-f", "/dev/null", "new-session", "-d", "-s", "path-test", "sleep 60")
+                config = root / "theme.conf"
+                config.write_text(generator.tmux_conf(generator.load_themes()[0]), encoding="utf-8")
+                run("source-file", str(config))
+                self.assertEqual(run("show", "-gv", "status-right-length"), "10000")
+                # Substitute inputs to avoid depending on an attached client or pane startup.
+                preview_format = run("show", "-gv", "status-right").replace(
+                    "pane_current_path", "@test_path").replace("client_width", "@test_width")
+                for width in [1, 23, 24, 40, 79, 80, 81, 120, 240, 400]:
+                    budget = width // 4 - 5
+                    for name in ["short", "a" * max(1, budget), "a" * max(1, budget + 1),
+                                 "a" * 180 + "-project", "folder with spaces", "/"]:
+                        with self.subTest(width=width, name=name):
+                            run("set", "-g", "@test_path", str(root / name) if name != "/" else "/")
+                            run("set", "-g", "@test_width", str(width))
+                            preview = run("display-message", "-p", "-t", "path-test", preview_format)
+                            expected = name if len(name) <= budget else "..." + name[-budget:]
+                            self.assertEqual(preview, expected if width >= 24 else "")
+                            if preview:
+                                self.assertLessEqual(len(preview) + 2, width // 4)
             finally:
                 subprocess.run(command + ["kill-server"], capture_output=True, timeout=10)
 

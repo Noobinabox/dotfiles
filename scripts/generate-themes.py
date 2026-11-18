@@ -453,8 +453,9 @@ set -g status-left-style "fg={theme['foreground']},bg={surface},bold"
 set -g status-left-length 80
 set -g status-left " #{{?client_prefix,> ,}}#S "
 set -g status-right-style "fg={theme['foreground']},bg={theme['background']}"
-set -g status-right-length 150
-set -g status-right " #{{pane_current_path}} "
+# Let the format budget a quarter of the client width; reserve 3 dots + 2 spaces.
+set -g status-right-length 10000
+set -g status-right "#{{?#{{e|>=:#{{client_width}},24}}, #{{=/-#{{e|-:#{{e|/:#{{client_width}},4}},5}}/...:#{{b:pane_current_path}}}} ,}}"
 set -g message-style "fg={theme['foreground']},bg={surface}"
 set -g message-command-style "fg={theme['foreground']},bg={surface}"
 set -g menu-style "fg={theme['foreground']},bg={surface}"

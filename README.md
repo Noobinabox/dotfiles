@@ -383,7 +383,12 @@ scripts/apply-theme.sh
 Tmux inactive tabs use the theme foreground on its background so labels remain
 readable in light themes. The selected tab uses the theme's blue accent.
 The generated palette also owns the session label, directory display, menus,
-popups, and copy/window-picker selections. Picker selections use the palette's
+popups, and copy/window-picker selections. The directory preview shows only the
+folder name and uses at most a quarter of the client's columns, including padding
+and a leading ellipsis. It adapts on resize and hides below 24 columns. Reload
+`tmux source-file ~/.config/tmux/tmux.conf` after updating the installed theme file; an installed
+copy must be updated separately if it is not linked to this repository.
+Picker selections use the palette's
 selection background rather than its yellow accent. Tokyo Night's tmux theme
 plugin is no longer loaded, so its hard-coded colors cannot override the palette.
 

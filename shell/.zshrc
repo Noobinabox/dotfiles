@@ -344,6 +344,7 @@ source ~/.bashrc_aliases
 export NVM_DIR="$HOME/.nvm"
 source "$HOME/.config/zsh/nvm-lazy.zsh"
 export PATH="$HOME/.local/bin:$HOME/.dotnet/tools:$PATH"
+export PATH="$HOME/Repos/Personal/dotfiles/scripts:$PATH"
 
 # add Pulumi to the PATH
 export PATH="$PATH:$HOME/.pulumi/bin"

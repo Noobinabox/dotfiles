@@ -59,7 +59,7 @@ class SecretsTests(unittest.TestCase):
     def run_script(self, script, *names, success=True):
         result = subprocess.run(
             ["bash", str(self.repo / "scripts" / script), *names],
-            env=self.env, capture_output=True, text=True,
+            env=self.env, stdin=subprocess.DEVNULL, capture_output=True, text=True,
         )
         self.assertEqual(result.returncode == 0, success, result.stderr)
         return result

@@ -490,6 +490,11 @@ The timer runs `scripts/auto-sync.sh`, which:
 - rebases on the configured upstream
 - pushes without force
 
+The service runs non-interactively, so `scripts/auto-sync.sh` sources
+`$NVM_DIR/nvm.sh` (defaulting to `~/.nvm`) before the safety check. Install a
+Node.js version through NVM, or make `node` available on the systemd user
+service PATH.
+
 Install and enable the timer:
 
 ```sh

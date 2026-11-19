@@ -1,4 +1,4 @@
-model = "gpt-6.1-sol"
+model = "gpt-6.1-terra"
 model_reasoning_effort = "medium"
 approvals_reviewer = "auto_review"
 plan_mode_reasoning_effort = "high"
@@ -96,6 +96,12 @@ trust_level = "trusted"
 trust_level = "trusted"
 
 [projects."/home/seth/Repos/Personal/dotfiles"]
+trust_level = "trusted"
+
+[projects."/home/seth/Repos/Personal/audible-tui"]
+trust_level = "trusted"
+
+[projects."/home/seth/Repos/Personal/RotS-Rust-Client"]
 trust_level = "trusted"
 
 [tui]

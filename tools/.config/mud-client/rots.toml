@@ -1,12 +1,12 @@
 current_room = "1504"
-previous_room = "1506"
+previous_room = "1101"
 follow = true
 static_mode = false
 nofollow = false
 direction_arrow = true
 unicode = true
 show_vnums = false
-last_direction = "e"
+last_direction = "n"
 next_generated_id = 9
 
 [rooms.1]
@@ -9461,6 +9461,152 @@ flags = []
 [rooms.10978.exits.n]
 direction = "n"
 to = "10968"
+flags = []
+
+[rooms.1101]
+id = "1101"
+name = "Creation Hall"
+description = ""
+area = ""
+note = ""
+terrain = "Floor"
+symbol = ""
+weight = 1.0
+x = 12
+y = 12
+z = 0
+exit_order = [
+    "n",
+    "e",
+    "s",
+    "w",
+    "u",
+]
+flags = []
+
+[rooms.1101.exits.e]
+direction = "e"
+to = "1120"
+flags = []
+
+[rooms.1101.exits.n]
+direction = "n"
+to = "1103"
+flags = []
+
+[rooms.1101.exits.s]
+direction = "s"
+to = "1115"
+flags = []
+
+[rooms.1101.exits.u]
+direction = "u"
+to = "1105"
+flags = []
+
+[rooms.1101.exits.w]
+direction = "w"
+to = "1140"
+flags = []
+
+[rooms.1103]
+id = "1103"
+name = ""
+description = ""
+area = ""
+note = ""
+terrain = ""
+symbol = ""
+weight = 1.0
+x = 12
+y = 11
+z = 0
+exit_order = []
+flags = []
+
+[rooms.1103.exits.s]
+direction = "s"
+to = "1101"
+flags = []
+
+[rooms.1105]
+id = "1105"
+name = ""
+description = ""
+area = ""
+note = ""
+terrain = ""
+symbol = ""
+weight = 1.0
+x = 12
+y = 12
+z = 1
+exit_order = []
+flags = []
+
+[rooms.1105.exits.d]
+direction = "d"
+to = "1101"
+flags = []
+
+[rooms.1115]
+id = "1115"
+name = ""
+description = ""
+area = ""
+note = ""
+terrain = ""
+symbol = ""
+weight = 1.0
+x = 12
+y = 13
+z = 0
+exit_order = []
+flags = []
+
+[rooms.1115.exits.n]
+direction = "n"
+to = "1101"
+flags = []
+
+[rooms.1120]
+id = "1120"
+name = ""
+description = ""
+area = ""
+note = ""
+terrain = ""
+symbol = ""
+weight = 1.0
+x = 13
+y = 12
+z = 0
+exit_order = []
+flags = []
+
+[rooms.1120.exits.w]
+direction = "w"
+to = "1101"
+flags = []
+
+[rooms.1140]
+id = "1140"
+name = ""
+description = ""
+area = ""
+note = ""
+terrain = ""
+symbol = ""
+weight = 1.0
+x = 11
+y = 12
+z = 0
+exit_order = []
+flags = []
+
+[rooms.1140.exits.e]
+direction = "e"
+to = "1101"
 flags = []
 
 [rooms.11500]
@@ -118896,6 +119042,222 @@ direction = "w"
 to = "27343"
 flags = []
 
+[rooms.27900]
+id = "27900"
+name = ""
+description = ""
+area = ""
+note = ""
+terrain = ""
+symbol = ""
+weight = 1.0
+x = 12
+y = 10
+z = 0
+exit_order = []
+flags = []
+
+[rooms.27900.exits.s]
+direction = "s"
+to = "27909"
+flags = []
+
+[rooms.27908]
+id = "27908"
+name = "Flats on the Bog"
+description = ""
+area = ""
+note = ""
+terrain = "Swamp"
+symbol = ""
+weight = 8.0
+x = 11
+y = 11
+z = 0
+exit_order = ["e"]
+flags = []
+
+[rooms.27908.exits.e]
+direction = "e"
+to = "27909"
+flags = []
+
+[rooms.27909]
+id = "27909"
+name = "Behind the Barricade"
+description = ""
+area = ""
+note = ""
+terrain = "City"
+symbol = ""
+weight = 1.0
+x = 12
+y = 11
+z = 0
+exit_order = [
+    "n",
+    "e",
+    "s",
+    "w",
+]
+flags = []
+
+[rooms.27909.exits.e]
+direction = "e"
+to = "27910"
+flags = []
+
+[rooms.27909.exits.n]
+direction = "n"
+to = "27900"
+flags = []
+
+[rooms.27909.exits.s]
+direction = "s"
+to = "27916"
+flags = []
+
+[rooms.27909.exits.w]
+direction = "w"
+to = "27908"
+flags = []
+
+[rooms.27910]
+id = "27910"
+name = "Behind the Barricade"
+description = ""
+area = ""
+note = ""
+terrain = "City"
+symbol = ""
+weight = 1.0
+x = 13
+y = 11
+z = 0
+exit_order = [
+    "e",
+    "s",
+    "w",
+    "u",
+]
+flags = []
+
+[rooms.27910.exits.e]
+direction = "e"
+to = "27911"
+flags = []
+
+[rooms.27910.exits.s]
+direction = "s"
+to = "27917"
+flags = []
+
+[rooms.27910.exits.u]
+direction = "u"
+to = "27974"
+flags = []
+
+[rooms.27910.exits.w]
+direction = "w"
+to = "27909"
+flags = []
+
+[rooms.27911]
+id = "27911"
+name = ""
+description = ""
+area = ""
+note = ""
+terrain = ""
+symbol = ""
+weight = 1.0
+x = 14
+y = 11
+z = 0
+exit_order = []
+flags = []
+
+[rooms.27911.exits.w]
+direction = "w"
+to = "27910"
+flags = []
+
+[rooms.27916]
+id = "27916"
+name = "Makeshift Tents"
+description = ""
+area = ""
+note = ""
+terrain = "Floor"
+symbol = ""
+weight = 1.0
+x = 12
+y = 12
+z = 0
+exit_order = [
+    "n",
+    "e",
+]
+flags = []
+
+[rooms.27916.exits.e]
+direction = "e"
+to = "27917"
+flags = []
+
+[rooms.27916.exits.n]
+direction = "n"
+to = "27909"
+flags = []
+
+[rooms.27917]
+id = "27917"
+name = "Mess Tent"
+description = ""
+area = ""
+note = ""
+terrain = "Floor"
+symbol = ""
+weight = 1.0
+x = 13
+y = 12
+z = 0
+exit_order = [
+    "n",
+    "w",
+]
+flags = []
+
+[rooms.27917.exits.n]
+direction = "n"
+to = "27910"
+flags = []
+
+[rooms.27917.exits.w]
+direction = "w"
+to = "27916"
+flags = []
+
+[rooms.27974]
+id = "27974"
+name = ""
+description = ""
+area = ""
+note = ""
+terrain = ""
+symbol = ""
+weight = 1.0
+x = 13
+y = 11
+z = 1
+exit_order = []
+flags = []
+
+[rooms.27974.exits.d]
+direction = "d"
+to = "27910"
+flags = []
+
 [rooms.2800]
 id = "2800"
 name = "Dirt Trail"
@@ -195376,6 +195738,6 @@ size = ""
 
 [last_move]
 from = "1504"
-to = "1505"
-direction = "e"
+to = "1500"
+direction = "n"
 created_room = false

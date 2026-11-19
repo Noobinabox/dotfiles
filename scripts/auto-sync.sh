@@ -18,6 +18,15 @@ cd "$repo_root"
 
 export GIT_TERMINAL_PROMPT=0
 export GIT_SSH_COMMAND="${GIT_SSH_COMMAND:-ssh -o BatchMode=yes}"
+export NVM_DIR="${NVM_DIR:-$HOME/.nvm}"
+if [[ -s "$NVM_DIR/nvm.sh" ]]; then
+	# shellcheck source=/dev/null
+	source "$NVM_DIR/nvm.sh"
+fi
+if ! command -v node >/dev/null 2>&1; then
+	log "Node.js is unavailable; install Node through NVM or configure it on the service PATH"
+	exit 1
+fi
 
 git_dir="$(git rev-parse --git-dir)"
 upstream="$(git rev-parse --abbrev-ref --symbolic-full-name '@{u}' 2>/dev/null || true)"
